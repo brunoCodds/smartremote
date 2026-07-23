@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Smart Remote</string>
+
+    <string name="desc_power">Ligar/Desligar TV</string>
+    <string name="desc_keyboard">Teclado numérico</string>
+    <string name="desc_assistant">Assistente de voz</string>
+    <string name="desc_dpad_up">Navegar para cima</string>
+    <string name="desc_dpad_down">Navegar para baixo</string>
+    <string name="desc_dpad_left">Navegar para esquerda</string>
+    <string name="desc_dpad_right">Navegar para direita</string>
+    <string name="desc_dpad_ok">Selecionar</string>
+    <string name="desc_back">Voltar</string>
+    <string name="desc_home">Tela inicial</string>
+    <string name="desc_play_pause">Play/Pause</string>
+    <string name="desc_volume_up">Aumentar volume</string>
+    <string name="desc_volume_down">Diminuir volume</string>
+    <string name="desc_channel_up">Canal seguinte</string>
+    <string name="desc_channel_down">Canal anterior</string>
+    <string name="desc_netflix">Abrir Netflix</string>
+    <string name="desc_prime">Abrir Prime Video</string>
+    <string name="desc_globoplay">Abrir Globoplay</string>
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fundo -->
+    <color name="background_dark">#111111</color>
+
+    <!-- Botões -->
+    <color name="button_dark">#2A2A2A</color>
+    <color name="button_dark_light">#333333</color>
+    <color name="dpad_outer">#1C1C1C</color>
+
+    <!-- Textos -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#9E9E9E</color>
+
+    <!-- Destaques -->
+    <color name="power_red">#E53935</color>
+    <color name="ripple_light">#33FFFFFF</color>
+
+    <!-- Apps de streaming -->
+    <color name="netflix_red">#E50914</color>
+    <color name="prime_blue">#00A8E1</color>
+    <color name="globoplay_purple">#8A2BE2</color>
+</resources>

@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark"
+    android:fitsSystemWindows="true"
+    android:paddingHorizontal="24dp"
+    android:paddingVertical="16dp"
+    tools:context=".MainActivity">
+
+    <!-- ===================== TOPO: Power / 123 / Assistente ===================== -->
+    <LinearLayout
+        android:id="@+id/rowTop"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="spread">
+
+        <TextView
+            android:id="@+id/btnPower"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/ripple_circle_power"
+            android:clickable="true"
+            android:contentDescription="@string/desc_power"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="⏻"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnKeyboard"
+            android:layout_width="64dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/ripple_rounded_rect"
+            android:clickable="true"
+            android:contentDescription="@string/desc_keyboard"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="123"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnAssistant"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_assistant"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="G"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <!-- ===================== D-PAD ===================== -->
+
+    <!-- ===================== VOLTAR / HOME / PLAY-PAUSE ===================== -->
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/dpadContainer"
+        android:layout_width="260dp"
+        android:layout_height="260dp"
+        android:background="@drawable/bg_dpad_outer"
+        app:layout_constraintBottom_toTopOf="@id/rowMiddleControls"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rowTop">
+
+        <TextView
+            android:id="@+id/btnDpadUp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_dpad_up"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="▲"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/btnDpadDown"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_dpad_down"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="▼"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/btnDpadLeft"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_dpad_left"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="◀"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/btnDpadRight"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_dpad_right"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="▶"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/btnDpadOk"
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:background="@drawable/ripple_circle_dpad_center"
+            android:clickable="true"
+            android:contentDescription="@string/desc_dpad_ok"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="OK"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/rowMiddleControls"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/rowVolumeChannel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/dpadContainer">
+
+        <TextView
+            android:id="@+id/btnBack"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_back"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="↩"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/btnHome"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="28dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_home"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="⌂"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/btnPlayPause"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="28dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_play_pause"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="⏯"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp" />
+
+    </LinearLayout>
+
+    <!-- ===================== VOLUME / CANAL ===================== -->
+    <LinearLayout
+        android:id="@+id/rowVolumeChannel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/rowStreaming"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rowMiddleControls">
+
+        <!-- Coluna Volume -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/btnVolumeUp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/ripple_circle"
+                android:clickable="true"
+                android:contentDescription="@string/desc_volume_up"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="+"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp"
+                android:text="VOL"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btnVolumeDown"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/ripple_circle"
+                android:clickable="true"
+                android:contentDescription="@string/desc_volume_down"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="−"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Coluna Canal -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="64dp"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/btnChannelUp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/ripple_circle"
+                android:clickable="true"
+                android:contentDescription="@string/desc_channel_up"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="⌃"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp"
+                android:text="CH"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btnChannelDown"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:background="@drawable/ripple_circle"
+                android:clickable="true"
+                android:contentDescription="@string/desc_channel_down"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="⌄"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ===================== NETFLIX / PRIME / GLOBOPLAY ===================== -->
+    <LinearLayout
+        android:id="@+id/rowStreaming"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rowVolumeChannel">
+
+        <TextView
+            android:id="@+id/btnNetflix"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/ripple_circle_netflix"
+            android:clickable="true"
+            android:contentDescription="@string/desc_netflix"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="N"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnPrimeVideo"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="24dp"
+            android:background="@drawable/ripple_circle_prime"
+            android:clickable="true"
+            android:contentDescription="@string/desc_prime"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="P"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnGloboplay"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="24dp"
+            android:background="@drawable/ripple_circle_globoplay"
+            android:clickable="true"
+            android:contentDescription="@string/desc_globoplay"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="G"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
