@@ -1,5 +1,6 @@
 package com.example.smartremote
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.HapticFeedbackConstants
@@ -10,6 +11,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.example.smartremote.databinding.ActivityMainBinding
+import com.example.smartremote.discovery.DeviceDiscoveryActivity
 
 /**
  * Tela única do Smart Remote (v1).
@@ -50,8 +52,14 @@ class MainActivity : AppCompatActivity() {
     /** Centraliza a configuração de todos os cliques do controle remoto. */
     private fun setupClickListeners() {
         with(binding) {
+            // Configurações (procurar/conectar TV)
+            btnSettings.setOnClickListener { openDeviceDiscovery() }
+
             // Topo
             btnPower.setOnClickListener { power() }
+            // Pressionar e segurar o Power abre a configuração/pareamento de TV.
+            // Escolhido para não exigir nenhum novo elemento visual na interface atual.
+            btnPower.setOnLongClickListener { openDeviceDiscovery(); true }
             btnKeyboard.setOnClickListener { keyboard() }
             btnAssistant.setOnClickListener { assistant() }
 
@@ -78,6 +86,11 @@ class MainActivity : AppCompatActivity() {
             btnPrimeVideo.setOnClickListener { primeVideo() }
             btnGloboplay.setOnClickListener { globoplay() }
         }
+    }
+
+    /** Abre a tela de descoberta/pareamento de Smart TVs na rede local. */
+    private fun openDeviceDiscovery() {
+        startActivity(Intent(this, DeviceDiscoveryActivity::class.java))
     }
 
     // ===================== AÇÕES - TOPO =====================

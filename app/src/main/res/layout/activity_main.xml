@@ -12,6 +12,22 @@
     android:paddingVertical="16dp"
     tools:context=".MainActivity">
 
+    <!-- ===================== CONFIGURAÇÕES (descoberta/pareamento de TV) ===================== -->
+    <TextView
+        android:id="@+id/btnSettings"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/ripple_circle"
+        android:clickable="true"
+        android:contentDescription="@string/desc_settings"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="⚙"
+        android:textColor="@color/text_secondary"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- ===================== TOPO: Power / 123 / Assistente ===================== -->
     <LinearLayout
         android:id="@+id/rowTop"

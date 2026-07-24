@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings novas da Fase 2 (descoberta de TVs).
+  Basta manter este arquivo em res/values/ - o Android mescla automaticamente
+  todos os arquivos dessa pasta com o strings.xml existente, sem precisar
+  copiar nada manualmente.
+-->
+<resources>
+    <string name="discovery_title">Procurar TVs</string>
+    <string name="discovery_scan_button">Procurar TVs</string>
+    <string name="discovery_refresh_button">Atualizar</string>
+    <string name="discovery_connect_button">Conectar</string>
+    <string name="discovery_empty_state">Nenhuma TV encontrada. Verifique se o celular e a TV estão na mesma rede Wi-Fi.</string>
+    <string name="device_unknown_brand">Fabricante desconhecido</string>
+    <string name="device_subtitle_format">%1$s • %2$s • %3$s</string>
+    <string name="device_saved_format">TV salva: %1$s</string>
+    <string name="desc_open_discovery">Configurar TV (pressione e segure)</string>
+    <string name="desc_settings">Configurações — procurar e conectar TV</string>
+</resources>

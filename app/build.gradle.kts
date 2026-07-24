@@ -43,6 +43,11 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.core.ktx)
     implementation(libs.material)
+    // Necessária para a lista de TVs encontradas na DeviceDiscoveryActivity.
+    // Adicionada por coordenada direta pois não tenho acesso ao catálogo
+    // libs.versions.toml do projeto - se preferir, mova para o catálogo
+    // como alias "androidx-recyclerview".
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
