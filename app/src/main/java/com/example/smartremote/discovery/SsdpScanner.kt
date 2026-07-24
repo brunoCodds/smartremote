@@ -27,6 +27,16 @@ class SsdpScanner {
         // do problema "fabricante desconhecido" ser confirmada e corrigida.
         private const val DIAG_TAG = "SsdpDiagnostic"
         private const val DIAG_XML_SNIPPET_LENGTH = 500
+
+        // Como o M-SEARCH usa ST: ssdp:all, uma única TV física responde
+        // várias vezes - uma por serviço/dispositivo embutido que ela
+        // anuncia (rootdevice, MediaRenderer, serviço do fabricante etc).
+        // Cada resposta vem com um USN diferente, mas todos compartilham o
+        // mesmo prefixo "uuid:<UUID>" - essa é a parte realmente estável
+        // que identifica a TV, então é ela (e só ela) que vira o deviceId
+        // usado como TvDevice.stableKey(). Sem isso, a mesma TV aparece
+        // duplicada na lista de descoberta uma vez por serviço anunciado.
+        private val USN_UUID_REGEX = Regex("uuid:[^:\\s]+")
     }
 
     fun scan(
@@ -57,12 +67,17 @@ class SsdpScanner {
             val buffer = ByteArray(2048)
             val deadline = System.currentTimeMillis() + Constants.SSDP_TOTAL_TIMEOUT_MS
 
+            // Dedup local desta rodada de scan: evita buscar o XML de
+            // descrição repetidamente para a mesma TV só porque ela
+            // respondeu várias vezes ao ssdp:all (uma vez por serviço).
+            val seenStableIds = mutableSetOf<String>()
+
             while (System.currentTimeMillis() < deadline) {
                 try {
                     val response = DatagramPacket(buffer, buffer.size)
                     socket.receive(response)
                     val text = String(response.data, 0, response.length)
-                    parseResponse(text, response.address?.hostAddress)?.let(onDeviceFound)
+                    parseResponse(text, response.address?.hostAddress, seenStableIds)?.let(onDeviceFound)
                 } catch (timeout: SocketTimeoutException) {
                     // ignora e continua tentando até o deadline geral
                 }
@@ -75,7 +90,7 @@ class SsdpScanner {
         }
     }
 
-    private fun parseResponse(raw: String, ip: String?): TvDevice? {
+    private fun parseResponse(raw: String, ip: String?, seenStableIds: MutableSet<String>): TvDevice? {
         if (ip == null) return null
 
         val headers = raw.lines()
@@ -96,6 +111,15 @@ class SsdpScanner {
 
         val server = headers["SERVER"].orEmpty()
         val usn = headers["USN"]
+        val stableId = extractStableDeviceId(usn) ?: usn
+
+        // Mesma TV já processada nesta rodada (respondeu de novo para um
+        // serviço/dispositivo embutido diferente) - ignora silenciosamente
+        // em vez de buscar o XML e notificar onDeviceFound outra vez.
+        if (stableId != null && !seenStableIds.add(stableId)) {
+            Log.d(DIAG_TAG, "Ignorando resposta duplicada de $ip (mesma TV, stableId=$stableId)")
+            return null
+        }
 
         val details = fetchDeviceDescription(location)
         Log.d(
@@ -107,6 +131,14 @@ class SsdpScanner {
                 "deviceType=${details?.deviceType ?: "NULO"}"
         )
 
+        val os = guessOs(
+            manufacturer = details?.manufacturer,
+            modelName = details?.modelName,
+            deviceType = details?.deviceType,
+            server = server
+        )
+        Log.d(DIAG_TAG, "OS decidido para $ip: $os (manufacturer=${details?.manufacturer}, modelName=${details?.modelName}, deviceType=${details?.deviceType}, server=\"$server\")")
+
         return TvDevice(
             name = details?.friendlyName ?: server.takeIf { it.isNotBlank() } ?: "Dispositivo SSDP",
             brand = details?.manufacturer,
@@ -114,10 +146,21 @@ class SsdpScanner {
             ip = ip,
             port = runCatching { URL(location).port }.getOrNull()?.takeIf { it != -1 },
             protocol = DeviceProtocol.SSDP,
-            os = guessOsFromServer(server),
-            deviceId = usn,
+            os = os,
+            deviceId = stableId,
             connected = false
         )
+    }
+
+    /**
+     * Extrai apenas o "uuid:<UUID>" do USN, descartando o sufixo
+     * "::urn:..." que varia conforme o serviço/dispositivo embutido
+     * anunciado. Retorna null se o USN não tiver esse formato (fallback
+     * para o USN bruto é feito por quem chama esta função).
+     */
+    private fun extractStableDeviceId(usn: String?): String? {
+        if (usn.isNullOrBlank()) return null
+        return USN_UUID_REGEX.find(usn)?.value
     }
 
     /** GET simples no LOCATION do UPnP para extrair friendlyName/manufacturer/modelName. */
@@ -184,6 +227,40 @@ class SsdpScanner {
         return regex.find(xml)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotBlank() }
     }
 
+    /**
+     * Heurística principal de detecção de SO: usa manufacturer/modelName/
+     * deviceType (obtidos do XML de descrição UPnP), que são bem mais
+     * confiáveis que o header SERVER - por exemplo, TVs Samsung reais
+     * costumam anunciar "Samsung-Linux" no SERVER (sem a palavra "tizen"),
+     * mas sempre trazem "Samsung Electronics" como manufacturer no XML.
+     *
+     * Se o XML não foi obtido (details == null, ex: TV não respondeu ou
+     * cleartext bloqueado), cai no fallback por SERVER como antes.
+     */
+    private fun guessOs(
+        manufacturer: String?,
+        modelName: String?,
+        deviceType: String?,
+        server: String
+    ): TvOperatingSystem {
+        val combined = listOfNotNull(manufacturer, modelName, deviceType)
+            .joinToString(" ")
+            .lowercase()
+
+        return when {
+            combined.contains("samsung") || combined.contains("tizen") -> TvOperatingSystem.TIZEN
+            combined.contains("lg electronics") || combined.contains("webos") -> TvOperatingSystem.WEBOS
+            combined.contains("roku") -> TvOperatingSystem.ROKU_OS
+            combined.contains("amazon") -> TvOperatingSystem.FIRE_OS
+            combined.contains("hisense") || combined.contains("vidaa") -> TvOperatingSystem.VIDAA
+            combined.contains("android") -> TvOperatingSystem.ANDROID_TV
+            combined.contains("google") -> TvOperatingSystem.GOOGLE_TV
+            combined.isNotBlank() -> TvOperatingSystem.UNKNOWN
+            else -> guessOsFromServer(server) // XML indisponível - único sinal restante é o SERVER
+        }
+    }
+
+    /** Fallback usado quando o XML de descrição não pôde ser obtido. */
     private fun guessOsFromServer(server: String): TvOperatingSystem {
         val s = server.lowercase()
         return when {

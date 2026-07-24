@@ -22,7 +22,16 @@ object Constants {
 
     // ===== Persistência =====
     const val PREFS_NAME = "smart_remote_prefs"
+
+    // Chave antiga (formato: um único objeto TvDevice). Mantida apenas
+    // para a migração automática em DeviceStorage - não usar em código
+    // novo. Pode ser removida quando não houver mais base instalada com
+    // esse formato antigo.
     const val PREF_KEY_SAVED_DEVICE = "saved_tv_device"
+
+    // Chave nova (formato: JSONArray de TvDevice). Usar esta em todo
+    // código novo.
+    const val PREF_KEY_SAVED_DEVICES = "saved_tv_devices"
 
     // ===== Credenciais de pareamento (tokens, client-keys, certificados) =====
     const val CREDENTIALS_PREFS_NAME = "smart_remote_credentials"

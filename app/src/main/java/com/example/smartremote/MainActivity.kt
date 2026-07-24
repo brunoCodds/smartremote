@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.databinding.ActivityMainBinding
 import com.example.smartremote.diagnostic.DiagnosticLogEntry
 import com.example.smartremote.diagnostic.DiagnosticManager
@@ -225,12 +226,19 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Registra a MainActivity como observadora do DiagnosticManager e, se já
-     * existir uma TV salva, envia o dispositivo atual para o painel nascer
-     * preenchido mesmo antes de qualquer nova descoberta/conexão.
+     * existir uma TV salva, tenta reconectar automaticamente com ela -
+     * como o token de pareamento já foi salvo no primeiro pareamento, isso
+     * reconecta direto, sem exigir nova confirmação na TV.
      */
     private fun setupDiagnosticPanel() {
         DiagnosticManager.addListener(diagnosticListener)
-        TvManager.getSavedDevice(applicationContext)?.let { DiagnosticManager.updateDevice(it) }
+        TvManager.getSavedDevice(applicationContext)?.let { device ->
+            TvManager.connect(applicationContext, device, object : TvConnectionListener {
+                override fun onConnected() { /* painel de diagnóstico já reflete o estado via DiagnosticManager */ }
+                override fun onPairingRequired() { /* não deveria ocorrer numa reconexão com token salvo */ }
+                override fun onError(message: String) { /* fica desconectado; usuário pode reconectar em Configurações */ }
+            })
+        }
     }
 
     /** Abre o painel se estiver fechado, ou fecha se estiver aberto. */

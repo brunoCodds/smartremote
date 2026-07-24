@@ -25,6 +25,49 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!--
+          Seção "TVs pareadas": lista TODAS as TVs já pareadas (o app agora
+          suporta múltiplas - ver TvManager/DeviceStorage), cada uma com
+          suas próprias ações (conectar/desconectar/esquecer). Fica oculta
+          por completo (GONE) quando não há nenhuma TV pareada. Tocar em um
+          item revela as ações daquele item especificamente - controlado em
+          DeviceDiscoveryActivity.kt / PairedDeviceListAdapter, sem lógica
+          nova de layout aqui.
+
+          altura limitada (wrap_content dentro de um scroll natural da tela)
+          e um teto (maxHeight aproximado por peso zero) para não competir
+          demais com a lista de descoberta abaixo quando houver muitas TVs
+          pareadas - ajuste livre conforme o design real do app.
+        -->
+        <LinearLayout
+            android:id="@+id/sectionPairedDevices"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/discovery_saved_section_title"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerPairedDevices"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:nestedScrollingEnabled="false"
+                android:clipToPadding="false"
+                tools:listitem="@layout/item_paired_device"
+                tools:itemCount="2" />
+
+        </LinearLayout>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnScan"
             android:layout_width="match_parent"

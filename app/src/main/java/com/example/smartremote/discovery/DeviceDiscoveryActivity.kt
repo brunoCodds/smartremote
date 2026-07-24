@@ -14,19 +14,26 @@ import com.example.smartremote.model.TvDevice
 /**
  * Tela de descoberta de Smart TVs na rede local (SSDP + mDNS).
  *
- * Fluxo: usuário toca em "Procurar TVs" -> DeviceScanner busca na rede ->
- * lista é exibida -> usuário seleciona uma TV -> toca em "Conectar" -> o
- * dispositivo é salvo via TvManager E o pareamento/conexão é iniciado
- * imediatamente (a TV pode mostrar o popup de autorização) -> só quando a
- * conexão é efetivamente estabelecida esta tela fecha e volta para a
- * MainActivity. Se der erro, a tela permanece aberta para tentar de novo
- * ou escolher outro dispositivo.
+ * Fluxo de pareamento: usuário toca em "Procurar TVs" -> DeviceScanner busca
+ * na rede -> lista é exibida (com selo "Pareada" nas que já forem
+ * conhecidas, mas SEM nunca esconder nenhuma) -> usuário seleciona uma TV
+ * -> toca em "Conectar" -> o dispositivo é pareado via TvManager E o
+ * pareamento/conexão é iniciado imediatamente (a TV pode mostrar o popup de
+ * autorização) -> só quando a conexão é efetivamente estabelecida esta tela
+ * fecha e volta para a MainActivity. Se der erro, a tela permanece aberta
+ * para tentar de novo ou escolher outro dispositivo.
+ *
+ * Fluxo de TVs já pareadas: a seção "TVs pareadas" lista TODAS as TVs
+ * pareadas (múltiplas, ver TvManager/DeviceStorage). Tocar em uma revela
+ * suas ações (Esquecer / Conectar-Desconectar). Esquecer uma TV nunca afeta
+ * as demais.
  */
 class DeviceDiscoveryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDeviceDiscoveryBinding
     private lateinit var scanner: DeviceScanner
     private lateinit var adapter: DeviceListAdapter
+    private lateinit var pairedAdapter: PairedDeviceListAdapter
 
     private var selectedDevice: TvDevice? = null
 
@@ -43,6 +50,8 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
         setupToolbar()
         setupRecyclerView()
         setupButtons()
+        setupPairedDevicesSection()
+        refreshPairedDevicesSection()
     }
 
     private fun setupToolbar() {
@@ -82,6 +91,7 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
             override fun onScanFinished(devices: List<TvDevice>) {
                 setScanningState(false)
                 binding.emptyStateText.visibility = if (adapter.isEmpty()) View.VISIBLE else View.GONE
+                refreshPairedBadges()
             }
 
             override fun onScanError(message: String) {
@@ -97,10 +107,12 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
         binding.btnRefresh.isEnabled = !scanning
     }
 
-    /** Salva a TV escolhida e já inicia o pareamento/conexão em seguida. */
+    /** Pareia a TV escolhida na descoberta e já inicia o pareamento/conexão em seguida. */
     private fun confirmSelection() {
         val device = selectedDevice ?: return
-        TvManager.saveDevice(applicationContext, device)
+        TvManager.pairDevice(applicationContext, device)
+        refreshPairedDevicesSection()
+        refreshPairedBadges()
         startConnection(device)
     }
 
@@ -118,6 +130,7 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
                     getString(R.string.device_connected_format, device.name),
                     Toast.LENGTH_SHORT
                 ).show()
+                refreshPairedDevicesSection()
                 finish()
             }
 
@@ -128,6 +141,7 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
             override fun onError(message: String) {
                 setConnectingState(false)
                 binding.txtConnectionStatus.text = message
+                refreshPairedDevicesSection()
             }
         })
     }
@@ -138,6 +152,42 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
         binding.btnScan.isEnabled = !connecting
         binding.btnRefresh.isEnabled = !connecting
         binding.btnConnect.isEnabled = !connecting && selectedDevice != null
+    }
+
+    // ===================== SEÇÃO "TVS PAREADAS" (múltiplas) =====================
+    // Lista TODAS as TVs pareadas (ver DeviceStorage/TvManager), cada uma
+    // com suas próprias ações. Esquecer uma TV nunca apaga as outras.
+
+    private fun setupPairedDevicesSection() {
+        pairedAdapter = PairedDeviceListAdapter(
+            onConnect = { device -> startConnection(device) },
+            onDisconnect = {
+                TvManager.disconnect()
+                connectionEstablished = false
+                refreshPairedDevicesSection()
+            },
+            onForget = { device ->
+                TvManager.forgetDevice(applicationContext, device.stableKey())
+                refreshPairedDevicesSection()
+                refreshPairedBadges()
+            }
+        )
+        binding.recyclerPairedDevices.layoutManager = LinearLayoutManager(this)
+        binding.recyclerPairedDevices.adapter = pairedAdapter
+    }
+
+    /** Recarrega a seção a partir do que está pareado em TvManager. Oculta tudo se não houver nenhuma TV pareada. */
+    private fun refreshPairedDevicesSection() {
+        val devices = TvManager.getPairedDevices(applicationContext)
+        binding.sectionPairedDevices.visibility = if (devices.isEmpty()) View.GONE else View.VISIBLE
+        pairedAdapter.submitList(devices)
+        pairedAdapter.updateConnectedKey(TvManager.getConnectedDeviceKey())
+    }
+
+    /** Atualiza só os selos "Pareada" da lista de descoberta, sem recarregar a lista de pareadas inteira. */
+    private fun refreshPairedBadges() {
+        val pairedKeys = TvManager.getPairedDevices(applicationContext).map { it.stableKey() }.toSet()
+        adapter.updatePairedKeys(pairedKeys)
     }
 
     override fun onDestroy() {
