@@ -12,6 +12,36 @@
     android:paddingVertical="16dp"
     tools:context=".MainActivity">
 
+    <!-- ===================== DIAGNÓSTICO (painel de debug, apenas dev) ===================== -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnInfo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp"
+        android:background="@drawable/ripple_circle"
+        app:backgroundTint="@android:color/transparent"
+        app:cornerRadius="24dp"
+        app:elevation="0dp"
+        android:stateListAnimator="@null"
+        android:gravity="center"
+        android:includeFontPadding="false"
+        android:text="ⓘ"
+        android:textAllCaps="false"
+        android:textColor="@color/text_secondary"
+        android:textSize="18sp"
+        android:contentDescription="@string/desc_diagnostic"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- ===================== CONFIGURAÇÕES (descoberta/pareamento de TV) ===================== -->
     <TextView
         android:id="@+id/btnSettings"
@@ -404,5 +434,68 @@
             android:textStyle="bold" />
 
     </LinearLayout>
+
+    <!-- ===================== PAINEL DE DIAGNÓSTICO (overlay, apenas dev) ===================== -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/panelDiagnostic"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:color/transparent"
+        android:visibility="gone"
+        android:clickable="false"
+        android:focusable="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/txtDiagnosticInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="64dp"
+            android:clickable="false"
+            android:focusable="false"
+            android:fontFamily="monospace"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="4dp"
+            android:textColor="@android:color/white"
+            android:textIsSelectable="false"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="IP................192.168.0.15\nMarca.............Samsung" />
+
+        <ScrollView
+            android:id="@+id/scrollDiagnosticLogs"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"
+            android:clickable="false"
+            android:focusable="false"
+            android:scrollbars="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/txtDiagnosticInfo">
+
+            <TextView
+                android:id="@+id/txtDiagnosticLogs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:focusable="false"
+                android:fontFamily="monospace"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@android:color/white"
+                android:textIsSelectable="false"
+                android:textSize="11sp"
+                tools:text="[10:20:31] Conectado\n[10:20:34] KEY_HOME" />
+
+        </ScrollView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

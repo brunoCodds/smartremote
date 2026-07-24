@@ -11,7 +11,11 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.example.smartremote.databinding.ActivityMainBinding
+import com.example.smartremote.diagnostic.DiagnosticLogEntry
+import com.example.smartremote.diagnostic.DiagnosticManager
+import com.example.smartremote.diagnostic.DiagnosticState
 import com.example.smartremote.discovery.DeviceDiscoveryActivity
+import com.example.smartremote.manager.TvManager
 
 /**
  * Tela única do Smart Remote (v1).
@@ -29,6 +33,21 @@ class MainActivity : AppCompatActivity() {
         private const val TAG = "SmartRemote"
         private const val CLICK_ANIM_DURATION_MS = 50L // down + up = ~100ms
         private const val CLICK_ANIM_SCALE = 0.95f
+
+        private const val DIAGNOSTIC_ANIM_DURATION_MS = 200L
+        private const val DIAGNOSTIC_SLIDE_DISTANCE_DP = 40f
+        private const val DIAGNOSTIC_LABEL_COLUMN_WIDTH = 18
+    }
+
+    /** Recebe as atualizações do DiagnosticManager e apenas repassa para renderDiagnostic(). */
+    private val diagnosticListener = DiagnosticManager.Listener { state, logs ->
+        renderDiagnostic(state, logs)
+    }
+
+    private var isDiagnosticPanelOpen = false
+
+    private val diagnosticSlideDistancePx: Float by lazy {
+        DIAGNOSTIC_SLIDE_DISTANCE_DP * resources.displayMetrics.density
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +57,12 @@ class MainActivity : AppCompatActivity() {
 
         enableFullscreenMode()
         setupClickListeners()
+        setupDiagnosticPanel()
+    }
+
+    override fun onDestroy() {
+        DiagnosticManager.removeListener(diagnosticListener)
+        super.onDestroy()
     }
 
     /** Deixa a tela em modo imersivo (sem barra de status/navegação). */
@@ -52,6 +77,9 @@ class MainActivity : AppCompatActivity() {
     /** Centraliza a configuração de todos os cliques do controle remoto. */
     private fun setupClickListeners() {
         with(binding) {
+            // Diagnóstico (painel de debug, apenas dev)
+            btnInfo.setOnClickListener { toggleDiagnosticPanel() }
+
             // Configurações (procurar/conectar TV)
             btnSettings.setOnClickListener { openDeviceDiscovery() }
 
@@ -191,6 +219,111 @@ class MainActivity : AppCompatActivity() {
     /** Hoje: apenas feedback local. Futuramente: tvController.openGloboplay() */
     private fun globoplay() {
         executeAction(binding.btnGloboplay, toastText = "Globoplay", logMessage = "Globoplay button pressed")
+    }
+
+    // ===================== PAINEL DE DIAGNÓSTICO =====================
+
+    /**
+     * Registra a MainActivity como observadora do DiagnosticManager e, se já
+     * existir uma TV salva, envia o dispositivo atual para o painel nascer
+     * preenchido mesmo antes de qualquer nova descoberta/conexão.
+     */
+    private fun setupDiagnosticPanel() {
+        DiagnosticManager.addListener(diagnosticListener)
+        TvManager.getSavedDevice(applicationContext)?.let { DiagnosticManager.updateDevice(it) }
+    }
+
+    /** Abre o painel se estiver fechado, ou fecha se estiver aberto. */
+    private fun toggleDiagnosticPanel() {
+        if (isDiagnosticPanelOpen) closeDiagnosticPanel() else openDiagnosticPanel()
+    }
+
+    private fun openDiagnosticPanel() {
+        if (isDiagnosticPanelOpen) return
+        isDiagnosticPanelOpen = true
+        with(binding.panelDiagnostic) {
+            animate().cancel()
+            alpha = 0f
+            translationY = -diagnosticSlideDistancePx
+            visibility = View.VISIBLE
+            animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(DIAGNOSTIC_ANIM_DURATION_MS)
+                .start()
+        }
+    }
+
+    private fun closeDiagnosticPanel() {
+        if (!isDiagnosticPanelOpen) return
+        isDiagnosticPanelOpen = false
+        with(binding.panelDiagnostic) {
+            animate().cancel()
+            animate()
+                .alpha(0f)
+                .translationY(-diagnosticSlideDistancePx)
+                .setDuration(DIAGNOSTIC_ANIM_DURATION_MS)
+                .withEndAction { visibility = View.GONE }
+                .start()
+        }
+    }
+
+    /**
+     * Único ponto que escreve nos TextViews do painel. Chamado sempre que o
+     * DiagnosticManager notifica uma mudança de estado ou um novo log -
+     * o painel não precisa ser fechado/reaberto para refletir alterações.
+     */
+    private fun renderDiagnostic(state: DiagnosticState, logs: List<DiagnosticLogEntry>) {
+        binding.txtDiagnosticInfo.text = buildDiagnosticInfoText(state)
+        binding.txtDiagnosticLogs.text = buildDiagnosticLogsText(logs)
+        binding.scrollDiagnosticLogs.post {
+            binding.scrollDiagnosticLogs.fullScroll(View.FOCUS_DOWN)
+        }
+    }
+
+    private fun buildDiagnosticInfoText(state: DiagnosticState): String = listOf(
+        diagnosticLine("IP", state.ip ?: "—"),
+        diagnosticLine("Marca", state.brand ?: "—"),
+        diagnosticLine("Modelo", state.model ?: "—"),
+        diagnosticLine("Sistema", formatDiagnosticOs(state.os)),
+        diagnosticLine("Controlador", state.controllerName ?: "—"),
+        diagnosticLine("Protocolo", formatDiagnosticProtocol(state.protocol)),
+        diagnosticLine("Status", state.connectionStatus),
+        diagnosticLine("Ping", state.pingMs?.let { "$it ms" } ?: "—"),
+        diagnosticLine("Token", state.tokenMasked ?: "—"),
+        diagnosticLine("Último comando", state.lastCommand ?: "—"),
+        diagnosticLine("Resposta", state.lastResponse ?: "—"),
+        diagnosticLine("Erro", state.lastError ?: "—")
+    ).joinToString(separator = "\n")
+
+    private fun buildDiagnosticLogsText(logs: List<DiagnosticLogEntry>): String {
+        if (logs.isEmpty()) return "Nenhum evento registrado ainda."
+        return logs.joinToString(separator = "\n") { entry -> "[${entry.timestamp}] ${entry.message}" }
+    }
+
+    /** Formata "Rótulo....................valor", alinhado em coluna monoespaçada. */
+    private fun diagnosticLine(label: String, value: String): String {
+        val dotsCount = (DIAGNOSTIC_LABEL_COLUMN_WIDTH - label.length).coerceAtLeast(1)
+        return label + ".".repeat(dotsCount) + value
+    }
+
+    private fun formatDiagnosticOs(rawOs: String?): String = when (rawOs) {
+        "TIZEN" -> "Tizen"
+        "WEBOS" -> "webOS"
+        "ANDROID_TV" -> "Android TV"
+        "GOOGLE_TV" -> "Google TV"
+        "ROKU_OS" -> "Roku OS"
+        "FIRE_OS" -> "Fire OS"
+        "VIDAA" -> "VIDAA"
+        null, "UNKNOWN" -> "—"
+        else -> rawOs
+    }
+
+    private fun formatDiagnosticProtocol(rawProtocol: String?): String = when (rawProtocol) {
+        "SSDP" -> "SSDP (UPnP)"
+        "MDNS" -> "mDNS"
+        null -> "—"
+        else -> rawProtocol
     }
 
     // ===================== HELPERS REUTILIZÁVEIS =====================

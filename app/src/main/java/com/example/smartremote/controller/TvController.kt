@@ -9,7 +9,7 @@ package com.example.smartremote.controller
  * a arquitetura já esteja pronta para recebê-las sem retrabalho.
  */
 interface TvController {
-    fun connect()
+    fun connect(listener: TvConnectionListener)
     fun disconnect()
     fun isConnected(): Boolean
 

@@ -23,4 +23,14 @@ object Constants {
     // ===== Persistência =====
     const val PREFS_NAME = "smart_remote_prefs"
     const val PREF_KEY_SAVED_DEVICE = "saved_tv_device"
+
+    // ===== Credenciais de pareamento (tokens, client-keys, certificados) =====
+    const val CREDENTIALS_PREFS_NAME = "smart_remote_credentials"
+
+    // ===== Samsung Tizen (WebSocket "Samsung Remote Control") =====
+    const val SAMSUNG_APP_NAME = "SmartRemote"
+    const val SAMSUNG_WS_PORT = 8002
+    const val SAMSUNG_WS_PATH = "/api/v2/channels/samsung.remote.control"
+    const val SAMSUNG_CREDENTIAL_TYPE = "samsung_token"
+    const val SAMSUNG_PAIRING_TIMEOUT_MS = 60_000L
 }

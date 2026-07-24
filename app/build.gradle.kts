@@ -48,6 +48,9 @@ dependencies {
     // libs.versions.toml do projeto - se preferir, mova para o catálogo
     // como alias "androidx-recyclerview".
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    // WebSocket para conexão com Smart TVs (Samsung Tizen nesta fase; demais
+    // fabricantes reutilizarão o mesmo cliente OkHttp em fases futuras).
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
