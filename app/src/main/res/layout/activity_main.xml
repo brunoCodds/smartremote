@@ -469,6 +469,24 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
+        <!-- Abre o AppsBottomSheet com a grade de apps disponíveis, em vez
+             de listar cada app direto nesta linha - permite adicionar mais
+             apps no futuro sem lotar a tela principal. -->
+        <TextView
+            android:id="@+id/btnApps"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="24dp"
+            android:background="@drawable/ripple_circle"
+            android:clickable="true"
+            android:contentDescription="@string/desc_apps"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="⚏"
+            android:textColor="@color/text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
     </LinearLayout>
 
     <!-- ===================== PAINEL DE DIAGNÓSTICO (overlay, apenas dev) ===================== -->

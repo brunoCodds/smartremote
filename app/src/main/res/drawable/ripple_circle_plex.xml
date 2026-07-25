@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Segue o mesmo padrão visual de ripple_circle_netflix/ripple_circle_prime/
+    ripple_circle_globoplay (RippleDrawable sobre uma forma oval sólida) -
+    reproduzido aqui pois os arquivos originais não estavam disponíveis
+    para copiar a estrutura exata. Ajuste a cor abaixo se o padrão real do
+    projeto for diferente.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/ripple_light">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/plex_gold" />
+        </shape>
+    </item>
+</ripple>

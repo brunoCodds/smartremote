@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Um card de app dentro da grade do AppsBottomSheet. A cor de fundo do
+    círculo e o texto são preenchidos em runtime pelo AppsAdapter a partir
+    de AppItem - este layout não conhece nenhum app específico.
+
+    Quando o app não está em TvManager.getSupportedApps() (ver
+    AppsBottomSheet), o AppsAdapter reduz o alpha do card inteiro e
+    desabilita o clique, em vez de escondê-lo - assim o usuário entende
+    que o app existe mas não é suportado pela TV/fabricante atual, ao
+    invés de simplesmente sumir da tela.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/appCardRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingVertical="12dp">
+
+    <TextView
+        android:id="@+id/appIcon"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        tools:background="@drawable/ripple_circle_netflix"
+        tools:text="N" />
+
+    <TextView
+        android:id="@+id/appLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        tools:text="Netflix" />
+
+</LinearLayout>

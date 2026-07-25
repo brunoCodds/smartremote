@@ -190,6 +190,14 @@ object TvManager {
     /** Se a TV de chave [key] é a que está conectada (ou conectando) no momento. */
     fun isConnectedTo(key: String): Boolean = connectionManager.isConnectedTo(key)
 
+    /**
+     * Apps que a TV/fabricante atualmente conectado sabe abrir (ver
+     * [TvController.supportedApps]). Vazio se não houver TV conectada.
+     * Só delega ao controller ativo - TvManager continua sem saber nada
+     * de fabricante.
+     */
+    fun getSupportedApps(): Set<RemoteKey> = currentController?.supportedApps() ?: emptySet()
+
     /** Chave (stableKey) da TV atualmente conectada, ou null se nenhuma conexão ativa. */
     fun getConnectedDeviceKey(): String? {
         val device = connectionManager.getCurrentDevice() ?: return null

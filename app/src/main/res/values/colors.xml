@@ -20,4 +20,11 @@
     <color name="netflix_red">#E50914</color>
     <color name="prime_blue">#00A8E1</color>
     <color name="globoplay_purple">#8A2BE2</color>
+    <color name="youtube_red">#FF0000</color>
+    <color name="disney_blue">#113CCF</color>
+    <color name="max_purple">#5822B4</color>
+    <color name="appletv_gray">#555555</color>
+    <color name="paramount_blue">#0064FF</color>
+    <color name="crunchyroll_orange">#F47521</color>
+    <color name="plex_gold">#E5A00D</color>
 </resources>

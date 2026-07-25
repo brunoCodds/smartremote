@@ -39,4 +39,20 @@ interface TvController {
      * implementações não devem fingir detectar isso.
      */
     fun sendText(text: String)
+
+    /**
+     * Conjunto de valores de [RemoteKey] (do grupo "apps de streaming")
+     * que ESTE fabricante sabe de fato lançar - isto é, as chaves
+     * presentes no mapa interno de app-launch do controller concreto
+     * (ex: SamsungTizenController.APP_LAUNCH_MAP).
+     *
+     * Existe para que a UI (ex: AppsBottomSheet) possa desabilitar/ocultar
+     * botões de apps que este fabricante/modelo não suporta, em vez de
+     * deixar o usuário tocar num botão que só vai gerar um "comando não
+     * suportado" silencioso no DiagnosticManager. Cada TvController novo
+     * (LG, Android TV, Roku, etc.) simplesmente retorna o próprio
+     * conjunto - a UI não precisa saber nada de fabricante para reagir a
+     * isso.
+     */
+    fun supportedApps(): Set<RemoteKey>
 }

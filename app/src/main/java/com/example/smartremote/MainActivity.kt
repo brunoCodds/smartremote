@@ -20,6 +20,7 @@ import com.example.smartremote.diagnostic.DiagnosticState
 import com.example.smartremote.discovery.DeviceDiscoveryActivity
 import com.example.smartremote.manager.TvManager
 import com.example.smartremote.model.RemoteKey
+import com.example.smartremote.ui.AppsBottomSheet
 import com.example.smartremote.ui.RemoteKeypadBottomSheet
 import com.example.smartremote.ui.TextInputBottomSheet
 import java.util.Locale
@@ -145,6 +146,7 @@ class MainActivity : AppCompatActivity() {
             btnNetflix.setOnClickListener { netflix() }
             btnPrimeVideo.setOnClickListener { primeVideo() }
             btnGloboplay.setOnClickListener { globoplay() }
+            btnApps.setOnClickListener { apps() }
         }
     }
 
@@ -318,6 +320,17 @@ class MainActivity : AppCompatActivity() {
     private fun globoplay() {
         TvManager.sendRemoteKey(RemoteKey.GLOBOPLAY)
         executeAction(binding.btnGloboplay, toastText = "Globoplay", logMessage = "Globoplay button pressed")
+    }
+
+    /**
+     * Abre a grade de apps (BottomSheet) em vez de mandar um RemoteKey
+     * direto - "Apps" é um atalho de navegação da UI, igual [keyboard]/
+     * [abc]. Cada card dentro do AppsBottomSheet chama TvManager.sendRemoteKey()
+     * por conta própria com o app escolhido.
+     */
+    private fun apps() {
+        triggerHapticFeedback(binding.btnApps)
+        AppsBottomSheet().show(supportFragmentManager, AppsBottomSheet.TAG)
     }
 
     // ===================== PAINEL DE DIAGNÓSTICO =====================

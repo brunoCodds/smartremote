@@ -41,4 +41,16 @@
     <string name="voice_prompt">Fale agora…</string>
     <string name="voice_no_speech_recognized">Não entendi, tenta de novo</string>
     <string name="voice_not_available">Reconhecimento de voz não disponível neste aparelho</string>
+
+    <!-- ===== Botão de Apps (AppsBottomSheet) ===== -->
+    <string name="desc_apps">Abrir apps</string>
+    <string name="apps_bottom_sheet_title">Apps</string>
+    <string name="desc_youtube">Abrir YouTube</string>
+    <string name="desc_disney_plus">Abrir Disney+</string>
+    <string name="desc_max">Abrir Max</string>
+    <string name="desc_apple_tv_plus">Abrir Apple TV+</string>
+    <string name="desc_paramount_plus">Abrir Paramount+</string>
+    <string name="desc_crunchyroll">Abrir Crunchyroll</string>
+    <string name="desc_plex">Abrir Plex</string>
+    <string name="app_not_supported_toast">Ainda não suportado nesta TV</string>
 </resources>

@@ -68,5 +68,21 @@ enum class RemoteKey {
     // ===== Atalhos de apps de streaming =====
     NETFLIX,
     PRIME_VIDEO,
-    GLOBOPLAY
+    GLOBOPLAY,
+    YOUTUBE,
+    DISNEY_PLUS,
+    /** HBO Max renomeado para "Max" - mesmo app/mesma família de IDs. */
+    MAX,
+    /** App oficial "Apple TV" - hoje inclui o conteúdo do Apple TV+. */
+    APPLE_TV_PLUS,
+    PARAMOUNT_PLUS,
+    /**
+     * Sem App ID Samsung confiável documentado nesta fase (app oficial
+     * recente, rollout parcial por região/ano de TV) - fica presente no
+     * enum para a UI já poder exibi-lo (desabilitado) e para não exigir
+     * mudança nesta lista quando um ID confiável surgir no futuro. Ver
+     * SamsungTizenController.APP_LAUNCH_MAP.
+     */
+    CRUNCHYROLL,
+    PLEX
 }

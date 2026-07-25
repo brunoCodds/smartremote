@@ -227,9 +227,9 @@ class SamsungTizenController(
             return
         }
 
-        val appId = APP_LAUNCH_MAP[key]
-        if (appId != null) {
-            sendAppLaunch(key, appId)
+        val appIds = APP_LAUNCH_MAP[key]
+        if (appIds != null) {
+            sendAppLaunch(key, appIds)
             return
         }
 
@@ -257,17 +257,36 @@ class SamsungTizenController(
         // de tratamento específico por comando aqui.
     }
 
-    private fun sendAppLaunch(key: RemoteKey, appId: String) {
+    /**
+     * Manda o comando de abrir app para CADA App ID candidato de [key], em
+     * sequência. Isso não é redundância por engano: como a Samsung não
+     * publica uma lista oficial de App IDs (ver comentário em
+     * SamsungProtocol sobre a fonte comunitária desses valores) e o
+     * protocolo é fire-and-forget (a TV não confirma qual ID foi
+     * reconhecido, e simplesmente ignora um ID que não exista nela), mandar
+     * todos os candidatos é seguro e aumenta a chance real de abrir o app
+     * certo em modelos/firmwares diferentes.
+     */
+    private fun sendAppLaunch(key: RemoteKey, appIds: List<String>) {
         DiagnosticManager.setLastCommand("Abrir app: ${key.name}")
-        val message = SamsungProtocol.buildAppLaunchCommand(appId)
-        val sent = socketClient.send(message)
 
-        if (!sent) {
+        var anySent = false
+        for (appId in appIds) {
+            val message = SamsungProtocol.buildAppLaunchCommand(appId)
+            if (socketClient.send(message)) {
+                anySent = true
+            }
+        }
+
+        if (!anySent) {
             DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
             return
         }
 
-        DiagnosticManager.log("Aplicativo aberto: ${key.name}", DiagnosticLogType.NETWORK)
+        DiagnosticManager.log(
+            "Aplicativo aberto: ${key.name} (${appIds.size} ID(s) candidato(s) enviado(s))",
+            DiagnosticLogType.NETWORK
+        )
     }
 
     /**
@@ -301,6 +320,9 @@ class SamsungTizenController(
         // havia um campo de texto focado na TV - só registramos o envio.
         DiagnosticManager.log("Texto enviado (${text.length} caractere(s))", DiagnosticLogType.NETWORK)
     }
+
+    /** Ver KDoc de [TvController.supportedApps]. */
+    override fun supportedApps(): Set<RemoteKey> = APP_LAUNCH_MAP.keys
 
     private companion object {
         const val CONTROLLER_NAME = "SamsungTizenController"
@@ -360,12 +382,27 @@ class SamsungTizenController(
 
         /**
          * Lançamento de apps (mecanismo diferente de KEY_CODE_MAP - ver
-         * SamsungProtocol.buildAppLaunchCommand). GLOBOPLAY
-         * propositalmente ausente - sem App ID confiável documentado.
+         * SamsungProtocol.buildAppLaunchCommand). Cada entrada é uma LISTA
+         * de App IDs candidatos (ver comentário em SamsungProtocol sobre a
+         * fonte comunitária e a falta de garantia desses valores) -
+         * sendAppLaunch manda todos em sequência.
+         *
+         * RemoteKey.CRUNCHYROLL propositalmente SEM entrada aqui: nenhuma
+         * fonte encontrada documenta um App ID confiável para ele nesta
+         * fase (ver SamsungProtocol). supportedApps() abaixo reflete isso
+         * automaticamente - a UI já sabe desabilitá-lo sem precisar de
+         * nenhuma lógica extra.
          */
-        val APP_LAUNCH_MAP: Map<RemoteKey, String> = mapOf(
-            RemoteKey.NETFLIX to SamsungProtocol.NETFLIX_APP_ID,
-            RemoteKey.PRIME_VIDEO to SamsungProtocol.PRIME_VIDEO_APP_ID
+        val APP_LAUNCH_MAP: Map<RemoteKey, List<String>> = mapOf(
+            RemoteKey.NETFLIX to SamsungProtocol.NETFLIX_APP_IDS,
+            RemoteKey.PRIME_VIDEO to SamsungProtocol.PRIME_VIDEO_APP_IDS,
+            RemoteKey.GLOBOPLAY to SamsungProtocol.GLOBOPLAY_APP_IDS,
+            RemoteKey.YOUTUBE to SamsungProtocol.YOUTUBE_APP_IDS,
+            RemoteKey.DISNEY_PLUS to SamsungProtocol.DISNEY_PLUS_APP_IDS,
+            RemoteKey.MAX to SamsungProtocol.MAX_APP_IDS,
+            RemoteKey.APPLE_TV_PLUS to SamsungProtocol.APPLE_TV_PLUS_APP_IDS,
+            RemoteKey.PARAMOUNT_PLUS to SamsungProtocol.PARAMOUNT_PLUS_APP_IDS,
+            RemoteKey.PLEX to SamsungProtocol.PLEX_APP_IDS
         )
     }
 }

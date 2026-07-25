@@ -20,19 +20,45 @@ import org.json.JSONObject
  */
 object SamsungProtocol {
 
-    // App IDs oficiais/comprovadamente documentados para lançamento de
-    // apps via ms.channel.emit (ver buildAppLaunchCommand). Centralizados
-    // aqui, e não em Constants.kt, porque são um detalhe do protocolo
-    // Samsung especificamente - outra marca terá seus próprios IDs em seu
-    // próprio *Protocol.
+    // App IDs para lançamento de apps via ms.channel.emit (ver
+    // buildAppLaunchCommand). Centralizados aqui, e não em Constants.kt,
+    // porque são um detalhe do protocolo Samsung especificamente - outra
+    // marca terá seus próprios IDs em seu próprio *Protocol.
     //
-    // GLOBOPLAY propositalmente NÃO está aqui: não há um App ID confiável
-    // o suficiente documentado para incluir sem risco de estar errado.
-    // SamsungTizenController.APP_LAUNCH_MAP simplesmente não tem entrada
-    // para RemoteKey.GLOBOPLAY até isso ser confirmado (ex: consultando
-    // ed.installedApp.get na própria TV do usuário, em uma fase futura).
-    const val NETFLIX_APP_ID = "11101200001"
-    const val PRIME_VIDEO_APP_ID = "3201512006785"
+    // IMPORTANTE - confiabilidade real destes IDs: a Samsung não publica
+    // uma lista oficial de App IDs. Os valores abaixo vêm de um
+    // levantamento comunitário (mesma fonte usada por projetos como
+    // samsungtvws/Home Assistant - github.com/xchwarze/samsung-tv-ws-api,
+    // arquivo APPLICATIONS.md) e o próprio levantamento avisa: "IDs are
+    // not guaranteed to work on your TV" e podem mudar por ano/firmware
+    // (muitos mudaram a partir de 2020). Por isso cada app abaixo guarda
+    // uma LISTA de IDs candidatos (não um só) - o mecanismo de lançamento
+    // (ver SamsungTizenController.sendAppLaunch) manda TODOS em sequência
+    // pela mesma sessão: como o protocolo é fire-and-forget e um ID
+    // desconhecido é simplesmente ignorado pela TV (sem erro nenhum),
+    // isso não tem efeito colateral - só aumenta a chance de acertar o ID
+    // certo para o modelo/firmware do usuário. É a mesma estratégia usada
+    // pelas integrações de referência (elas também guardam mais de um ID
+    // por app pelo mesmo motivo).
+    //
+    // CRUNCHYROLL propositalmente NÃO está aqui: é um app oficial
+    // recente (rollout parcial por região/ano de TV a partir de 2024) e
+    // não há nenhum App ID confiável documentado em nenhuma fonte
+    // encontrada até esta fase. RemoteKey.CRUNCHYROLL existe no enum,
+    // mas SamsungTizenController.APP_LAUNCH_MAP não tem entrada para ele
+    // - a UI trata isso como "não suportado nesta TV" via
+    // TvController.supportedApps(), até surgir um ID confiável.
+    val NETFLIX_APP_IDS = listOf("11101200001", "3201907018807")
+    val PRIME_VIDEO_APP_IDS = listOf("3201512006785", "3201910019365")
+    val GLOBOPLAY_APP_IDS = listOf("3201908019022")
+    val YOUTUBE_APP_IDS = listOf("111299001912")
+    val DISNEY_PLUS_APP_IDS = listOf("3201901017640", "3202009021709", "3202204027038")
+    /** HBO Max renomeado para "Max" - IDs do app antigo (HBO Max) e do atual (Max). */
+    val MAX_APP_IDS = listOf("3201601007230", "3202301029760")
+    /** App oficial "Apple TV" - hoje é onde o conteúdo do Apple TV+ é acessado. */
+    val APPLE_TV_PLUS_APP_IDS = listOf("3201807016597")
+    val PARAMOUNT_PLUS_APP_IDS = listOf("3201710014981", "3202110025305")
+    val PLEX_APP_IDS = listOf("3201512006963")
 
     /** Resultado da interpretação de uma mensagem recebida da TV. */
     sealed class SamsungEvent {
@@ -150,8 +176,8 @@ object SamsungProtocol {
 
     /**
      * Monta a mensagem oficial do protocolo Samsung para abrir um app
-     * instalado na TV, dado seu [appId] (ver [NETFLIX_APP_ID] /
-     * [PRIME_VIDEO_APP_ID]). Mecanismo diferente do envio de tecla -
+     * instalado na TV, dado seu [appId] (ver [NETFLIX_APP_IDS] /
+     * [PRIME_VIDEO_APP_IDS] e demais *_APP_IDS). Mecanismo diferente do envio de tecla -
      * usa ms.channel.emit / ed.apps.launch:
      *
      * {
