@@ -173,6 +173,20 @@ object TvManager {
         controller.sendRemoteKey(key)
     }
 
+    /**
+     * Envia um texto livre (teclado digitado ou voz reconhecida) para a
+     * TV atualmente conectada. Mesmo padrão de [sendRemoteKey]: não sabe
+     * nada sobre o protocolo do fabricante, só delega.
+     */
+    fun sendText(text: String) {
+        val controller = currentController
+        if (controller == null) {
+            DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+        controller.sendText(text)
+    }
+
     /** Se a TV de chave [key] é a que está conectada (ou conectando) no momento. */
     fun isConnectedTo(key: String): Boolean = connectionManager.isConnectedTo(key)
 

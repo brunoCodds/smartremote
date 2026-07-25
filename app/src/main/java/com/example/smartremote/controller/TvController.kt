@@ -26,4 +26,17 @@ interface TvController {
      * quando a própria [key] não for suportada por este fabricante.
      */
     fun sendRemoteKey(key: RemoteKey)
+
+    /**
+     * Envia um texto livre para a TV (teclado digitado ou voz
+     * reconhecida), usando o mecanismo oficial de entrada de texto do
+     * fabricante, quando existir - sem simular tecla por tecla. Mesmas
+     * regras de [sendRemoteKey]: nunca lança exceção se desconectada, e
+     * registra no DiagnosticManager se o fabricante não suportar texto.
+     *
+     * Importante: nenhum protocolo de TV conhecido informa de volta se
+     * havia um campo de texto realmente focado na TV no momento do envio -
+     * implementações não devem fingir detectar isso.
+     */
+    fun sendText(text: String)
 }

@@ -20,6 +20,20 @@ import org.json.JSONObject
  */
 object SamsungProtocol {
 
+    // App IDs oficiais/comprovadamente documentados para lançamento de
+    // apps via ms.channel.emit (ver buildAppLaunchCommand). Centralizados
+    // aqui, e não em Constants.kt, porque são um detalhe do protocolo
+    // Samsung especificamente - outra marca terá seus próprios IDs em seu
+    // próprio *Protocol.
+    //
+    // GLOBOPLAY propositalmente NÃO está aqui: não há um App ID confiável
+    // o suficiente documentado para incluir sem risco de estar errado.
+    // SamsungTizenController.APP_LAUNCH_MAP simplesmente não tem entrada
+    // para RemoteKey.GLOBOPLAY até isso ser confirmado (ex: consultando
+    // ed.installedApp.get na própria TV do usuário, em uma fase futura).
+    const val NETFLIX_APP_ID = "11101200001"
+    const val PRIME_VIDEO_APP_ID = "3201512006785"
+
     /** Resultado da interpretação de uma mensagem recebida da TV. */
     sealed class SamsungEvent {
         /**
@@ -95,6 +109,126 @@ object SamsungProtocol {
             put("DataOfCmd", keyCode)
             put("Option", "false")
             put("TypeOfRemote", "SendRemoteKey")
+        }
+        return JSONObject().apply {
+            put("method", "ms.remote.control")
+            put("params", params)
+        }.toString()
+    }
+
+    /**
+     * Monta a mensagem oficial do protocolo Samsung para enviar um texto
+     * livre de uma vez (não simula tecla por tecla). Formato oficial:
+     *
+     * {
+     *   "method": "ms.remote.control",
+     *   "params": {
+     *     "Cmd": "<texto em Base64>",
+     *     "DataOfCmd": "base64",
+     *     "TypeOfRemote": "SendInputString"
+     *   }
+     * }
+     *
+     * Limitação conhecida do protocolo: não existe forma de consultar se
+     * há um campo de texto realmente focado na TV no momento do envio -
+     * se não houver, a TV apenas ignora silenciosamente, sem retornar
+     * nenhum evento de erro. Quem chama esta função não deve assumir
+     * confirmação de entrega além do envio em si.
+     */
+    fun buildSendTextCommand(text: String): String {
+        val base64Text = Base64.encodeToString(text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+        val params = JSONObject().apply {
+            put("Cmd", base64Text)
+            put("DataOfCmd", "base64")
+            put("TypeOfRemote", "SendInputString")
+        }
+        return JSONObject().apply {
+            put("method", "ms.remote.control")
+            put("params", params)
+        }.toString()
+    }
+
+    /**
+     * Monta a mensagem oficial do protocolo Samsung para abrir um app
+     * instalado na TV, dado seu [appId] (ver [NETFLIX_APP_ID] /
+     * [PRIME_VIDEO_APP_ID]). Mecanismo diferente do envio de tecla -
+     * usa ms.channel.emit / ed.apps.launch:
+     *
+     * {
+     *   "method": "ms.channel.emit",
+     *   "params": {
+     *     "event": "ed.apps.launch",
+     *     "to": "host",
+     *     "data": { "action_type": "NATIVE_LAUNCH", "appId": "<appId>", "metaTag": "" }
+     *   }
+     * }
+     *
+     * "action_type" e "metaTag" NÃO são opcionais - a versão anterior desta
+     * função só mandava "appId", e várias TVs simplesmente ignoram (sem
+     * erro nenhum) um ed.apps.launch fora desse formato. Confirmado
+     * comparando com a lib de referência samsungtvws (ChannelEmitCommand.
+     * launch_app). "NATIVE_LAUNCH" é o valor correto aqui porque Netflix e
+     * Prime Video são apps já instalados na TV, não um link de conteúdo
+     * web (que usaria "DEEP_LINK").
+     */
+    fun buildAppLaunchCommand(appId: String): String {
+        val data = JSONObject().apply {
+            put("action_type", "NATIVE_LAUNCH")
+            put("appId", appId)
+            put("metaTag", "")
+        }
+        val params = JSONObject().apply {
+            put("event", "ed.apps.launch")
+            put("to", "host")
+            put("data", data)
+        }
+        return JSONObject().apply {
+            put("method", "ms.channel.emit")
+            put("params", params)
+        }.toString()
+    }
+
+    /**
+     * Aviso (broadcast) que deve ser enviado uma vez, antes do PRIMEIRO
+     * [buildSendTextCommand] de uma sessão de digitação. Sem isso, várias
+     * TVs ignoram silenciosamente o SendInputString que vem em seguida -
+     * confirmado no fluxo oficial do próprio app Samsung SmartView
+     * (RemoteControl.sendInputString sempre manda este broadcast antes do
+     * primeiro texto de cada sessão). Quem decide "é a primeira vez desta
+     * sessão?" é o SamsungTizenController, não esta função - aqui só a
+     * mensagem em si.
+     *
+     * {
+     *   "method": "ms.channel.emit",
+     *   "params": { "event": "custom.remote.textReceived", "to": "broadcast" }
+     * }
+     */
+    fun buildTextReceivedBroadcastCommand(): String {
+        val params = JSONObject().apply {
+            put("event", "custom.remote.textReceived")
+            put("to", "broadcast")
+        }
+        return JSONObject().apply {
+            put("method", "ms.channel.emit")
+            put("params", params)
+        }.toString()
+    }
+
+    /**
+     * Finaliza/aplica a sessão de entrada de texto (IME) na TV. Deve ser
+     * enviado DEPOIS de [buildSendTextCommand] - sem ele, a sessão de IME
+     * fica pendurada e a TV pode nunca aplicar o texto no campo, mesmo
+     * tendo recebido o SendInputString corretamente. Mesmo fluxo do app
+     * oficial: sendInputString() sempre seguido de sendInputEnd().
+     *
+     * {
+     *   "method": "ms.remote.control",
+     *   "params": { "TypeOfRemote": "SendInputEnd" }
+     * }
+     */
+    fun buildSendTextEndCommand(): String {
+        val params = JSONObject().apply {
+            put("TypeOfRemote", "SendInputEnd")
         }
         return JSONObject().apply {
             put("method", "ms.remote.control")

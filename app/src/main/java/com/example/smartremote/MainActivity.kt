@@ -2,10 +2,12 @@ package com.example.smartremote
 
 import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -18,14 +20,17 @@ import com.example.smartremote.diagnostic.DiagnosticState
 import com.example.smartremote.discovery.DeviceDiscoveryActivity
 import com.example.smartremote.manager.TvManager
 import com.example.smartremote.model.RemoteKey
+import com.example.smartremote.ui.RemoteKeypadBottomSheet
+import com.example.smartremote.ui.TextInputBottomSheet
+import java.util.Locale
 
 /**
  * Tela única do Smart Remote (v1).
  *
- * Nesta versão o app apenas exibe a interface do controle e reage aos toques
- * com Toast + Log + animação de clique + haptic feedback. A comunicação real
- * com a Smart TV será adicionada em uma versão futura (ex: substituindo o
- * corpo de cada função de ação por uma chamada a um "tvController").
+ * Cada botão dispara feedback local (Toast + Log + animação + haptic) e,
+ * quando aplicável, envia o comando real para a TV via TvManager
+ * (sendRemoteKey/sendText) - sem conhecer nenhum detalhe de protocolo do
+ * fabricante, que fica isolado em cada TvController concreto.
  */
 class MainActivity : AppCompatActivity() {
 
@@ -47,6 +52,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var isDiagnosticPanelOpen = false
+
+    /**
+     * Resultado do reconhecimento de voz do Android (usado pelo botão
+     * Assistente - ver [assistant]/[startVoiceRecognition]). Não controla
+     * Bixby/Alexa/Google Assistant da TV - só reconhece a fala localmente
+     * no aparelho e envia o TEXTO reconhecido para a TV via
+     * TvManager.sendText(), mesmo caminho do teclado digitado.
+     */
+    private val voiceRecognitionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val spokenText = result.data
+            ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            ?.firstOrNull()
+
+        if (spokenText.isNullOrBlank()) {
+            showToast(getString(R.string.voice_no_speech_recognized))
+            return@registerForActivityResult
+        }
+
+        TvManager.sendText(spokenText)
+        showToast(getString(R.string.text_input_sent_toast))
+    }
 
     private val diagnosticSlideDistancePx: Float by lazy {
         DIAGNOSTIC_SLIDE_DISTANCE_DP * resources.displayMetrics.density
@@ -91,6 +119,7 @@ class MainActivity : AppCompatActivity() {
             // Escolhido para não exigir nenhum novo elemento visual na interface atual.
             btnPower.setOnLongClickListener { openDeviceDiscovery(); true }
             btnKeyboard.setOnClickListener { keyboard() }
+            btnAbc.setOnClickListener { abc() }
             btnAssistant.setOnClickListener { assistant() }
 
             // D-pad
@@ -108,6 +137,7 @@ class MainActivity : AppCompatActivity() {
             // Volume e canal
             btnVolumeUp.setOnClickListener { volumeUp() }
             btnVolumeDown.setOnClickListener { volumeDown() }
+            btnMute.setOnClickListener { mute() }
             btnChannelUp.setOnClickListener { channelUp() }
             btnChannelDown.setOnClickListener { channelDown() }
 
@@ -132,23 +162,52 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Envia RemoteKey.KEYBOARD para a TV. Ainda não suportado por nenhum
-     * TvController nesta fase (usa um mecanismo diferente do protocolo -
-     * SendInputString, não SendRemoteKey) - o app não trava, só registra
-     * "não suportado" no diagnóstico até a fase dedicada a isso.
+     * Abre o teclado numérico (BottomSheet) em vez de mandar uma tecla
+     * diretamente - o "123" é um atalho de navegação da UI, não um
+     * RemoteKey em si. Cada botão do BottomSheet chama TvManager por
+     * conta própria (ver RemoteKeypadBottomSheet).
      */
     private fun keyboard() {
-        TvManager.sendRemoteKey(RemoteKey.KEYBOARD)
-        executeAction(binding.btnKeyboard, toastText = "123", logMessage = "Keyboard button pressed")
+        triggerHapticFeedback(binding.btnKeyboard)
+        RemoteKeypadBottomSheet().show(supportFragmentManager, RemoteKeypadBottomSheet.TAG)
     }
 
     /**
-     * Envia RemoteKey.ASSISTANT para a TV. Mesma observação de [keyboard] -
-     * ainda não suportado por nenhum TvController nesta fase.
+     * Atalho de UI que pula direto para a digitação de texto, sem passar
+     * pelo teclado numérico primeiro - mesma tela ([TextInputBottomSheet])
+     * que o botão "ABC" de dentro do RemoteKeypadBottomSheet já abre, e o
+     * mesmo TvManager.sendText() usado pela entrada por voz. Não conhece
+     * nada de Samsung - só abre a UI genérica de texto.
+     */
+    private fun abc() {
+        triggerHapticFeedback(binding.btnAbc)
+        TextInputBottomSheet().show(supportFragmentManager, TextInputBottomSheet.TAG)
+    }
+
+    /**
+     * Não existe um comando Samsung confiável/documentado para abrir o
+     * Bixby via WebSocket de forma consistente entre modelos - por isso
+     * este botão foi reaproveitado para o reconhecimento de voz do
+     * próprio Android (ver [startVoiceRecognition]), que envia o texto
+     * reconhecido para a TV pelo mesmo mecanismo do teclado digitado.
      */
     private fun assistant() {
-        TvManager.sendRemoteKey(RemoteKey.ASSISTANT)
-        executeAction(binding.btnAssistant, toastText = "Assistente", logMessage = "Assistant button pressed")
+        triggerHapticFeedback(binding.btnAssistant)
+        startVoiceRecognition()
+    }
+
+    private fun startVoiceRecognition() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_prompt))
+        }
+        try {
+            voiceRecognitionLauncher.launch(intent)
+        } catch (e: Exception) {
+            // Nenhum app de reconhecimento de voz disponível no aparelho.
+            showToast(getString(R.string.voice_not_available))
+        }
     }
 
     // ===================== AÇÕES - D-PAD =====================
@@ -215,6 +274,12 @@ class MainActivity : AppCompatActivity() {
     private fun volumeDown() {
         TvManager.sendRemoteKey(RemoteKey.VOLUME_DOWN)
         executeAction(binding.btnVolumeDown, toastText = "Volume -", logMessage = "Volume Down button pressed")
+    }
+
+    /** Envia RemoteKey.MUTE para a TV, além do feedback local. */
+    private fun mute() {
+        TvManager.sendRemoteKey(RemoteKey.MUTE)
+        executeAction(binding.btnMute, toastText = "Mute", logMessage = "Mute button pressed")
     }
 
     /** Envia RemoteKey.CHANNEL_UP para a TV, além do feedback local. */

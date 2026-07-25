@@ -227,6 +227,12 @@ class SamsungTizenController(
             return
         }
 
+        val appId = APP_LAUNCH_MAP[key]
+        if (appId != null) {
+            sendAppLaunch(key, appId)
+            return
+        }
+
         val keyCode = KEY_CODE_MAP[key]
         if (keyCode == null) {
             DiagnosticManager.log("Comando ainda não suportado: $key", DiagnosticLogType.WARNING)
@@ -251,6 +257,51 @@ class SamsungTizenController(
         // de tratamento específico por comando aqui.
     }
 
+    private fun sendAppLaunch(key: RemoteKey, appId: String) {
+        DiagnosticManager.setLastCommand("Abrir app: ${key.name}")
+        val message = SamsungProtocol.buildAppLaunchCommand(appId)
+        val sent = socketClient.send(message)
+
+        if (!sent) {
+            DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+
+        DiagnosticManager.log("Aplicativo aberto: ${key.name}", DiagnosticLogType.NETWORK)
+    }
+
+    /**
+     * Envia um texto livre para a TV usando o mecanismo oficial
+     * SendInputString (não simula tecla por tecla). Usado tanto pelo
+     * teclado digitado quanto pela entrada por voz (ambos convergem aqui
+     * em MainActivity).
+     *
+     * Não é logado o texto em si (mesmo padrão de privacidade já usado
+     * para o token - ver DiagnosticManager.setToken), só o tamanho, para
+     * não deixar o conteúdo digitado/falado exposto no painel de
+     * diagnóstico.
+     */
+    override fun sendText(text: String) {
+        if (!connected) {
+            DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+        if (text.isBlank()) return
+
+        DiagnosticManager.setLastCommand("Texto (${text.length} caractere(s))")
+        val message = SamsungProtocol.buildSendTextCommand(text)
+        val sent = socketClient.send(message)
+
+        if (!sent) {
+            DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+
+        // Limitação conhecida do protocolo: não há confirmação de que
+        // havia um campo de texto focado na TV - só registramos o envio.
+        DiagnosticManager.log("Texto enviado (${text.length} caractere(s))", DiagnosticLogType.NETWORK)
+    }
+
     private companion object {
         const val CONTROLLER_NAME = "SamsungTizenController"
 
@@ -273,11 +324,48 @@ class SamsungTizenController(
             RemoteKey.BACK to "KEY_RETURN",
             RemoteKey.HOME to "KEY_HOME",
             RemoteKey.POWER to "KEY_POWER",
+            RemoteKey.MUTE to "KEY_MUTE",
             RemoteKey.VOLUME_UP to "KEY_VOLUP",
             RemoteKey.VOLUME_DOWN to "KEY_VOLDOWN",
             RemoteKey.CHANNEL_UP to "KEY_CHUP",
             RemoteKey.CHANNEL_DOWN to "KEY_CHDOWN",
-            RemoteKey.PLAY_PAUSE to "KEY_PAUSE"
+
+            // Toggle único do botão físico play/pause. Confiança moderada
+            // (não 100% confirmada em todos os modelos) - por isso PLAY,
+            // PAUSE e STOP continuam mapeados abaixo como fallback pronto,
+            // caso este código não funcione em algum aparelho específico.
+            RemoteKey.PLAY_PAUSE to "KEY_PLAY_PAUSE",
+            RemoteKey.PLAY to "KEY_PLAY",
+            RemoteKey.PAUSE to "KEY_PAUSE",
+            RemoteKey.STOP to "KEY_STOP",
+
+            // Teclado numérico
+            RemoteKey.NUM_0 to "KEY_0",
+            RemoteKey.NUM_1 to "KEY_1",
+            RemoteKey.NUM_2 to "KEY_2",
+            RemoteKey.NUM_3 to "KEY_3",
+            RemoteKey.NUM_4 to "KEY_4",
+            RemoteKey.NUM_5 to "KEY_5",
+            RemoteKey.NUM_6 to "KEY_6",
+            RemoteKey.NUM_7 to "KEY_7",
+            RemoteKey.NUM_8 to "KEY_8",
+            RemoteKey.NUM_9 to "KEY_9",
+
+            // Teclas coloridas
+            RemoteKey.RED to "KEY_RED",
+            RemoteKey.GREEN to "KEY_GREEN",
+            RemoteKey.YELLOW to "KEY_YELLOW",
+            RemoteKey.BLUE to "KEY_BLUE"
+        )
+
+        /**
+         * Lançamento de apps (mecanismo diferente de KEY_CODE_MAP - ver
+         * SamsungProtocol.buildAppLaunchCommand). GLOBOPLAY
+         * propositalmente ausente - sem App ID confiável documentado.
+         */
+        val APP_LAUNCH_MAP: Map<RemoteKey, String> = mapOf(
+            RemoteKey.NETFLIX to SamsungProtocol.NETFLIX_APP_ID,
+            RemoteKey.PRIME_VIDEO to SamsungProtocol.PRIME_VIDEO_APP_ID
         )
     }
 }

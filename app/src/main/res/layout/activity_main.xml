@@ -59,6 +59,11 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- ===================== TOPO: Power / 123 / Assistente ===================== -->
+
+    <!-- ===================== D-PAD ===================== -->
+
+    <!-- ===================== VOLTAR / HOME / PLAY-PAUSE ===================== -->
+
     <LinearLayout
         android:id="@+id/rowTop"
         android:layout_width="0dp"
@@ -66,6 +71,7 @@
         android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="spread">
@@ -86,8 +92,8 @@
 
         <TextView
             android:id="@+id/btnKeyboard"
-            android:layout_width="64dp"
-            android:layout_height="56dp"
+            android:layout_width="58dp"
+            android:layout_height="34dp"
             android:layout_marginStart="20dp"
             android:background="@drawable/ripple_rounded_rect"
             android:clickable="true"
@@ -95,6 +101,23 @@
             android:focusable="true"
             android:gravity="center"
             android:text="123"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Atalho direto para a digitação de texto (TextInputBottomSheet),
+             sem precisar passar pelo teclado numérico "123" primeiro. -->
+        <TextView
+            android:id="@+id/btnAbc"
+            android:layout_width="50dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/ripple_rounded_rect"
+            android:clickable="true"
+            android:contentDescription="@string/desc_abc"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="ABC"
             android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -115,10 +138,6 @@
             android:textStyle="bold" />
 
     </LinearLayout>
-
-    <!-- ===================== D-PAD ===================== -->
-
-    <!-- ===================== VOLTAR / HOME / PLAY-PAUSE ===================== -->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/dpadContainer"
@@ -324,6 +343,23 @@
                 android:textColor="@color/text_primary"
                 android:textSize="24sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btnMute"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/ripple_circle"
+                android:clickable="true"
+                android:contentDescription="@string/desc_mute"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="🔇"
+                android:textColor="@color/text_secondary"
+                android:textSize="18sp" />
+
+            <!-- Botão Mute: adicionado na Fase 3.2, mesma coluna de
+                 volume (posição de um controle físico real). -->
 
         </LinearLayout>
 

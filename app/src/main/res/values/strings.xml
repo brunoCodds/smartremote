@@ -4,6 +4,7 @@
 
     <string name="desc_power">Ligar/Desligar TV</string>
     <string name="desc_keyboard">Teclado numérico</string>
+    <string name="desc_abc">Teclado de texto</string>
     <string name="desc_assistant">Assistente de voz</string>
     <string name="desc_dpad_up">Navegar para cima</string>
     <string name="desc_dpad_down">Navegar para baixo</string>
@@ -20,4 +21,24 @@
     <string name="desc_netflix">Abrir Netflix</string>
     <string name="desc_prime">Abrir Prime Video</string>
     <string name="desc_globoplay">Abrir Globoplay</string>
+
+    <!-- ===== Fase 3.2 - Mute ===== -->
+    <string name="desc_mute">Mudo</string>
+
+    <!-- ===== Fase 3.2 - Teclado numérico / teclas coloridas (BottomSheet) ===== -->
+    <string name="desc_color_red">Vermelho</string>
+    <string name="desc_color_green">Verde</string>
+    <string name="desc_color_yellow">Amarelo</string>
+    <string name="desc_color_blue">Azul</string>
+    <string name="keypad_text_mode_button">ABC — digitar texto</string>
+
+    <!-- ===== Fase 3.2 - Campo de texto (SendInputString) ===== -->
+    <string name="text_input_hint_note">Funciona quando a TV tiver um campo de texto ativo (ex: busca de um app)</string>
+    <string name="text_input_send_button">Enviar</string>
+    <string name="text_input_sent_toast">Enviado</string>
+
+    <!-- ===== Fase 3.2 - Entrada por voz (SpeechRecognizer do Android) ===== -->
+    <string name="voice_prompt">Fale agora…</string>
+    <string name="voice_no_speech_recognized">Não entendi, tenta de novo</string>
+    <string name="voice_not_available">Reconhecimento de voz não disponível neste aparelho</string>
 </resources>
