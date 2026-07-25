@@ -17,10 +17,11 @@ import com.example.smartremote.model.TvDevice
  * Fluxo de pareamento: usuário toca em "Procurar TVs" -> DeviceScanner busca
  * na rede -> lista é exibida (com selo "Pareada" nas que já forem
  * conhecidas, mas SEM nunca esconder nenhuma) -> usuário seleciona uma TV
- * -> toca em "Conectar" -> o dispositivo é pareado via TvManager E o
- * pareamento/conexão é iniciado imediatamente (a TV pode mostrar o popup de
- * autorização) -> só quando a conexão é efetivamente estabelecida esta tela
- * fecha e volta para a MainActivity. Se der erro, a tela permanece aberta
+ * -> toca em "Conectar" -> o app tenta conectar imediatamente (a TV pode
+ * mostrar o popup de autorização) -> só quando a conexão é EFETIVAMENTE
+ * estabelecida (onConnected) é que o dispositivo é salvo como pareado, e
+ * esta tela fecha e volta para a MainActivity. Se o usuário negar o popup,
+ * der timeout ou qualquer erro, nada é salvo e a tela permanece aberta
  * para tentar de novo ou escolher outro dispositivo.
  *
  * Fluxo de TVs já pareadas: a seção "TVs pareadas" lista TODAS as TVs
@@ -107,12 +108,9 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
         binding.btnRefresh.isEnabled = !scanning
     }
 
-    /** Pareia a TV escolhida na descoberta e já inicia o pareamento/conexão em seguida. */
+    /** Tenta conectar/parear com a TV escolhida na descoberta. Só é salva como pareada se a conexão for confirmada (ver startConnection/onConnected). */
     private fun confirmSelection() {
         val device = selectedDevice ?: return
-        TvManager.pairDevice(applicationContext, device)
-        refreshPairedDevicesSection()
-        refreshPairedBadges()
         startConnection(device)
     }
 
@@ -125,12 +123,21 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
             override fun onConnected() {
                 connectionEstablished = true
                 setConnectingState(false)
+
+                // Só agora - com a conexão de fato confirmada pela TV - a
+                // TV é salva como pareada. Evita registrar uma TV "pareada"
+                // que na verdade teve a autorização negada ou deu timeout,
+                // o que deixaria uma entrada órfã (sem credencial válida)
+                // na lista de TVs pareadas.
+                TvManager.pairDevice(applicationContext, device)
+
                 Toast.makeText(
                     this@DeviceDiscoveryActivity,
                     getString(R.string.device_connected_format, device.name),
                     Toast.LENGTH_SHORT
                 ).show()
                 refreshPairedDevicesSection()
+                refreshPairedBadges()
                 finish()
             }
 
