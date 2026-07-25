@@ -7,6 +7,7 @@ import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.controller.TvController
 import com.example.smartremote.diagnostic.DiagnosticLogType
 import com.example.smartremote.diagnostic.DiagnosticManager
+import com.example.smartremote.model.RemoteKey
 import com.example.smartremote.model.TvDevice
 import com.example.smartremote.util.Constants
 import com.example.smartremote.util.CredentialStore
@@ -15,11 +16,9 @@ import com.example.smartremote.util.CredentialStore
  * Primeiro TvController real do app: conexão e pareamento com TVs Samsung
  * (Tizen), via WebSocket (porta 8002, protocolo "Samsung Remote Control").
  *
- * Nesta fase, apenas conectar/parear/reconectar estão implementados. Os
- * comandos do controle remoto (volume, canal, d-pad, apps de streaming)
- * ainda não existem - sendKey() e os demais métodos de comando ficam como
- * stub, prontos para a próxima fase, apenas registrando um aviso no
- * DiagnosticManager caso sejam chamados.
+ * Além de conectar/parear/reconectar, implementa [sendRemoteKey] para os
+ * comandos de navegação, energia, volume, canal e play/pause - ver
+ * [KEY_CODE_MAP] para a lista exata de teclas suportadas nesta fase.
  *
  * Fluxo:
  *  1. Se já existe token salvo (CredentialStore) -> conecta direto com ele.
@@ -53,6 +52,7 @@ class SamsungTizenController(
 
         val savedToken = CredentialStore.get(context, credentialDeviceId, Constants.SAMSUNG_CREDENTIAL_TYPE)
         if (savedToken != null) {
+            DiagnosticManager.setToken(savedToken)
             connectWithToken(savedToken)
         } else {
             startPairing()
@@ -136,6 +136,7 @@ class SamsungTizenController(
         }
 
         DiagnosticManager.log("Token recebido", DiagnosticLogType.INFO)
+        DiagnosticManager.setToken(newToken)
         CredentialStore.save(context, credentialDeviceId, Constants.SAMSUNG_CREDENTIAL_TYPE, newToken)
         DiagnosticManager.log("Token salvo", DiagnosticLogType.INFO)
 
@@ -151,6 +152,7 @@ class SamsungTizenController(
             // Token salvo não é mais válido (ex: TV resetada/desparelhada) - descarta e reinicia o pareamento.
             DiagnosticManager.log("Erro de autenticação", DiagnosticLogType.ERROR)
             DiagnosticManager.setLastError("Token inválido - iniciando novo pareamento")
+            DiagnosticManager.setToken(null)
             CredentialStore.clear(context, credentialDeviceId, Constants.SAMSUNG_CREDENTIAL_TYPE)
             startPairing()
         } else {
@@ -217,28 +219,65 @@ class SamsungTizenController(
     private fun notifyPairingRequired() = mainHandler.post { currentListener?.onPairingRequired() }
     private fun notifyError(message: String) = mainHandler.post { currentListener?.onError(message) }
 
-    // ===================== COMANDOS (implementados na próxima fase) =====================
+    // ===================== COMANDOS =====================
 
-    override fun powerToggle() = commandNotImplemented("powerToggle")
-    override fun volumeUp() = commandNotImplemented("volumeUp")
-    override fun volumeDown() = commandNotImplemented("volumeDown")
-    override fun channelUp() = commandNotImplemented("channelUp")
-    override fun channelDown() = commandNotImplemented("channelDown")
-    override fun dpadUp() = commandNotImplemented("dpadUp")
-    override fun dpadDown() = commandNotImplemented("dpadDown")
-    override fun dpadLeft() = commandNotImplemented("dpadLeft")
-    override fun dpadRight() = commandNotImplemented("dpadRight")
-    override fun dpadOk() = commandNotImplemented("dpadOk")
-    override fun back() = commandNotImplemented("back")
-    override fun home() = commandNotImplemented("home")
-    override fun playPause() = commandNotImplemented("playPause")
-    override fun sendKey(key: String) = commandNotImplemented("sendKey($key)")
+    override fun sendRemoteKey(key: RemoteKey) {
+        if (!connected) {
+            DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
 
-    private fun commandNotImplemented(name: String) {
-        DiagnosticManager.log("Comando ainda não implementado: $name", DiagnosticLogType.WARNING)
+        val keyCode = KEY_CODE_MAP[key]
+        if (keyCode == null) {
+            DiagnosticManager.log("Comando ainda não suportado: $key", DiagnosticLogType.WARNING)
+            return
+        }
+
+        DiagnosticManager.setLastCommand(key.name)
+        val message = SamsungProtocol.buildRemoteControlCommand(keyCode)
+        val sent = socketClient.send(message)
+
+        if (!sent) {
+            // O socket estava marcado como conectado, mas o envio falhou
+            // (ex: TV caiu no meio da leitura de estado) - mesma mensagem
+            // do caso "desconectado", sem lançar exceção.
+            DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+
+        DiagnosticManager.log("Comando enviado: ${key.name} ($keyCode)", DiagnosticLogType.NETWORK)
+        // A resposta (se a TV enviar alguma) chega em onSocketMessage() e já
+        // é refletida via DiagnosticManager.setLastResponse() - não precisa
+        // de tratamento específico por comando aqui.
     }
 
     private companion object {
         const val CONTROLLER_NAME = "SamsungTizenController"
+
+        /**
+         * Tradução RemoteKey -> código oficial do protocolo Samsung Remote
+         * Control. Só entram aqui as teclas já validadas nesta fase - as
+         * demais (KEYBOARD, ASSISTANT, NETFLIX, PRIME_VIDEO, GLOBOPLAY)
+         * usam mecanismos diferentes do protocolo (SendInputString,
+         * lançamento de app via ms.channel.emit com app ID específico) e
+         * ficam para uma fase futura dedicada a elas - até lá, sendRemoteKey
+         * simplesmente registra "não suportado" para essas teclas, sem
+         * quebrar nada.
+         */
+        val KEY_CODE_MAP: Map<RemoteKey, String> = mapOf(
+            RemoteKey.UP to "KEY_UP",
+            RemoteKey.DOWN to "KEY_DOWN",
+            RemoteKey.LEFT to "KEY_LEFT",
+            RemoteKey.RIGHT to "KEY_RIGHT",
+            RemoteKey.OK to "KEY_ENTER",
+            RemoteKey.BACK to "KEY_RETURN",
+            RemoteKey.HOME to "KEY_HOME",
+            RemoteKey.POWER to "KEY_POWER",
+            RemoteKey.VOLUME_UP to "KEY_VOLUP",
+            RemoteKey.VOLUME_DOWN to "KEY_VOLDOWN",
+            RemoteKey.CHANNEL_UP to "KEY_CHUP",
+            RemoteKey.CHANNEL_DOWN to "KEY_CHDOWN",
+            RemoteKey.PLAY_PAUSE to "KEY_PAUSE"
+        )
     }
 }

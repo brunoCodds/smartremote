@@ -17,6 +17,7 @@ import com.example.smartremote.diagnostic.DiagnosticManager
 import com.example.smartremote.diagnostic.DiagnosticState
 import com.example.smartremote.discovery.DeviceDiscoveryActivity
 import com.example.smartremote.manager.TvManager
+import com.example.smartremote.model.RemoteKey
 
 /**
  * Tela única do Smart Remote (v1).
@@ -124,101 +125,133 @@ class MainActivity : AppCompatActivity() {
 
     // ===================== AÇÕES - TOPO =====================
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.power() */
+    /** Envia RemoteKey.POWER para a TV, além do feedback local. */
     private fun power() {
+        TvManager.sendRemoteKey(RemoteKey.POWER)
         executeAction(binding.btnPower, toastText = "Power", logMessage = "Power button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.openKeyboard() */
+    /**
+     * Envia RemoteKey.KEYBOARD para a TV. Ainda não suportado por nenhum
+     * TvController nesta fase (usa um mecanismo diferente do protocolo -
+     * SendInputString, não SendRemoteKey) - o app não trava, só registra
+     * "não suportado" no diagnóstico até a fase dedicada a isso.
+     */
     private fun keyboard() {
+        TvManager.sendRemoteKey(RemoteKey.KEYBOARD)
         executeAction(binding.btnKeyboard, toastText = "123", logMessage = "Keyboard button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.openAssistant() */
+    /**
+     * Envia RemoteKey.ASSISTANT para a TV. Mesma observação de [keyboard] -
+     * ainda não suportado por nenhum TvController nesta fase.
+     */
     private fun assistant() {
+        TvManager.sendRemoteKey(RemoteKey.ASSISTANT)
         executeAction(binding.btnAssistant, toastText = "Assistente", logMessage = "Assistant button pressed")
     }
 
     // ===================== AÇÕES - D-PAD =====================
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.dpadUp() */
+    /** Envia RemoteKey.UP para a TV, além do feedback local. */
     private fun dpadUp() {
+        TvManager.sendRemoteKey(RemoteKey.UP)
         executeAction(binding.btnDpadUp, toastText = "Cima", logMessage = "D-pad Up button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.dpadDown() */
+    /** Envia RemoteKey.DOWN para a TV, além do feedback local. */
     private fun dpadDown() {
+        TvManager.sendRemoteKey(RemoteKey.DOWN)
         executeAction(binding.btnDpadDown, toastText = "Baixo", logMessage = "D-pad Down button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.dpadLeft() */
+    /** Envia RemoteKey.LEFT para a TV, além do feedback local. */
     private fun dpadLeft() {
+        TvManager.sendRemoteKey(RemoteKey.LEFT)
         executeAction(binding.btnDpadLeft, toastText = "Esquerda", logMessage = "D-pad Left button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.dpadRight() */
+    /** Envia RemoteKey.RIGHT para a TV, além do feedback local. */
     private fun dpadRight() {
+        TvManager.sendRemoteKey(RemoteKey.RIGHT)
         executeAction(binding.btnDpadRight, toastText = "Direita", logMessage = "D-pad Right button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.dpadOk() */
+    /** Envia RemoteKey.OK para a TV, além do feedback local. */
     private fun dpadOk() {
+        TvManager.sendRemoteKey(RemoteKey.OK)
         executeAction(binding.btnDpadOk, toastText = "OK", logMessage = "D-pad OK button pressed")
     }
 
     // ===================== AÇÕES - CONTROLES DO MEIO =====================
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.back() */
+    /** Envia RemoteKey.BACK para a TV, além do feedback local. */
     private fun back() {
+        TvManager.sendRemoteKey(RemoteKey.BACK)
         executeAction(binding.btnBack, toastText = "Voltar", logMessage = "Back button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.home() */
+    /** Envia RemoteKey.HOME para a TV, além do feedback local. */
     private fun home() {
+        TvManager.sendRemoteKey(RemoteKey.HOME)
         executeAction(binding.btnHome, toastText = "Home", logMessage = "Home button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.playPause() */
+    /** Envia RemoteKey.PLAY_PAUSE para a TV, além do feedback local. */
     private fun playPause() {
+        TvManager.sendRemoteKey(RemoteKey.PLAY_PAUSE)
         executeAction(binding.btnPlayPause, toastText = "Play/Pause", logMessage = "Play/Pause button pressed")
     }
 
     // ===================== AÇÕES - VOLUME E CANAL =====================
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.volumeUp() */
+    /** Envia RemoteKey.VOLUME_UP para a TV, além do feedback local. */
     private fun volumeUp() {
+        TvManager.sendRemoteKey(RemoteKey.VOLUME_UP)
         executeAction(binding.btnVolumeUp, toastText = "Volume +", logMessage = "Volume Up button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.volumeDown() */
+    /** Envia RemoteKey.VOLUME_DOWN para a TV, além do feedback local. */
     private fun volumeDown() {
+        TvManager.sendRemoteKey(RemoteKey.VOLUME_DOWN)
         executeAction(binding.btnVolumeDown, toastText = "Volume -", logMessage = "Volume Down button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.channelUp() */
+    /** Envia RemoteKey.CHANNEL_UP para a TV, além do feedback local. */
     private fun channelUp() {
+        TvManager.sendRemoteKey(RemoteKey.CHANNEL_UP)
         executeAction(binding.btnChannelUp, toastText = "Canal +", logMessage = "Channel Up button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.channelDown() */
+    /** Envia RemoteKey.CHANNEL_DOWN para a TV, além do feedback local. */
     private fun channelDown() {
+        TvManager.sendRemoteKey(RemoteKey.CHANNEL_DOWN)
         executeAction(binding.btnChannelDown, toastText = "Canal -", logMessage = "Channel Down button pressed")
     }
 
     // ===================== AÇÕES - STREAMING =====================
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.openNetflix() */
+    /**
+     * Envia RemoteKey.NETFLIX para a TV. Ainda não suportado por nenhum
+     * TvController nesta fase (lançamento de app usa um mecanismo
+     * diferente do protocolo - ms.channel.emit + app ID - fica para uma
+     * fase futura dedicada a apps). Não trava o app, só registra "não
+     * suportado" no diagnóstico.
+     */
     private fun netflix() {
+        TvManager.sendRemoteKey(RemoteKey.NETFLIX)
         executeAction(binding.btnNetflix, toastText = "Netflix", logMessage = "Netflix button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.openPrimeVideo() */
+    /** Envia RemoteKey.PRIME_VIDEO para a TV. Mesma observação de [netflix]. */
     private fun primeVideo() {
+        TvManager.sendRemoteKey(RemoteKey.PRIME_VIDEO)
         executeAction(binding.btnPrimeVideo, toastText = "Prime Video", logMessage = "Prime Video button pressed")
     }
 
-    /** Hoje: apenas feedback local. Futuramente: tvController.openGloboplay() */
+    /** Envia RemoteKey.GLOBOPLAY para a TV. Mesma observação de [netflix]. */
     private fun globoplay() {
+        TvManager.sendRemoteKey(RemoteKey.GLOBOPLAY)
         executeAction(binding.btnGloboplay, toastText = "Globoplay", logMessage = "Globoplay button pressed")
     }
 

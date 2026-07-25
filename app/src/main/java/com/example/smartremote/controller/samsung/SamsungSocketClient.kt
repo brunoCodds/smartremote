@@ -62,6 +62,18 @@ class SamsungSocketClient {
         })
     }
 
+    /**
+     * Envia [text] pelo socket já aberto. Retorna `false` (sem lançar
+     * exceção) se não houver socket aberto no momento (nunca conectado, já
+     * desconectado, ou o buffer de envio do OkHttp estiver cheio) - quem
+     * chama deve tratar esse retorno como "não foi possível enviar agora",
+     * nunca como um erro fatal.
+     */
+    fun send(text: String): Boolean {
+        val socket = webSocket ?: return false
+        return socket.send(text)
+    }
+
     /** Fecha a conexão atual, se existir. Seguro chamar mesmo sem conexão aberta. */
     fun close() {
         webSocket?.close(NORMAL_CLOSURE_CODE, null)

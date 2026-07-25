@@ -5,7 +5,9 @@ import android.util.Log
 import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.controller.TvController
 import com.example.smartremote.controller.samsung.SamsungTizenController
+import com.example.smartremote.diagnostic.DiagnosticLogType
 import com.example.smartremote.diagnostic.DiagnosticManager
+import com.example.smartremote.model.RemoteKey
 import com.example.smartremote.model.TvDevice
 import com.example.smartremote.model.TvOperatingSystem
 import com.example.smartremote.util.Constants
@@ -153,6 +155,23 @@ object TvManager {
     }
 
     fun isConnected(): Boolean = connectionManager.isConnected()
+
+    /**
+     * Envia um comando genérico (ver [RemoteKey]) para a TV atualmente
+     * conectada. Não sabe nada sobre o protocolo do fabricante - só
+     * delega ao [TvController] ativo, que decide como (ou se) traduz essa
+     * tecla. Se não houver nenhuma TV conectada no momento, registra o
+     * mesmo aviso genérico que o controller usaria para o caso de
+     * desconexão - aqui de forma independente de fabricante.
+     */
+    fun sendRemoteKey(key: RemoteKey) {
+        val controller = currentController
+        if (controller == null) {
+            DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+        controller.sendRemoteKey(key)
+    }
 
     /** Se a TV de chave [key] é a que está conectada (ou conectando) no momento. */
     fun isConnectedTo(key: String): Boolean = connectionManager.isConnectedTo(key)

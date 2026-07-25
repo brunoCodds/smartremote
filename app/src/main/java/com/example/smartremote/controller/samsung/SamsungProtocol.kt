@@ -6,9 +6,17 @@ import org.json.JSONObject
 
 /**
  * Lógica pura do protocolo Samsung Remote Control (Tizen): monta as URLs de
- * conexão e interpreta as mensagens JSON recebidas da TV. Não abre nenhuma
- * conexão - quem fala com a rede é o [SamsungSocketClient]. Mantida
- * separada para poder ser testada/entendida isoladamente do WebSocket.
+ * conexão, interpreta as mensagens JSON recebidas da TV, e monta as
+ * mensagens de comando enviadas a ela. Não abre nenhuma conexão - quem fala
+ * com a rede é o [SamsungSocketClient]. Mantida separada para poder ser
+ * testada/entendida isoladamente do WebSocket.
+ *
+ * Importante: esta classe só lida com códigos de tecla já traduzidos (ex:
+ * "KEY_HOME") - ela não conhece o enum [com.example.smartremote.model.RemoteKey].
+ * A tradução de RemoteKey -> código Samsung é responsabilidade do
+ * SamsungTizenController (ver seu KEY_CODE_MAP), mantendo esta classe
+ * focada só em "como o protocolo Samsung se parece", sem depender de um
+ * conceito genérico do app.
  */
 object SamsungProtocol {
 
@@ -64,5 +72,33 @@ object SamsungProtocol {
         } catch (e: Exception) {
             SamsungEvent.Unknown(null)
         }
+    }
+
+    /**
+     * Monta a mensagem oficial do protocolo Samsung Remote Control para
+     * simular o clique de uma tecla física, dado o [keyCode] já traduzido
+     * (ex: "KEY_UP", "KEY_HOME", "KEY_ENTER"). Formato oficial:
+     *
+     * {
+     *   "method": "ms.remote.control",
+     *   "params": {
+     *     "Cmd": "Click",
+     *     "DataOfCmd": "<keyCode>",
+     *     "Option": "false",
+     *     "TypeOfRemote": "SendRemoteKey"
+     *   }
+     * }
+     */
+    fun buildRemoteControlCommand(keyCode: String): String {
+        val params = JSONObject().apply {
+            put("Cmd", "Click")
+            put("DataOfCmd", keyCode)
+            put("Option", "false")
+            put("TypeOfRemote", "SendRemoteKey")
+        }
+        return JSONObject().apply {
+            put("method", "ms.remote.control")
+            put("params", params)
+        }.toString()
     }
 }
