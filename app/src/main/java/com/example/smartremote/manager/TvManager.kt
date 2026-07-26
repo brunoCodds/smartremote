@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.controller.TvController
+import com.example.smartremote.controller.lg.LgWebOsController
 import com.example.smartremote.controller.samsung.SamsungTizenController
 import com.example.smartremote.diagnostic.DiagnosticLogType
 import com.example.smartremote.diagnostic.DiagnosticManager
@@ -32,10 +33,18 @@ import com.example.smartremote.util.DeviceStorage
  * Isso permite que uma TV pareada mude de IP (renovação de DHCP) sem que o
  * app a trate como um dispositivo novo ou perca o token salvo.
  *
- * Decide qual TvController usar com base em `device.os` (hoje só Tizen -
- * Samsung; os demais fabricantes entram aqui conforme forem
+ * Decide qual TvController usar com base em `device.os` (Tizen -> Samsung,
+ * WEBOS -> LG; os demais fabricantes entram aqui conforme forem
  * implementados) e delega a ele a conexão de fato, mantendo o
  * ConnectionManager como registro simples de estado.
+ *
+ * *** ETAPA 1 (continuação) - checkpoint 6/6 do rastreamento de
+ * pareamento LG ***: o wrapper de [TvConnectionListener] passado a
+ * [TvController.connect] agora loga explicitamente quando CADA callback
+ * (onConnected/onPairingRequired/onError) chega até aqui vindo do
+ * controller, e quando ele é repassado pro listener da UI - para
+ * confirmar que a ponte controller -> TvManager -> UI não é o elo que
+ * está quebrando o fluxo de pareamento LG.
  */
 object TvManager {
 
@@ -132,15 +141,28 @@ object TvManager {
 
         controller.connect(object : TvConnectionListener {
             override fun onConnected() {
+                DiagnosticManager.log(
+                    "[LG-PAIRING] 6/6 - TvManager.onConnected() recebido do controller (${controller::class.simpleName}); marcando ConnectionManager e repassando para o listener da UI",
+                    DiagnosticLogType.INFO
+                )
                 connectionManager.markConnected()
                 listener.onConnected()
+                DiagnosticManager.log("[LG-PAIRING] 6/6 - listener.onConnected() da UI retornou (repasse concluído)", DiagnosticLogType.INFO)
             }
 
             override fun onPairingRequired() {
+                DiagnosticManager.log(
+                    "[LG-PAIRING] TvManager.onPairingRequired() recebido do controller (${controller::class.simpleName}); repassando para o listener da UI",
+                    DiagnosticLogType.INFO
+                )
                 listener.onPairingRequired()
             }
 
             override fun onError(message: String) {
+                DiagnosticManager.log(
+                    "[LG-PAIRING] TvManager.onError() recebido do controller (${controller::class.simpleName}): $message",
+                    DiagnosticLogType.ERROR
+                )
                 connectionManager.disconnect()
                 listener.onError(message)
             }
@@ -207,6 +229,7 @@ object TvManager {
     private fun createControllerFor(context: Context, device: TvDevice): TvController? {
         val controller = when (device.os) {
             TvOperatingSystem.TIZEN -> SamsungTizenController(context.applicationContext, device)
+            TvOperatingSystem.WEBOS -> LgWebOsController(context.applicationContext, device)
             else -> null
         }
         Log.d(
@@ -220,11 +243,12 @@ object TvManager {
      * Tipo de credencial ([CredentialStore]) usado por cada fabricante,
      * para saber o que limpar em [forgetDevice]. Único lugar que precisa
      * ganhar uma linha nova quando um fabricante novo passar a salvar
-     * credencial (LG client-key, certificado Android TV, etc.) - o
-     * CredentialStore em si não precisa mudar.
+     * credencial (certificado Android TV, etc.) - o CredentialStore em si
+     * não precisa mudar.
      */
     private fun credentialTypeFor(os: TvOperatingSystem): String? = when (os) {
         TvOperatingSystem.TIZEN -> Constants.SAMSUNG_CREDENTIAL_TYPE
+        TvOperatingSystem.WEBOS -> Constants.LG_CREDENTIAL_TYPE
         else -> null
     }
 }

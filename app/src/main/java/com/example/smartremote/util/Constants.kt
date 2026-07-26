@@ -42,4 +42,14 @@ object Constants {
     const val SAMSUNG_WS_PATH = "/api/v2/channels/samsung.remote.control"
     const val SAMSUNG_CREDENTIAL_TYPE = "samsung_token"
     const val SAMSUNG_PAIRING_TIMEOUT_MS = 60_000L
+
+    // ===== LG webOS (WebSocket "SSAP") =====
+    // Nome exibido para o usuário no popup de autorização da TV.
+    const val LG_APP_NAME = "SmartRemote"
+    // Porta segura (wss://), recomendada para webOS 4.x em diante. TVs
+    // muito antigas (2014-2017, webOS < 4) usariam ws://3000 sem TLS, mas
+    // esse fallback fica fora de escopo nesta fase - ver análise técnica.
+    const val LG_WS_PORT = 3001
+    const val LG_CREDENTIAL_TYPE = "lg_client_key"
+    const val LG_PAIRING_TIMEOUT_MS = 60_000L
 }
