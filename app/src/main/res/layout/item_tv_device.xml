@@ -4,17 +4,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cardDevice"
+    style="@style/Widget.Fluent.Card.Glass"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
     android:checkable="true"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="@color/button_dark"
-    app:strokeColor="@color/text_primary"
-    app:checkedIconTint="@color/text_primary"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="0dp">
+    app:checkedIconTint="?attr/colorAccent">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,24 +30,26 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:textAppearance="@style/TextAppearance.Fluent.Body"
                 android:textStyle="bold"
                 tools:text="Samsung TV Living Room" />
 
             <!--
-              Selo exibido quando esta TV encontrada já está pareada
-              (ver DeviceListAdapter.updatePairedKeys). A TV nunca é
-              removida da lista de descoberta por já estar pareada -
-              isto é apenas um indicador visual.
+              Selo exibido quando esta TV encontrada já está pareada.
+              A TV nunca é removida da lista de descoberta por já estar
+              pareada — isto é apenas um indicador visual.
             -->
             <TextView
                 android:id="@+id/tvPairedBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:drawableStart="@drawable/ic_check"
+                android:drawableTint="?attr/colorAccent"
+                android:drawablePadding="4dp"
+                android:gravity="center_vertical"
                 android:text="@string/device_paired_badge"
-                android:textColor="?attr/colorPrimary"
+                android:textColor="?attr/colorAccent"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:visibility="gone"
@@ -63,8 +62,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.Fluent.Caption"
             tools:text="Samsung • 192.168.0.10 • SSDP" />
 
     </LinearLayout>

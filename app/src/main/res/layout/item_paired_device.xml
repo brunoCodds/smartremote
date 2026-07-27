@@ -1,25 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Item da lista de "TVs pareadas". Mesmo estilo visual do card único que
-  existia antes (cardSavedDevice em activity_device_discovery.xml) - só
-  virou um item de RecyclerView para suportar múltiplas TVs. Tocar no
-  cabeçalho do card revela/oculta as ações (Esquecer / Conectar-Desconectar),
-  exatamente como o card único já fazia.
+  Item da lista de "TVs pareadas". Tocar no cabeçalho do card
+  revela/oculta as ações (Esquecer / Conectar-Desconectar) — controlado
+  em DeviceDiscoveryActivity.kt / PairedDeviceListAdapter, sem lógica
+  nova de layout aqui.
 -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cardPairedDevice"
+    style="@style/Widget.Fluent.Card.Glass"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
     android:clickable="true"
-    android:focusable="true"
-    app:cardBackgroundColor="@color/button_dark"
-    app:strokeColor="@color/text_primary"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="0dp">
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,19 +34,21 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:textAppearance="@style/TextAppearance.Fluent.Body"
                 android:textStyle="bold"
                 tools:text="[TV] Samsung 5 Series (43)" />
 
-            <!-- Indica a TV controlada agora - não é o mesmo que "pareada". -->
+            <!-- Indica a TV controlada agora — não é o mesmo que "pareada". -->
             <TextView
                 android:id="@+id/tvPairedConnectedBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
+                android:drawableStart="@drawable/bg_status_dot_connected"
+                android:drawablePadding="6dp"
+                android:gravity="center_vertical"
                 android:text="@string/device_connected_badge"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/colorSuccess"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:visibility="gone"
@@ -63,8 +61,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp"
+            android:textAppearance="@style/TextAppearance.Fluent.Caption"
             tools:text="Samsung Electronics • 192.168.3.60 • SSDP" />
 
         <LinearLayout
@@ -78,21 +75,21 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnForgetPairedDevice"
+                style="@style/Widget.Fluent.Button.Pill.Outline"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="@string/discovery_forget_button"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
+                android:text="@string/discovery_forget_button" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnConnectOrDisconnectPairedDevice"
+                style="@style/Widget.Fluent.Button.Pill.Accent"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="@string/discovery_connect_button"
-                style="@style/Widget.Material3.Button" />
+                android:text="@string/discovery_connect_button" />
 
         </LinearLayout>
 

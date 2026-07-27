@@ -6,64 +6,47 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
+    android:background="?attr/colorSurfaceDeep"
     android:fitsSystemWindows="true"
     android:paddingHorizontal="24dp"
     android:paddingVertical="16dp"
     tools:context=".MainActivity">
 
+    <!-- ===================== GLOW por trás do D-pad (puramente decorativo, sem id) ===================== -->
+    <View
+        android:layout_width="320dp"
+        android:layout_height="320dp"
+        android:background="@drawable/bg_accent_glow"
+        app:layout_constraintBottom_toBottomOf="@id/dpadContainer"
+        app:layout_constraintEnd_toEndOf="@id/dpadContainer"
+        app:layout_constraintStart_toStartOf="@id/dpadContainer"
+        app:layout_constraintTop_toTopOf="@id/dpadContainer" />
+
     <!-- ===================== DIAGNÓSTICO (painel de debug, apenas dev) ===================== -->
-    <com.google.android.material.button.MaterialButton
+    <ImageView
         android:id="@+id/btnInfo"
+        style="@style/Widget.Fluent.IconCircle.Secondary"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:insetLeft="0dp"
-        android:insetTop="0dp"
-        android:insetRight="0dp"
-        android:insetBottom="0dp"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        android:paddingStart="0dp"
-        android:paddingEnd="0dp"
-        android:paddingTop="0dp"
-        android:paddingBottom="0dp"
-        android:background="@drawable/ripple_circle"
-        app:backgroundTint="@android:color/transparent"
-        app:cornerRadius="24dp"
-        app:elevation="0dp"
-        android:stateListAnimator="@null"
-        android:gravity="center"
-        android:includeFontPadding="false"
-        android:text="ⓘ"
-        android:textAllCaps="false"
-        android:textColor="@color/text_secondary"
-        android:textSize="18sp"
+        android:padding="12dp"
+        android:src="@drawable/ic_info"
         android:contentDescription="@string/desc_diagnostic"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- ===================== CONFIGURAÇÕES (descoberta/pareamento de TV) ===================== -->
-    <TextView
+    <ImageView
         android:id="@+id/btnSettings"
+        style="@style/Widget.Fluent.IconCircle.Secondary"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:background="@drawable/ripple_circle"
-        android:clickable="true"
+        android:padding="12dp"
+        android:src="@drawable/ic_settings"
         android:contentDescription="@string/desc_settings"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="⚙"
-        android:textColor="@color/text_secondary"
-        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ===================== TOPO: Power / 123 / Assistente ===================== -->
-
-    <!-- ===================== D-PAD ===================== -->
-
-    <!-- ===================== VOLTAR / HOME / PLAY-PAUSE ===================== -->
-
+    <!-- ===================== TOPO: Power / 123 / ABC / Assistente ===================== -->
     <LinearLayout
         android:id="@+id/rowTop"
         android:layout_width="0dp"
@@ -76,69 +59,64 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="spread">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnPower"
+            style="@style/Widget.Fluent.IconCircle.Danger"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/ripple_circle_power"
-            android:clickable="true"
-            android:contentDescription="@string/desc_power"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="⏻"
-            android:textColor="@color/text_primary"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:padding="15dp"
+            android:src="@drawable/ic_power"
+            android:contentDescription="@string/desc_power" />
 
-        <TextView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnKeyboard"
+            style="@style/Widget.Fluent.Button.Pill"
             android:layout_width="58dp"
             android:layout_height="34dp"
             android:layout_marginStart="20dp"
-            android:background="@drawable/ripple_rounded_rect"
-            android:clickable="true"
-            android:contentDescription="@string/desc_keyboard"
-            android:focusable="true"
-            android:gravity="center"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingHorizontal="0dp"
+            android:paddingVertical="0dp"
             android:text="123"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:contentDescription="@string/desc_keyboard" />
 
         <!-- Atalho direto para a digitação de texto (TextInputBottomSheet),
              sem precisar passar pelo teclado numérico "123" primeiro. -->
-        <TextView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAbc"
+            style="@style/Widget.Fluent.Button.Pill"
             android:layout_width="50dp"
             android:layout_height="34dp"
             android:layout_marginStart="20dp"
-            android:background="@drawable/ripple_rounded_rect"
-            android:clickable="true"
-            android:contentDescription="@string/desc_abc"
-            android:focusable="true"
-            android:gravity="center"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingHorizontal="0dp"
+            android:paddingVertical="0dp"
             android:text="ABC"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:contentDescription="@string/desc_abc" />
 
-        <TextView
+        <ImageView
             android:id="@+id/btnAssistant"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="20dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
-            android:contentDescription="@string/desc_assistant"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="G"
-            android:textColor="@color/text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:padding="15dp"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="@string/desc_assistant" />
 
     </LinearLayout>
 
+    <!-- ===================== D-PAD ===================== -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/dpadContainer"
         android:layout_width="260dp"
@@ -150,66 +128,50 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rowTop">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnDpadUp"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
+            android:padding="20dp"
+            android:src="@drawable/ic_chevron_up"
             android:contentDescription="@string/desc_dpad_up"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="▲"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
+        <ImageView
             android:id="@+id/btnDpadDown"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
+            android:padding="20dp"
+            android:src="@drawable/ic_chevron_down"
             android:contentDescription="@string/desc_dpad_down"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="▼"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
+        <ImageView
             android:id="@+id/btnDpadLeft"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
+            android:padding="20dp"
+            android:src="@drawable/ic_chevron_left"
             android:contentDescription="@string/desc_dpad_left"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="◀"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
+        <ImageView
             android:id="@+id/btnDpadRight"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
+            android:padding="20dp"
+            android:src="@drawable/ic_chevron_right"
             android:contentDescription="@string/desc_dpad_right"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="▶"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -218,13 +180,14 @@
             android:id="@+id/btnDpadOk"
             android:layout_width="96dp"
             android:layout_height="96dp"
-            android:background="@drawable/ripple_circle_dpad_center"
+            android:background="@drawable/bg_button_glass_circle_selected"
             android:clickable="true"
             android:contentDescription="@string/desc_dpad_ok"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="OK"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorAccent"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -234,6 +197,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- ===================== VOLTAR / HOME / PLAY-PAUSE ===================== -->
     <LinearLayout
         android:id="@+id/rowMiddleControls"
         android:layout_width="0dp"
@@ -245,58 +209,50 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/dpadContainer">
 
-        <TextView
+        <ImageView
             android:id="@+id/btnBack"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
             android:contentDescription="@string/desc_back"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="↩"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp" />
+            android:padding="15dp"
+            android:src="@drawable/ic_back" />
 
-        <TextView
+        <ImageView
             android:id="@+id/btnHome"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="28dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
-            android:contentDescription="@string/desc_home"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="⌂"
-            android:textColor="@color/text_primary"
-            android:textSize="22sp" />
+            android:padding="14dp"
+            android:src="@drawable/ic_home"
+            android:contentDescription="@string/desc_home" />
 
-        <TextView
+        <ImageView
             android:id="@+id/btnPlayPause"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="28dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
-            android:contentDescription="@string/desc_play_pause"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="⏯"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp" />
+            android:padding="15dp"
+            android:src="@drawable/ic_play_pause"
+            android:contentDescription="@string/desc_play_pause" />
 
     </LinearLayout>
 
     <!-- ===================== VOLUME / CANAL ===================== -->
+
+    <!-- ===================== NETFLIX / PRIME / GLOBOPLAY / APPS ===================== -->
+
     <LinearLayout
         android:id="@+id/rowVolumeChannel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
+        android:layout_width="202dp"
+        android:layout_height="151dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layout_constraintBottom_toTopOf="@id/rowStreaming"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rowMiddleControls">
 
@@ -307,19 +263,14 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <TextView
+            <ImageView
                 android:id="@+id/btnVolumeUp"
+                style="@style/Widget.Fluent.IconCircle"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:background="@drawable/ripple_circle"
-                android:clickable="true"
                 android:contentDescription="@string/desc_volume_up"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="+"
-                android:textColor="@color/text_primary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:padding="15dp"
+                android:src="@drawable/ic_add" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -327,63 +278,48 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="6dp"
                 android:text="VOL"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textAppearance="@style/TextAppearance.Fluent.Caption" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/btnVolumeDown"
+                style="@style/Widget.Fluent.IconCircle"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:background="@drawable/ripple_circle"
-                android:clickable="true"
                 android:contentDescription="@string/desc_volume_down"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="−"
-                android:textColor="@color/text_primary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/btnMute"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/ripple_circle"
-                android:clickable="true"
-                android:contentDescription="@string/desc_mute"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="🔇"
-                android:textColor="@color/text_secondary"
-                android:textSize="18sp" />
-
-            <!-- Botão Mute: adicionado na Fase 3.2, mesma coluna de
-                 volume (posição de um controle físico real). -->
+                android:padding="15dp"
+                android:src="@drawable/ic_remove" />
 
         </LinearLayout>
+
+        <!-- Botão Mute: fica no meio, entre as duas colunas — não pertence
+             nem a Volume nem a Canal, então ganha uma posição neutra,
+             centralizada verticalmente em relação às duas colunas, em vez
+             de disputar espaço dentro de uma delas. -->
+        <ImageView
+            android:id="@+id/btnMute"
+            style="@style/Widget.Fluent.IconCircle.Secondary"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginHorizontal="20dp"
+            android:contentDescription="@string/desc_mute"
+            android:padding="13dp"
+            android:src="@drawable/ic_volume_off" />
 
         <!-- Coluna Canal -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="64dp"
             android:gravity="center"
             android:orientation="vertical">
 
-            <TextView
+            <ImageView
                 android:id="@+id/btnChannelUp"
+                style="@style/Widget.Fluent.IconCircle"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:background="@drawable/ripple_circle"
-                android:clickable="true"
                 android:contentDescription="@string/desc_channel_up"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="⌃"
-                android:textColor="@color/text_primary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:padding="15dp"
+                android:src="@drawable/ic_chevron_up" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -391,28 +327,21 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="6dp"
                 android:text="CH"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:textAppearance="@style/TextAppearance.Fluent.Caption" />
 
-            <TextView
+            <ImageView
                 android:id="@+id/btnChannelDown"
+                style="@style/Widget.Fluent.IconCircle"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:background="@drawable/ripple_circle"
-                android:clickable="true"
                 android:contentDescription="@string/desc_channel_down"
-                android:focusable="true"
-                android:gravity="center"
-                android:text="⌄"
-                android:textColor="@color/text_primary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:padding="15dp"
+                android:src="@drawable/ic_chevron_down" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- ===================== NETFLIX / PRIME / GLOBOPLAY ===================== -->
     <LinearLayout
         android:id="@+id/rowStreaming"
         android:layout_width="0dp"
@@ -433,9 +362,10 @@
             android:clickable="true"
             android:contentDescription="@string/desc_netflix"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="N"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -448,9 +378,10 @@
             android:clickable="true"
             android:contentDescription="@string/desc_prime"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="P"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -463,33 +394,27 @@
             android:clickable="true"
             android:contentDescription="@string/desc_globoplay"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="G"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <!-- Abre o AppsBottomSheet com a grade de apps disponíveis, em vez
-             de listar cada app direto nesta linha - permite adicionar mais
-             apps no futuro sem lotar a tela principal. -->
-        <TextView
+        <!-- Abre o AppsBottomSheet com a grade de apps disponíveis. -->
+        <ImageView
             android:id="@+id/btnApps"
+            style="@style/Widget.Fluent.IconCircle"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="24dp"
-            android:background="@drawable/ripple_circle"
-            android:clickable="true"
-            android:contentDescription="@string/desc_apps"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="⚏"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:padding="15dp"
+            android:src="@drawable/ic_apps"
+            android:contentDescription="@string/desc_apps" />
 
     </LinearLayout>
 
-    <!-- ===================== PAINEL DE DIAGNÓSTICO (overlay, apenas dev) ===================== -->
+    <!-- ===================== PAINEL DE DIAGNÓSTICO (overlay, apenas dev — visual "console") ===================== -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/panelDiagnostic"
         android:layout_width="0dp"
@@ -513,7 +438,7 @@
             android:fontFamily="monospace"
             android:includeFontPadding="false"
             android:lineSpacingExtra="4dp"
-            android:textColor="@android:color/white"
+            android:textColor="?attr/colorAccent"
             android:textIsSelectable="false"
             android:textSize="12sp"
             app:layout_constraintStart_toStartOf="parent"
@@ -543,7 +468,7 @@
                 android:fontFamily="monospace"
                 android:includeFontPadding="false"
                 android:lineSpacingExtra="2dp"
-                android:textColor="@android:color/white"
+                android:textColor="?attr/colorTextPrimary"
                 android:textIsSelectable="false"
                 android:textSize="11sp"
                 tools:text="[10:20:31] Conectado\n[10:20:34] KEY_HOME" />

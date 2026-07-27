@@ -18,8 +18,8 @@
     <string name="device_subtitle_format">%1$s • %2$s • %3$s</string>
     <string name="device_saved_format">TV salva: %1$s</string>
     <string name="device_connected_format">TV conectada: %1$s</string>
-    <string name="device_paired_badge">✔ Pareada</string>
-    <string name="device_connected_badge">● Conectada</string>
+    <string name="device_paired_badge">Pareada</string>
+    <string name="device_connected_badge">Conectada</string>
     <string name="connection_status_connecting">Conectando…</string>
     <string name="connection_status_pairing">Confirme a conexão na TV</string>
     <string name="desc_open_discovery">Configurar TV (pressione e segure)</string>

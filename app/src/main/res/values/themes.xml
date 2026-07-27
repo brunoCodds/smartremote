@@ -1,13 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- ============================================================
+         SMART REMOTE FLUENT — Tema
+         ============================================================
+         Único tema ativo nesta fase: Cyan (padrão). A arquitetura já
+         suporta múltiplos temas — um tema novo no futuro (marketplace,
+         Premium) é só:
+
+             <style name="Theme.SmartRemote.Violet" parent="Theme.SmartRemote">
+                 <item name="colorAccent">@color/violet_500</item>
+                 <item name="colorAccentPressed">@color/violet_600</item>
+                 ... (sobrescreve só os attrs de cor abaixo)
+             </style>
+
+         Nenhum Widget.Fluent.* ou drawable precisa mudar quando isso
+         acontecer — todos já resolvem cor via ?attr/, nunca @color/
+         direto.
+    -->
     <style name="Theme.SmartRemote" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">@color/text_primary</item>
-        <item name="colorOnPrimary">@color/background_dark</item>
-        <item name="android:windowBackground">@color/background_dark</item>
-        <item name="android:statusBarColor">@color/background_dark</item>
-        <item name="android:navigationBarColor">@color/background_dark</item>
+
+        <!-- •••• Mapeamento Accent (tema Cyan) •••• -->
+        <item name="colorAccent">@color/cyan_500</item>
+        <item name="colorAccentPressed">@color/cyan_600</item>
+        <item name="colorAccentDim">@color/cyan_700</item>
+        <item name="colorAccentContainer">@color/cyan_container_16</item>
+        <item name="colorAccentGlow">@color/cyan_glow_20</item>
+        <item name="colorOnAccent">@color/on_cyan</item>
+
+        <!-- •••• Superfícies •••• -->
+        <item name="colorSurfaceDeep">@color/neutral_0</item>
+        <item name="colorSurfaceElevated">@color/neutral_50</item>
+
+        <!-- •••• Vidro fosco •••• -->
+        <item name="colorGlassFill">@color/neutral_glass_white_08</item>
+        <item name="colorGlassStroke">@color/neutral_stroke_white_15</item>
+        <item name="colorGlassStrokeStrong">@color/neutral_stroke_white_25</item>
+
+        <!-- •••• Texto •••• -->
+        <item name="colorTextPrimary">@color/text_white_high</item>
+        <item name="colorTextSecondary">@color/text_white_medium</item>
+        <item name="colorTextDisabled">@color/text_white_low</item>
+
+        <!-- •••• Semânticos fixos •••• -->
+        <item name="colorDanger">@color/danger_500</item>
+        <item name="colorOnDanger">@color/on_danger</item>
+        <item name="colorSuccess">@color/success_500</item>
+
+        <!-- •••• Mantém os componentes stock do Material3 coerentes com o Fluent •••• -->
+        <item name="colorPrimary">?attr/colorAccent</item>
+        <item name="colorOnPrimary">?attr/colorOnAccent</item>
+        <item name="colorSurface">?attr/colorSurfaceDeep</item>
+        <item name="colorOnSurface">?attr/colorTextPrimary</item>
+
+        <!-- •••• Janela •••• -->
+        <item name="android:windowBackground">?attr/colorSurfaceDeep</item>
+        <item name="android:statusBarColor">?attr/colorSurfaceDeep</item>
+        <item name="android:navigationBarColor">?attr/colorSurfaceDeep</item>
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowNoTitle">true</item>
+
+        <!-- •••• Estilos default de componentes stock •••• -->
+        <item name="materialButtonStyle">@style/Widget.Fluent.Button.Pill</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Fluent.BottomSheet</item>
+        <item name="materialCardViewStyle">@style/Widget.Fluent.Card.Glass</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Fluent.Dialog</item>
     </style>
+
+    <!-- ============================================================
+         SHAPE APPEARANCES — cantos padronizados do Fluent
+         ============================================================ -->
+    <style name="ShapeAppearance.Fluent.Small" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Fluent.Medium" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerSize">18dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Fluent.Large" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerSize">28dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Fluent.Pill" parent="ShapeAppearance.Material3.Corner.Full">
+        <item name="cornerSizeTopLeft">50%</item>
+        <item name="cornerSizeTopRight">50%</item>
+        <item name="cornerSizeBottomLeft">50%</item>
+        <item name="cornerSizeBottomRight">50%</item>
+    </style>
+
+    <!-- ============================================================
+         BOTÕES — Widget.Fluent.Button.*
+         ============================================================
+         Todos resolvem cor via ?attr/ — fundo e borda vêm dos
+         drawables base (bg_button_glass_circle, bg_glass_fill,
+         bg_pill_accent), que por sua vez também usam ?attr/ nos seus
+         próprios <shape>/<ripple>. Trocar de tema = essas cores mudam
+         sozinhas, em cascata.
+    -->
+
+    <!-- Botão circular de vidro: D-pad, back/home/play, volume, canal, power (ícone que muda de cor, ver Button.Accent) -->
+    <style name="Widget.Fluent.Button.Glass.Circle" parent="Widget.Material3.Button.IconButton">
+        <item name="android:background">@drawable/bg_button_glass_circle</item>
+        <item name="android:stateListAnimator">@animator/fluent_button_press</item>
+        <item name="iconTint">?attr/colorTextPrimary</item>
+        <item name="rippleColor">?attr/colorAccentContainer</item>
+    </style>
+
+    <!-- Variante do círculo de vidro usada no botão Power: mesmo fundo, ícone em colorDanger -->
+    <style name="Widget.Fluent.Button.Glass.Circle.Danger">
+        <item name="iconTint">?attr/colorDanger</item>
+    </style>
+
+    <!-- ============================================================
+         BOTÃO-ÍCONE CIRCULAR — Widget.Fluent.IconCircle
+         ============================================================
+         Base reutilizável para qualquer ImageView clicável usada como
+         botão circular do controle (D-pad, back/home/play, volume,
+         canal, power, assistente, apps, configurações, diagnóstico...).
+         Substitui os antigos TextViews com caractere unicode — agora
+         é um ImageView com android:src apontando pro ic_*.xml certo.
+         Qualquer tela nova (LG, Android TV, Roku, Fire TV) reaproveita
+         este mesmo style, só trocando o ícone e o tamanho.
+    -->
+    <style name="Widget.Fluent.IconCircle" parent="">
+        <item name="android:background">@drawable/bg_button_glass_circle</item>
+        <item name="android:tint">?attr/colorTextPrimary</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:stateListAnimator">@animator/fluent_button_press</item>
+    </style>
+
+    <!-- Variante para ações de "perigo"/energia (Power) -->
+    <style name="Widget.Fluent.IconCircle.Danger">
+        <item name="android:tint">?attr/colorDanger</item>
+    </style>
+
+    <!-- Variante para ações discretas de topo (configurações, diagnóstico) -->
+    <style name="Widget.Fluent.IconCircle.Secondary">
+        <item name="android:tint">?attr/colorTextSecondary</item>
+    </style>
+
+    <!-- Pílula (123, ABC, chips de ação textual, botões secundários curtos) -->
+    <style name="Widget.Fluent.Button.Pill" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:textColor">?attr/colorTextPrimary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:background">@drawable/bg_glass_fill</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Fluent.Pill</item>
+        <item name="rippleColor">?attr/colorAccentContainer</item>
+        <item name="android:stateListAnimator">@animator/fluent_button_press</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <!-- Pílula em destaque — ação primária (ex.: Conectar) -->
+    <style name="Widget.Fluent.Button.Pill.Accent">
+        <item name="android:background">@drawable/bg_pill_accent</item>
+        <item name="android:textColor">?attr/colorOnAccent</item>
+    </style>
+
+    <!-- Pílula outline — ação secundária (ex.: Atualizar, Esquecer) -->
+    <style name="Widget.Fluent.Button.Pill.Outline" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">?attr/colorTextPrimary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="strokeColor">?attr/colorGlassStroke</item>
+        <item name="rippleColor">?attr/colorAccentContainer</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Fluent.Pill</item>
+    </style>
+
+    <!-- ============================================================
+         CARDS — Widget.Fluent.Card.*
+         ============================================================ -->
+    <style name="Widget.Fluent.Card.Glass" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardBackgroundColor">?attr/colorGlassFill</item>
+        <item name="strokeColor">?attr/colorGlassStroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Fluent.Medium</item>
+        <item name="rippleColor">?attr/colorAccentContainer</item>
+    </style>
+
+    <!-- Estado selecionado/conectado — troca só a stroke, resto herdado -->
+    <style name="Widget.Fluent.Card.Glass.Selected">
+        <item name="strokeColor">?attr/colorAccent</item>
+        <item name="strokeWidth">1.5dp</item>
+    </style>
+
+    <!-- ============================================================
+         BOTTOM SHEET
+         ============================================================ -->
+    <style name="ThemeOverlay.Fluent.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Fluent.BottomSheet</item>
+    </style>
+
+    <style name="Widget.Fluent.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="android:background">@drawable/bg_bottom_sheet_glass</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Fluent.Large</item>
+    </style>
+
+    <!-- ============================================================
+         DIÁLOGOS
+         ============================================================ -->
+    <style name="ThemeOverlay.Fluent.Dialog" parent="ThemeOverlay.Material3.Dialog">
+        <item name="materialAlertDialogTitleTextStyle">@style/TextAppearance.Fluent.DialogTitle</item>
+        <item name="colorSurface">?attr/colorSurfaceElevated</item>
+        <item name="colorOnSurface">?attr/colorTextPrimary</item>
+        <item name="dialogCornerRadius">24dp</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Fluent.Button.Pill.Accent</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Fluent.Button.Pill.Outline</item>
+    </style>
+
+    <!-- ============================================================
+         TIPOGRAFIA — TextAppearance.Fluent.*
+         ============================================================ -->
+    <style name="TextAppearance.Fluent.SectionTitle" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">?attr/colorTextSecondary</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.05</item>
+    </style>
+
+    <style name="TextAppearance.Fluent.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">?attr/colorTextPrimary</item>
+    </style>
+
+    <style name="TextAppearance.Fluent.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textColor">?attr/colorTextSecondary</item>
+    </style>
+
+    <style name="TextAppearance.Fluent.DialogTitle" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textColor">?attr/colorTextSecondary</item>
+    </style>
+
 </resources>

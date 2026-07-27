@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ============================================================
+         SMART REMOTE FLUENT — Design System Attributes
+         ============================================================
+         Camada de indireção de cor: nenhum componente do app deve
+         referenciar uma cor fixa (@color/xxx) diretamente — sempre
+         através destes atributos (?attr/colorXxx), resolvidos pelo
+         tema ativo em themes.xml (Theme.SmartRemote).
+
+         Adicionar um tema novo no futuro (Violet, Amber, temas do
+         marketplace, Premium...) é só criar:
+
+             <style name="Theme.SmartRemote.Violet" parent="Theme.SmartRemote">
+                 <item name="colorAccent">@color/violet_500</item>
+                 ...
+             </style>
+
+         Nenhum layout, botão, card, bottom sheet ou drawable precisa
+         mudar quando isso acontecer.
+    -->
+
+    <!-- •••••••••• Accent (cor de destaque do tema ativo) •••••••••• -->
+    <attr name="colorAccent" format="color" />
+    <attr name="colorAccentPressed" format="color" />
+    <attr name="colorAccentDim" format="color" />
+    <attr name="colorAccentContainer" format="color" />
+    <attr name="colorAccentGlow" format="color" />
+    <attr name="colorOnAccent" format="color" />
+
+    <!-- •••••••••• Superfícies •••••••••• -->
+    <attr name="colorSurfaceDeep" format="color" />
+    <attr name="colorSurfaceElevated" format="color" />
+
+    <!-- •••••••••• Vidro fosco (glass) •••••••••• -->
+    <attr name="colorGlassFill" format="color" />
+    <attr name="colorGlassStroke" format="color" />
+    <attr name="colorGlassStrokeStrong" format="color" />
+
+    <!-- •••••••••• Texto •••••••••• -->
+    <attr name="colorTextPrimary" format="color" />
+    <attr name="colorTextSecondary" format="color" />
+    <attr name="colorTextDisabled" format="color" />
+
+    <!-- •••••••••• Semânticos fixos (não fazem parte do accent do tema) •••••••••• -->
+    <attr name="colorDanger" format="color" />
+    <attr name="colorOnDanger" format="color" />
+    <attr name="colorSuccess" format="color" />
+
+</resources>

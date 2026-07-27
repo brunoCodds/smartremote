@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Alcinha visual no topo dos BottomSheets. Substitui o reaproveitamento
+    improvisado de bg_dpad_outer que existia antes.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorGlassStrokeStrong" />
+    <corners android:radius="4dp" />
+</shape>

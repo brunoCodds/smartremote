@@ -1,22 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Fundo -->
-    <color name="background_dark">#111111</color>
+    <!-- ============================================================
+         PALETA BASE — Smart Remote Fluent
+         ============================================================
+         Valores hexadecimais crus. NENHUM componente referencia estas
+         cores diretamente — apenas themes.xml as mapeia para os
+         atributos semânticos de attrs.xml. É essa indireção que
+         permite trocar de tema no futuro sem tocar em um layout sequer.
+    -->
 
-    <!-- Botões -->
-    <color name="button_dark">#2A2A2A</color>
-    <color name="button_dark_light">#333333</color>
-    <color name="dpad_outer">#1C1C1C</color>
+    <!-- Escala neutra (fundo/superfícies) -->
+    <color name="neutral_0">#000000</color>
+    <color name="neutral_50">#0D0F12</color>
+    <color name="neutral_100">#15181D</color>
+    <color name="neutral_glass_white_08">#14FFFFFF</color>
+    <color name="neutral_glass_white_12">#1FFFFFFF</color>
+    <color name="neutral_stroke_white_15">#26FFFFFF</color>
+    <color name="neutral_stroke_white_25">#40FFFFFF</color>
 
-    <!-- Textos -->
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#9E9E9E</color>
+    <!-- •••••••••• Texto •••••••••• -->
+    <color name="text_white_high">#F5F7FA</color>
+    <color name="text_white_medium">#9AA3AF</color>
+    <color name="text_white_low">#5A6572</color>
 
-    <!-- Destaques -->
-    <color name="power_red">#E53935</color>
-    <color name="ripple_light">#33FFFFFF</color>
+    <!-- •••••••••• Tema Cyan (padrão — único tema disponível nesta fase) •••••••••• -->
+    <color name="cyan_500">#22D3EE</color>
+    <color name="cyan_600">#0FB8D4</color>
+    <color name="cyan_700">#0E7490</color>
+    <color name="cyan_container_16">#2922D3EE</color>
+    <color name="cyan_glow_20">#3322D3EE</color>
+    <color name="on_cyan">#00252B</color>
 
-    <!-- Apps de streaming -->
+    <!-- •••••••••• Estados semânticos (fixos, independentes de tema/accent) •••••••••• -->
+    <color name="danger_500">#E53935</color>
+    <color name="on_danger">#FFFFFF</color>
+    <color name="success_500">#43A047</color>
+
+    <!-- •••••••••• Apps de streaming (cor de marca própria — fora do sistema de accent) •••••••••• -->
     <color name="netflix_red">#E50914</color>
     <color name="prime_blue">#00A8E1</color>
     <color name="globoplay_purple">#8A2BE2</color>
@@ -27,4 +47,21 @@
     <color name="paramount_blue">#0064FF</color>
     <color name="crunchyroll_orange">#F47521</color>
     <color name="plex_gold">#E5A00D</color>
+
+    <!-- ============================================================
+         COMPATIBILIDADE (legado)
+         ============================================================
+         Mantidos só para os layouts antigos não quebrarem enquanto a
+         migração para ?attr/ não é feita tela por tela. Não usar em
+         XML novo — todo componente novo referencia ?attr/colorXxx.
+         Remover este bloco quando a migração terminar.
+    -->
+    <color name="background_dark">@color/neutral_0</color>
+    <color name="button_dark">@color/neutral_100</color>
+    <color name="button_dark_light">@color/neutral_100</color>
+    <color name="dpad_outer">@color/neutral_50</color>
+    <color name="text_primary">@color/text_white_high</color>
+    <color name="text_secondary">@color/text_white_medium</color>
+    <color name="power_red">@color/danger_500</color>
+    <color name="ripple_light">#33FFFFFF</color>
 </resources>

@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Grade de apps disponíveis para abrir na TV. Aberto a partir do botão
-    "Apps" (btnApps) na tela principal.
-
-    Usa RecyclerView + GridLayoutManager (configurado em Kotlin, ver
-    AppsBottomSheet) em vez de uma linha fixa de LinearLayout, seguindo o
-    mesmo padrão de lista já usado no projeto (DeviceDiscoveryActivity com
-    item_tv_device.xml) - permite adicionar mais apps no futuro sem
-    reescrever este XML.
+    Grade de apps disponíveis para abrir na TV. O fundo/cantos do sheet
+    em si já vêm de Widget.Fluent.BottomSheet (aplicado via
+    bottomSheetDialogTheme no Theme.SmartRemote) — este XML só cuida
+    do conteúdo interno.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/background_dark"
     android:orientation="vertical"
     android:paddingHorizontal="12dp"
-    android:paddingTop="20dp"
+    android:paddingTop="12dp"
     android:paddingBottom="24dp">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_sheet_handle" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -25,9 +27,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"
         android:text="@string/apps_bottom_sheet_title"
-        android:textColor="@color/text_primary"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.Fluent.SectionTitle" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerApps"

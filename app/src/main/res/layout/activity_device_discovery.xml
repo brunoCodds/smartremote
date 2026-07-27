@@ -5,18 +5,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
+    android:background="?attr/colorSurfaceDeep"
     tools:context=".discovery.DeviceDiscoveryActivity">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/background_dark"
+        android:background="?attr/colorSurfaceDeep"
         app:title="@string/discovery_title"
-        app:titleTextColor="@color/text_primary"
+        app:titleTextColor="?attr/colorTextPrimary"
         app:navigationIcon="?attr/homeAsUpIndicator"
-        app:navigationIconTint="@color/text_primary" />
+        app:navigationIconTint="?attr/colorTextPrimary" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -33,11 +33,6 @@
           item revela as ações daquele item especificamente - controlado em
           DeviceDiscoveryActivity.kt / PairedDeviceListAdapter, sem lógica
           nova de layout aqui.
-
-          altura limitada (wrap_content dentro de um scroll natural da tela)
-          e um teto (maxHeight aproximado por peso zero) para não competir
-          demais com a lista de descoberta abaixo quando houver muitas TVs
-          pareadas - ajuste livre conforme o design real do app.
         -->
         <LinearLayout
             android:id="@+id/sectionPairedDevices"
@@ -50,17 +45,15 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="12dp"
                 android:text="@string/discovery_saved_section_title"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.Fluent.SectionTitle" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerPairedDevices"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="20dp"
                 android:nestedScrollingEnabled="false"
                 android:clipToPadding="false"
                 tools:listitem="@layout/item_paired_device"
@@ -70,10 +63,10 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnScan"
+            style="@style/Widget.Fluent.Button.Pill.Accent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/discovery_scan_button"
-            style="@style/Widget.Material3.Button" />
+            android:text="@string/discovery_scan_button" />
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/progressIndicator"
@@ -83,6 +76,8 @@
             android:layout_marginTop="16dp"
             android:visibility="gone"
             android:indeterminate="true"
+            app:indicatorColor="?attr/colorAccent"
+            app:trackColor="?attr/colorGlassFill"
             tools:visibility="visible" />
 
         <TextView
@@ -91,7 +86,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:gravity="center"
-            android:textColor="@color/text_secondary"
+            android:textAppearance="@style/TextAppearance.Fluent.Caption"
             android:visibility="gone"
             tools:text="Confirme a conexão na TV"
             tools:visibility="visible" />
@@ -103,7 +98,7 @@
             android:layout_marginTop="24dp"
             android:gravity="center"
             android:text="@string/discovery_empty_state"
-            android:textColor="@color/text_secondary"
+            android:textAppearance="@style/TextAppearance.Fluent.Caption"
             android:visibility="gone"
             tools:visibility="visible" />
 
@@ -123,21 +118,21 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRefresh"
+                style="@style/Widget.Fluent.Button.Pill.Outline"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="@string/discovery_refresh_button"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
+                android:text="@string/discovery_refresh_button" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnConnect"
+                style="@style/Widget.Fluent.Button.Pill.Accent"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="@string/discovery_connect_button"
-                style="@style/Widget.Material3.Button" />
+                android:text="@string/discovery_connect_button" />
         </LinearLayout>
     </LinearLayout>
 

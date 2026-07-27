@@ -3,7 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/background_dark"
     android:orientation="vertical"
     android:paddingHorizontal="24dp"
     android:paddingTop="12dp"
@@ -15,7 +14,7 @@
         android:layout_height="4dp"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"
-        android:background="@drawable/bg_dpad_outer" />
+        android:background="@drawable/bg_sheet_handle" />
 
     <!-- ===== Linha 1 2 3 ===== -->
     <LinearLayout
@@ -28,12 +27,13 @@
             android:id="@+id/btnNum1"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="1"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -42,12 +42,13 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="24dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="2"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -56,12 +57,13 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="24dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="3"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -79,12 +81,13 @@
             android:id="@+id/btnNum4"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="4"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -93,12 +96,13 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="24dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="5"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -107,12 +111,13 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="24dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="6"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -130,12 +135,13 @@
             android:id="@+id/btnNum7"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="7"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -144,12 +150,13 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="24dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="8"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -158,12 +165,13 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="24dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="9"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -181,18 +189,22 @@
             android:id="@+id/btnNum0"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:background="@drawable/ripple_circle"
+            android:background="@drawable/bg_button_glass_circle"
             android:clickable="true"
             android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press"
             android:gravity="center"
             android:text="0"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorTextPrimary"
             android:textSize="22sp"
             android:textStyle="bold" />
 
     </LinearLayout>
 
-    <!-- ===== Teclas coloridas (funções HbbTV/teletexto) ===== -->
+    <!-- ===== Teclas coloridas (funções HbbTV/teletexto) =====
+         Cores fixas por convenção universal de controle remoto — não
+         fazem parte do sistema de accent do tema (mesma lógica das
+         cores de marca dos apps de streaming). -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -208,7 +220,8 @@
             android:backgroundTint="#E53935"
             android:clickable="true"
             android:contentDescription="@string/desc_color_red"
-            android:focusable="true" />
+            android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press" />
 
         <TextView
             android:id="@+id/btnColorGreen"
@@ -219,7 +232,8 @@
             android:backgroundTint="#43A047"
             android:clickable="true"
             android:contentDescription="@string/desc_color_green"
-            android:focusable="true" />
+            android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press" />
 
         <TextView
             android:id="@+id/btnColorYellow"
@@ -230,7 +244,8 @@
             android:backgroundTint="#FDD835"
             android:clickable="true"
             android:contentDescription="@string/desc_color_yellow"
-            android:focusable="true" />
+            android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press" />
 
         <TextView
             android:id="@+id/btnColorBlue"
@@ -241,17 +256,18 @@
             android:backgroundTint="#1E88E5"
             android:clickable="true"
             android:contentDescription="@string/desc_color_blue"
-            android:focusable="true" />
+            android:focusable="true"
+            android:stateListAnimator="@animator/fluent_button_press" />
 
     </LinearLayout>
 
-    <!-- ===== Alternar para modo texto (ABC) - abre o campo de digitação ===== -->
+    <!-- ===== Alternar para modo texto (ABC) ===== -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnKeypadTextMode"
+        style="@style/Widget.Fluent.Button.Pill.Outline"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="@string/keypad_text_mode_button"
-        style="@style/Widget.Material3.Button.OutlinedButton" />
+        android:text="@string/keypad_text_mode_button" />
 
 </LinearLayout>
