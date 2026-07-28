@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import com.example.smartremote.model.TvDevice
+import com.example.smartremote.model.TvOperatingSystem
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -18,11 +19,42 @@ import java.util.concurrent.Executors
  *
  * É a única classe que a UI (DeviceDiscoveryActivity) precisa conhecer -
  * ela não sabe nada sobre os protocolos usados internamente.
+ *
+ * *** CORREÇÃO - serviço SSDP genérico "vencendo a corrida" e escondendo a
+ * TV de verdade ***
+ * Algumas TVs (observado em Samsung com middleware Ginga/SBTVD) anunciam,
+ * pelo MESMO IP, um serviço SSDP adicional sem friendlyName/manufacturer -
+ * o SsdpScanner então devolve um TvDevice genérico ("Dispositivo SSDP",
+ * os=UNKNOWN) com uma stableKey diferente da TV real (uuid distinto).
+ *
+ * A dedup por IP abaixo existia para evitar duplicar a MESMA TV quando
+ * SSDP e mDNS respondem os dois - mas como não há garantia de ordem de
+ * chegada dos pacotes UDP, se esse serviço genérico chegar ANTES da
+ * resposta real e identificada da TV, ele "reservava" o IP primeiro e a
+ * entrada de verdade (com marca/modelo/OS corretos) era descartada em
+ * silêncio - fazendo a TV sumir da lista de forma intermitente (varia a
+ * cada busca, conforme a ordem de chegada dos pacotes).
+ *
+ * Agora: dedup por IP só se aplica quando a entrada JÁ REGISTRADA para
+ * aquele IP já é uma TV identificada (tem marca OU SO reconhecido). Se a
+ * entrada já registrada for genérica e a nova trouxer identificação de
+ * verdade, a nova SUBSTITUI a genérica (ver [Listener.onDeviceUpgraded])
+ * em vez de ser descartada.
  */
 class DeviceScanner(context: Context) {
 
     interface Listener {
         fun onDeviceFound(device: TvDevice)
+
+        /**
+         * Uma entrada anteriormente exibida (registrada com a stableKey
+         * [previousKey], tipicamente genérica/sem identificação) foi
+         * substituída por [device], uma versão identificada da MESMA TV
+         * física (mesmo IP). A UI deve trocar o item já exibido, não
+         * adicionar um novo.
+         */
+        fun onDeviceUpgraded(previousKey: String, device: TvDevice)
+
         fun onScanFinished(devices: List<TvDevice>)
         fun onScanError(message: String)
     }
@@ -52,20 +84,33 @@ class DeviceScanner(context: Context) {
 
         val onDeviceFound: (TvDevice) -> Unit = onDeviceFound@{ device ->
             val key = device.stableKey()
-            val alreadyKnownByKey = found.containsKey(key)
 
-            // A mesma TV física pode responder por SSDP E mDNS ao mesmo
-            // tempo (ex: Samsung expõe UPnP local e também DIAL/Google
-            // Cast para receber apps). Cada protocolo gera um deviceId
-            // diferente por natureza - não há uma chave em comum entre
-            // eles sem buscar dado adicional - então usamos o IP como
-            // heurística secundária apenas para não duplicar a MESMA TV
-            // na lista quando isso acontecer. Mantém sempre a primeira
-            // encontrada; não afeta a deduplicação primária por stableKey
-            // (que continua sendo por deviceId, não por IP).
-            val alreadyKnownByIp = !alreadyKnownByKey && found.values.any { it.ip == device.ip }
+            // Mesma chave estável já vista nesta rodada - reanúncio do
+            // mesmo serviço (ex: SSDP respondendo de novo ao ssdp:all).
+            if (found.containsKey(key)) return@onDeviceFound
 
-            if (alreadyKnownByKey || alreadyKnownByIp) return@onDeviceFound
+            val existingAtSameIp = found.values.firstOrNull { it.ip == device.ip }
+
+            if (existingAtSameIp != null) {
+                val existingIsGeneric =
+                    existingAtSameIp.brand == null && existingAtSameIp.os == TvOperatingSystem.UNKNOWN
+                val newIsMoreInformative =
+                    device.brand != null || device.os != TvOperatingSystem.UNKNOWN
+
+                if (existingIsGeneric && newIsMoreInformative) {
+                    // A entrada nova identifica de verdade a TV que antes
+                    // só tinha uma entrada genérica no mesmo IP - substitui.
+                    val previousKey = existingAtSameIp.stableKey()
+                    found.remove(previousKey)
+                    found[key] = device
+                    mainHandler.post { listener.onDeviceUpgraded(previousKey, device) }
+                } else {
+                    // Mesma TV física já identificada (ou a nova também é
+                    // genérica) - mantém a primeira encontrada, ignora esta.
+                    return@onDeviceFound
+                }
+                return@onDeviceFound
+            }
 
             if (found.putIfAbsent(key, device) == null) {
                 mainHandler.post { listener.onDeviceFound(device) }

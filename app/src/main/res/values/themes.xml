@@ -101,7 +101,7 @@
 
     <!-- Botão circular de vidro: D-pad, back/home/play, volume, canal, power (ícone que muda de cor, ver Button.Accent) -->
     <style name="Widget.Fluent.Button.Glass.Circle" parent="Widget.Material3.Button.IconButton">
-        <item name="android:background">@drawable/bg_button_glass_circle</item>
+        <item name="android:background">@drawable/fluent_bg_button_glass_circle</item>
         <item name="android:stateListAnimator">@animator/fluent_button_press</item>
         <item name="iconTint">?attr/colorTextPrimary</item>
         <item name="rippleColor">?attr/colorAccentContainer</item>
@@ -124,7 +124,7 @@
          este mesmo style, só trocando o ícone e o tamanho.
     -->
     <style name="Widget.Fluent.IconCircle" parent="">
-        <item name="android:background">@drawable/bg_button_glass_circle</item>
+        <item name="android:background">@drawable/fluent_bg_button_glass_circle</item>
         <item name="android:tint">?attr/colorTextPrimary</item>
         <item name="android:scaleType">center</item>
         <item name="android:clickable">true</item>
@@ -147,7 +147,7 @@
         <item name="android:textColor">?attr/colorTextPrimary</item>
         <item name="android:textAllCaps">false</item>
         <item name="backgroundTint">@null</item>
-        <item name="android:background">@drawable/bg_glass_fill</item>
+        <item name="android:background">@drawable/fluent_bg_glass_fill</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Fluent.Pill</item>
         <item name="rippleColor">?attr/colorAccentContainer</item>
         <item name="android:stateListAnimator">@animator/fluent_button_press</item>
@@ -156,7 +156,7 @@
 
     <!-- Pílula em destaque — ação primária (ex.: Conectar) -->
     <style name="Widget.Fluent.Button.Pill.Accent">
-        <item name="android:background">@drawable/bg_pill_accent</item>
+        <item name="android:background">@drawable/fluent_bg_pill_accent</item>
         <item name="android:textColor">?attr/colorOnAccent</item>
     </style>
 
@@ -195,7 +195,7 @@
     </style>
 
     <style name="Widget.Fluent.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
-        <item name="android:background">@drawable/bg_bottom_sheet_glass</item>
+        <item name="android:background">@drawable/fluent_bg_bottom_sheet_glass</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Fluent.Large</item>
     </style>
 

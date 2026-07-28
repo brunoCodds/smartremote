@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Halo radial sutil, colocado atrás do D-pad e do Power para dar
+    profundidade sem depender de sombra. Cor de origem do gradiente é
+    ?attr/colorAccentGlow — muda sozinha quando o tema mudar.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="140dp"
+        android:centerColor="?attr/colorAccentGlow"
+        android:endColor="@android:color/transparent" />
+</shape>

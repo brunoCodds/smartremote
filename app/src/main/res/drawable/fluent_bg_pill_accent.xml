@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Pílula sólida na cor de acento do tema ativo. Usada em ações
+    primárias (ex.: "Conectar"). Ripple na variante "pressed" do
+    accent — ambos resolvidos via ?attr/, então trocar de tema no
+    futuro já atualiza esta pílula automaticamente.
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorAccentPressed">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorAccent" />
+            <corners android:radius="100dp" />
+        </shape>
+    </item>
+</ripple>

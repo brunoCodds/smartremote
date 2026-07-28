@@ -25,12 +25,12 @@
         android:id="@+id/appIcon"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:background="@drawable/bg_glass_fill"
+        android:background="@drawable/fluent_bg_glass_fill"
         android:gravity="center"
         android:textColor="?attr/colorTextPrimary"
         android:textSize="20sp"
         android:textStyle="bold"
-        tools:background="@drawable/ripple_circle_netflix"
+        tools:background="@drawable/legacy_ripple_circle_netflix"
         tools:text="N" />
 
     <TextView

@@ -45,6 +45,15 @@ import com.example.smartremote.util.DeviceStorage
  * controller, e quando ele é repassado pro listener da UI - para
  * confirmar que a ponte controller -> TvManager -> UI não é o elo que
  * está quebrando o fluxo de pareamento LG.
+ *
+ * *** ETAPA 2 - correção "reconexão automática sempre usa a primeira TV
+ * salva" ***: [pairDevice] agora marca explicitamente, via
+ * [TvDevice.connected], qual foi a ÚLTIMA TV efetivamente conectada
+ * (desmarcando as demais), e [getLastConnectedDevice] usa essa marcação
+ * para a reconexão automática ao abrir o app (ver MainActivity) - antes
+ * disso, a reconexão automática usava getSavedDevice() (primeira da
+ * lista), então trocar de TV pareada não fazia efeito nenhum na
+ * reconexão do próximo lançamento do app.
  */
 object TvManager {
 
@@ -57,9 +66,20 @@ object TvManager {
 
     // ===================== API NOVA (plural - múltiplas TVs) =====================
 
-    /** Pareia (salva) [device], ou atualiza os dados de uma TV já pareada com a mesma chave estável. */
+    /**
+     * Pareia (salva) [device], ou atualiza os dados de uma TV já pareada
+     * com a mesma chave estável, e marca esta TV como a ÚLTIMA
+     * efetivamente conectada (ver [TvDevice.connected] / [getLastConnectedDevice]),
+     * desmarcando qualquer outra TV que estivesse marcada assim
+     * anteriormente. As demais TVs salvas não são afetadas de nenhuma
+     * outra forma - continuam pareadas normalmente.
+     */
     fun pairDevice(context: Context, device: TvDevice) {
-        DeviceStorage.saveOrUpdate(context, device)
+        DeviceStorage.saveOrUpdate(context, device.copy(connected = true))
+
+        DeviceStorage.getAll(context)
+            .filter { it.stableKey() != device.stableKey() && it.connected }
+            .forEach { DeviceStorage.saveOrUpdate(context, it.copy(connected = false)) }
     }
 
     /** Todas as TVs pareadas no momento. Lista vazia se nenhuma. */
@@ -69,6 +89,21 @@ object TvManager {
     /** Se existe alguma TV pareada com esta chave estável. */
     fun isPaired(context: Context, key: String): Boolean =
         DeviceStorage.getByKey(context, key) != null
+
+    /**
+     * TV marcada como a última efetivamente conectada (ver [pairDevice]).
+     * Usada para a reconexão automática ao abrir o app - diferente de
+     * [getSavedDevice] (deprecated), que sempre retorna a primeira TV da
+     * lista, independente de qual foi usada por último.
+     *
+     * Fallback para a primeira TV salva caso nenhuma esteja marcada (ex:
+     * dado migrado do formato antigo de armazenamento, anterior a esta
+     * marcação existir).
+     */
+    fun getLastConnectedDevice(context: Context): TvDevice? {
+        val devices = getPairedDevices(context)
+        return devices.firstOrNull { it.connected } ?: devices.firstOrNull()
+    }
 
     /**
      * Esquece a TV de chave [key]: remove o pareamento e a credencial
@@ -104,7 +139,13 @@ object TvManager {
     /** @deprecated usar [pairDevice]. Mantido apenas por compatibilidade. */
     fun saveDevice(context: Context, device: TvDevice) = pairDevice(context, device)
 
-    /** @deprecated usar [getPairedDevices]. Mantido apenas por compatibilidade; retorna a primeira TV pareada. */
+    /**
+     * @deprecated usar [getLastConnectedDevice] (reconexão automática) ou
+     * [getPairedDevices] (lista completa). Mantido apenas por
+     * compatibilidade; retorna sempre a PRIMEIRA TV pareada da lista,
+     * independente de qual foi conectada por último - por isso não deve
+     * ser usado para decidir com qual TV reconectar automaticamente.
+     */
     fun getSavedDevice(context: Context): TvDevice? = getPairedDevices(context).firstOrNull()
 
     /** @deprecated usar [getPairedDevices].isNotEmpty(). Mantido apenas por compatibilidade. */

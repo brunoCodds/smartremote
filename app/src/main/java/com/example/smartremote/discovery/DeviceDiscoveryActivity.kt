@@ -28,6 +28,19 @@ import com.example.smartremote.model.TvDevice
  * pareadas (múltiplas, ver TvManager/DeviceStorage). Tocar em uma revela
  * suas ações (Esquecer / Conectar-Desconectar). Esquecer uma TV nunca afeta
  * as demais.
+ *
+ * *** CORREÇÃO - onDestroy() derrubava conexões alheias a esta tela ***
+ * Antes, [connectionEstablished] só virava true quando uma conexão
+ * INICIADA AQUI completava com sucesso. Isso significa que, se o usuário
+ * já estava conectado a uma TV (ex: reconexão automática feita pela
+ * MainActivity ao abrir o app) e apenas abria esta tela para olhar/fechar
+ * sem tocar em nada, o onDestroy() encontrava connectionEstablished=false
+ * e chamava TvManager.disconnect() - derrubando uma conexão que não tinha
+ * nada a ver com esta tela. [attemptedNewConnection] agora distingue "uma
+ * conexão nova foi tentada aqui" de "não fiz nada aqui", então só
+ * desconecta quando uma tentativa de conexão realmente começou nesta tela
+ * e não terminou em sucesso (ex: usuário trocou de TV mas cancelou/deu
+ * erro no meio do caminho).
  */
 class DeviceDiscoveryActivity : AppCompatActivity() {
 
@@ -37,6 +50,14 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
     private lateinit var pairedAdapter: PairedDeviceListAdapter
 
     private var selectedDevice: TvDevice? = null
+
+    /**
+     * Marca que uma tentativa de conexão (nova TV ou reconexão de uma TV
+     * já pareada) foi INICIADA a partir desta tela - ver [startConnection].
+     * Usada em conjunto com [connectionEstablished] para decidir, em
+     * [onDestroy], se é seguro desconectar.
+     */
+    private var attemptedNewConnection = false
 
     /** Evita que onDestroy() derrube uma conexão que acabou de ser estabelecida com sucesso. */
     private var connectionEstablished = false
@@ -89,6 +110,15 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
                 adapter.addDevice(device)
             }
 
+            override fun onDeviceUpgraded(previousKey: String, device: TvDevice) {
+                // Uma entrada genérica já exibida (ex: "Dispositivo SSDP"
+                // sem marca, comum em TVs Samsung com serviço Ginga/SBTVD)
+                // acabou de ser identificada de verdade - troca o item já
+                // exibido em vez de adicionar uma linha duplicada. Ver
+                // DeviceScanner.Listener.onDeviceUpgraded.
+                adapter.replaceDevice(previousKey, device)
+            }
+
             override fun onScanFinished(devices: List<TvDevice>) {
                 setScanningState(false)
                 binding.emptyStateText.visibility = if (adapter.isEmpty()) View.VISIBLE else View.GONE
@@ -115,6 +145,7 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
     }
 
     private fun startConnection(device: TvDevice) {
+        attemptedNewConnection = true
         setConnectingState(true)
         binding.txtConnectionStatus.visibility = View.VISIBLE
         binding.txtConnectionStatus.text = getString(R.string.connection_status_connecting)
@@ -197,9 +228,17 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
         adapter.updatePairedKeys(pairedKeys)
     }
 
+    /**
+     * Só derruba a conexão ativa se uma tentativa de conexão foi de fato
+     * iniciada NESTA tela (ver [startConnection]) e não terminou em
+     * sucesso (usuário cancelou saindo no meio do pareamento, erro,
+     * timeout, etc). Se o usuário só abriu e fechou esta tela sem tentar
+     * conectar nada, uma conexão pré-existente (ex: reconectada
+     * automaticamente pela MainActivity) permanece intacta.
+     */
     override fun onDestroy() {
         scanner.stopScan()
-        if (!connectionEstablished) {
+        if (attemptedNewConnection && !connectionEstablished) {
             TvManager.disconnect()
         }
         super.onDestroy()

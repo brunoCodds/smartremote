@@ -127,7 +127,17 @@ class LgWebOsController(
         RemoteKey.VOLUME_UP to "VOLUMEUP",
         RemoteKey.VOLUME_DOWN to "VOLUMEDOWN",
         RemoteKey.CHANNEL_UP to "CHANNELUP",
-        RemoteKey.CHANNEL_DOWN to "CHANNELDOWN"
+        RemoteKey.CHANNEL_DOWN to "CHANNELDOWN",
+
+        // Faltava por completo - RemoteKey.PLAY_PAUSE não tinha nenhuma
+        // entrada aqui, então sendRemoteKey() caía direto no bloco
+        // "buttonName == null" e retornava sem nunca chegar a montar/enviar
+        // nada pelo pointer socket. "PAUSE" é o nome de botão real e
+        // documentado do protocolo SSAP (mesmo valor usado pela integração
+        // webOS do Home Assistant) - não existe um botão nativo de toggle
+        // "PLAY_PAUSE" no pointer socket, só os discretos PLAY/PAUSE, mesma
+        // situação da Samsung.
+        RemoteKey.PLAY_PAUSE to "PAUSE"
     )
 
     override fun connect(listener: TvConnectionListener) {

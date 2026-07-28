@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Fundo genérico de "vidro fosco". Base reutilizável de qualquer
+    superfície plana do Fluent (pills, chips, painéis). Cor 100%
+    resolvida via ?attr/ — nunca hardcoded.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/colorGlassFill" />
+    <stroke
+        android:width="1dp"
+        android:color="?attr/colorGlassStroke" />
+    <corners android:radius="18dp" />
+</shape>

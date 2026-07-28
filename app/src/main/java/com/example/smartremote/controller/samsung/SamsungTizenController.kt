@@ -352,11 +352,20 @@ class SamsungTizenController(
             RemoteKey.CHANNEL_UP to "KEY_CHUP",
             RemoteKey.CHANNEL_DOWN to "KEY_CHDOWN",
 
-            // Toggle único do botão físico play/pause. Confiança moderada
-            // (não 100% confirmada em todos os modelos) - por isso PLAY,
-            // PAUSE e STOP continuam mapeados abaixo como fallback pronto,
-            // caso este código não funcione em algum aparelho específico.
-            RemoteKey.PLAY_PAUSE to "KEY_PLAY_PAUSE",
+            // Toggle único do botão físico play/pause. "KEY_PLAY_PAUSE"
+            // (valor usado anteriormente aqui) NÃO existe no protocolo
+            // Samsung Remote Control - não consta em nenhuma lista de
+            // DataOfCmd conhecida (nem na referência comunitária citada em
+            // SamsungProtocol, nem em levantamentos mais extensos como o
+            // Key_codes.md do samsungctl/ha-samsungtv-tizen). Por ser um
+            // protocolo fire-and-forget, a TV apenas ignorava esse código em
+            // silêncio - o app registrava "comando enviado" e nada
+            // acontecia na tela. "KEY_PAUSE" é o código real mais próximo
+            // do botão físico único de play/pause (mesma conclusão a que
+            // integrações da comunidade chegaram por tentativa e erro, já
+            // que o protocolo só expõe PLAY e PAUSE discretos, sem um
+            // toggle nativo).
+            RemoteKey.PLAY_PAUSE to "KEY_PAUSE",
             RemoteKey.PLAY to "KEY_PLAY",
             RemoteKey.PAUSE to "KEY_PAUSE",
             RemoteKey.STOP to "KEY_STOP",

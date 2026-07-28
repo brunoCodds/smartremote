@@ -18,6 +18,14 @@ import com.google.android.material.card.MaterialCardView
  * TVs cadastradas ([updatePairedKeys]), sem nunca remover o item da lista
  * por causa disso - a descoberta continua sempre mostrando todas as TVs
  * encontradas na rede, pareadas ou não.
+ *
+ * *** CORREÇÃO - substituição de entrada genérica por identificada ***
+ * Ver DeviceScanner.Listener.onDeviceUpgraded: quando uma TV (ex: Samsung
+ * com serviço Ginga/SBTVD) primeiro aparece como entrada genérica
+ * ("Dispositivo SSDP", sem marca) e, logo em seguida, a resposta SSDP de
+ * verdade da mesma TV chega, [replaceDevice] troca o item já exibido pela
+ * versão identificada, em vez de deixar a genérica escondendo a real ou
+ * duplicar a linha na lista.
  */
 class DeviceListAdapter(
     private val onDeviceSelected: (TvDevice) -> Unit
@@ -31,6 +39,32 @@ class DeviceListAdapter(
         if (devices.any { it.stableKey() == device.stableKey() }) return
         devices.add(device)
         notifyItemInserted(devices.size - 1)
+    }
+
+    /**
+     * Substitui o item de chave [previousKey] (tipicamente uma entrada
+     * genérica registrada antes da resposta real da TV chegar) por
+     * [newDevice], já identificado. Se [previousKey] não estiver mais na
+     * lista por algum motivo, apenas adiciona [newDevice] normalmente -
+     * nunca perde a TV por causa disso.
+     */
+    fun replaceDevice(previousKey: String, newDevice: TvDevice) {
+        val index = devices.indexOfFirst { it.stableKey() == previousKey }
+        if (index == -1) {
+            addDevice(newDevice)
+            return
+        }
+
+        devices[index] = newDevice
+        notifyItemChanged(index)
+
+        if (selectedPosition == index) {
+            // O usuário já tinha selecionado a entrada genérica antes de
+            // ela ser identificada - mantém a seleção, agora com os dados
+            // corretos, e reavisa quem escuta a seleção (ex: habilitar o
+            // botão Conectar já com o TvDevice certo).
+            onDeviceSelected(newDevice)
+        }
     }
 
     fun clear() {

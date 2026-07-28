@@ -340,10 +340,19 @@ class MainActivity : AppCompatActivity() {
      * existir uma TV salva, tenta reconectar automaticamente com ela -
      * como o token de pareamento já foi salvo no primeiro pareamento, isso
      * reconecta direto, sem exigir nova confirmação na TV.
+     *
+     * *** CORREÇÃO ***: antes usava [TvManager.getSavedDevice], que
+     * sempre retorna a PRIMEIRA TV da lista de pareadas, então trocar de
+     * TV ativa (ex: parear a LG depois da Samsung) não tinha efeito
+     * nenhum na reconexão automática do próximo lançamento do app - o
+     * app sempre voltava para a primeira TV pareada, dando a impressão
+     * de "a outra TV sumiu". [getLastConnectedDevice] usa a marcação
+     * feita em TvManager.pairDevice() para reconectar sempre com a TV
+     * que foi de fato usada por último.
      */
     private fun setupDiagnosticPanel() {
         DiagnosticManager.addListener(diagnosticListener)
-        TvManager.getSavedDevice(applicationContext)?.let { device ->
+        TvManager.getLastConnectedDevice(applicationContext)?.let { device ->
             TvManager.connect(applicationContext, device, object : TvConnectionListener {
                 override fun onConnected() { /* painel de diagnóstico já reflete o estado via DiagnosticManager */ }
                 override fun onPairingRequired() { /* não deveria ocorrer numa reconexão com token salvo */ }
