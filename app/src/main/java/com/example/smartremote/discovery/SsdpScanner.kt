@@ -1,5 +1,7 @@
 package com.example.smartremote.discovery
 
+import android.content.Context
+import android.net.wifi.WifiManager
 import android.util.Log
 import com.example.smartremote.model.DeviceProtocol
 import com.example.smartremote.model.TvDevice
@@ -51,13 +53,29 @@ import java.net.URL
  * socket em uso desbloqueia o `receive()` e encerra a busca antes do
  * deadline, sem propagar isso como [onError] (ver o tratamento de
  * `stopRequested` em [scan]).
+ *
+ * *** CORREÇÃO - v0.8: MulticastLock ausente ***
+ * O manifest já declarava `CHANGE_WIFI_MULTICAST_STATE`, mas nada no código
+ * chegava a adquirir um [WifiManager.MulticastLock] antes de abrir o
+ * [MulticastSocket] usado abaixo. Em bastante hardware Android real
+ * (principalmente com economia de energia agressiva do chip Wi-Fi),
+ * pacotes multicast chegam FILTRADOS pelo rádio a menos que esse lock
+ * esteja ativo - isso faz o SSDP falhar silenciosamente (nenhuma exceção,
+ * só nenhuma resposta chega nunca). Por isso este scanner agora recebe um
+ * [Context] no construtor (mesmo padrão já usado pelo [MdnsScanner]) só
+ * para conseguir o [WifiManager] e adquirir/liberar esse lock.
  */
-class SsdpScanner : DiscoveryScanner {
+class SsdpScanner(private val context: Context) : DiscoveryScanner {
 
     override val name: String = "SSDP"
 
     @Volatile private var activeSocket: MulticastSocket? = null
     @Volatile private var stopRequested = false
+
+    // Guarda o lock adquirido nesta rodada de scan() só para poder
+    // liberá-lo no finally correspondente - não é compartilhado entre
+    // rodadas (cada scan() adquire e libera o seu).
+    @Volatile private var multicastLock: WifiManager.MulticastLock? = null
 
     companion object {
         // TAG e limite usados apenas pelos logs temporários de diagnóstico
@@ -65,6 +83,11 @@ class SsdpScanner : DiscoveryScanner {
         // do problema "fabricante desconhecido" ser confirmada e corrigida.
         private const val DIAG_TAG = "SsdpDiagnostic"
         private const val DIAG_XML_SNIPPET_LENGTH = 500
+
+        // Tag exigida por WifiManager.createMulticastLock() - aparece em
+        // ferramentas de diagnóstico do sistema (ex: `dumpsys wifi`) como
+        // identificação de quem segura o lock.
+        private const val MULTICAST_LOCK_TAG = "SmartRemoteSsdpMulticastLock"
 
         // Uma única TV física responde várias vezes nesta rodada de scan:
         // uma vez por serviço/dispositivo embutido que ela anuncia sob
@@ -90,6 +113,29 @@ class SsdpScanner : DiscoveryScanner {
 
         var socket: MulticastSocket? = null
         try {
+            // Adquire o MulticastLock ANTES de abrir o socket - é a ordem
+            // recomendada pela documentação do Android (o lock afeta como o
+            // chip Wi-Fi trata pacotes multicast a partir de agora, então
+            // precisa estar ativo antes de qualquer coisa depender disso).
+            // setReferenceCounted(true) faz acquire()/release() se
+            // comportarem como um contador (só libera de verdade quando o
+            // número de releases igualar o de acquires) - protege contra o
+            // caso de, por algum motivo, mais de uma chamada concorrente de
+            // acquire acontecer para o mesmo lock.
+            val wifiManager = context.applicationContext
+                .getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            multicastLock = wifiManager?.createMulticastLock(MULTICAST_LOCK_TAG)?.apply {
+                setReferenceCounted(true)
+                acquire()
+            }
+            if (multicastLock == null) {
+                // Não deveria acontecer em hardware real (todo device com
+                // Wi-Fi tem WifiManager), mas não é motivo para abortar a
+                // busca - só significa que corremos o risco original
+                // (multicast filtrado) sem a proteção do lock.
+                Log.w(DIAG_TAG, "WifiManager indisponível - MulticastLock não adquirido; SSDP pode falhar silenciosamente em alguns dispositivos.")
+            }
+
             val group = InetAddress.getByName(Constants.SSDP_MULTICAST_ADDRESS)
             socket = MulticastSocket()
             socket.soTimeout = Constants.SSDP_SOCKET_TIMEOUT_MS
@@ -147,6 +193,19 @@ class SsdpScanner : DiscoveryScanner {
         } finally {
             activeSocket = null
             socket?.close()
+
+            // release() lança RuntimeException se chamado num lock que não
+            // está held (ex: alguma condição de corrida improvável já
+            // tivesse liberado antes) - isHeld evita isso; ainda assim
+            // envolvemos num try/catch como segunda camada de proteção,
+            // já que liberar o lock nunca deve derrubar o fluxo de scan().
+            try {
+                multicastLock?.takeIf { it.isHeld }?.release()
+            } catch (e: Exception) {
+                Log.w(DIAG_TAG, "Falha ao liberar MulticastLock: ${e.message}")
+            }
+            multicastLock = null
+
             DiscoveryDiagnostics.log(name, DiscoveryEventType.SCAN_FINISHED)
             onFinished()
         }

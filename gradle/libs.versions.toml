@@ -8,6 +8,11 @@ appcompat = "1.7.1"
 material = "1.14.0"
 activityKtx = "1.13.0"
 constraintlayout = "2.2.1"
+# v0.8 - item 9 da auditoria: antes declaradas por coordenada direta em
+# app/build.gradle.kts. Movidas para o catálogo por consistência com as
+# demais dependências do projeto.
+recyclerview = "1.3.2"
+okhttp = "4.12.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -18,6 +23,11 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+# Necessária para a lista de TVs encontradas na DeviceDiscoveryActivity.
+androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+# WebSocket para conexão com Smart TVs (Samsung Tizen nesta fase; demais
+# fabricantes reutilizarão o mesmo cliente OkHttp em fases futuras).
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

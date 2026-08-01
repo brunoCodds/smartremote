@@ -27,6 +27,7 @@
         android:layout_height="60dp"
         android:background="@drawable/fluent_bg_glass_fill"
         android:gravity="center"
+        android:importantForAccessibility="no"
         android:textColor="?attr/colorTextPrimary"
         android:textSize="20sp"
         android:textStyle="bold"

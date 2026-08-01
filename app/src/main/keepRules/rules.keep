@@ -10,3 +10,30 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# ===== v0.8 - item 8 da auditoria: R8/minificação ligado no release =====
+#
+# O projeto NÃO usa reflexão em nenhum lugar (DeviceStorage serializa/
+# desserializa TvDevice manualmente com org.json, usando strings de chave
+# fixas - não nomes de campo obtidos via reflection; ver
+# util/DeviceStorage.kt). Por isso o risco de algo quebrar com R8 ligado é
+# baixo. Ainda assim, mantemos aqui a regra padrão para enums: antigas
+# versões de R8/ProGuard podiam remover os métodos sintéticos values()/
+# valueOf() de enums quando "aparentemente" não usados diretamente pelo
+# código (mesmo sendo usados por chamadas como
+# TvOperatingSystem.valueOf(...) e DeviceProtocol.valueOf(...) em
+# DeviceStorage.deviceFromJson) - é uma proteção padrão, de baixo custo,
+# para todo enum do projeto (DeviceProtocol, TvOperatingSystem, RemoteKey
+# etc).
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# Os modelos de dados (TvDevice e afins) são lidos/escritos campo a campo
+# via org.json (chaves fixas tipo "brand", "model" - nunca via reflection
+# no nome da propriedade Kotlin), então a ofuscação dos nomes de campo em
+# si é segura. Mantemos os nomes das CLASSES do pacote `model` (não dos
+# membros) só para deixar stack traces de crash mais legíveis em produção
+# - não é uma exigência funcional, é conveniência de diagnóstico.
+-keepnames class com.example.smartremote.model.** { *; }

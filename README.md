@@ -5,9 +5,12 @@ View system, sem Compose/MVVM/DI) — descobre TVs na rede local, pareia, e
 controla via WebSocket, com uma tela de diagnóstico embutida para depurar
 conexão e comandos em tempo real.
 
-> **v0.7** — evolução completa da camada de descoberta de dispositivos
-> (múltiplos protocolos, deduplicação inteligente, diagnóstico estruturado).
-> Veja [Descoberta de TVs](#descoberta-de-tvs) para detalhes.
+> **v0.8** — fase de correção de arquitetura e robustez (bugs reais da
+> camada de Discovery, testes automatizados, CI, acessibilidade), sobre a
+> base da v0.7 (evolução completa da camada de descoberta de dispositivos —
+> múltiplos protocolos, deduplicação inteligente, diagnóstico estruturado).
+> Sem mudança de comportamento observável em relação à v0.7. Veja
+> [Descoberta de TVs](#descoberta-de-tvs) para detalhes da descoberta.
 
 ## Funcionalidades
 
@@ -118,7 +121,7 @@ Princípios que o projeto segue (e que qualquer contribuição deve manter):
 
 ## Requisitos
 
-- Android Studio (versão compatível com AGP 9.2.1 / compileSdk 37.1).
+- Android Studio (versão compatível com AGP 9.2.1 / compileSdk 37.0).
 - Dispositivo/emulador com **minSdk 26** (Android 8.0+).
 - TV e celular na **mesma rede Wi-Fi** — a descoberta é feita por multicast
   na rede local (SSDP/mDNS), então não funciona entre redes diferentes ou
@@ -133,6 +136,56 @@ cd smartremote
 ```
 
 Ou abra a pasta no Android Studio e rode normalmente (`Run ▶`).
+
+## Testes e CI
+
+```bash
+./gradlew test          # testes unitários (JUnit, sem framework de mock)
+./gradlew assembleDebug  # build de debug
+```
+
+O GitHub Actions (`.github/workflows/ci.yml`) roda os dois comandos acima
+em todo push/PR para `main`. Cobertura atual de testes unitários:
+
+- `DiscoveryAggregator` — dedup por UUID/deviceId/MAC/nome+modelo/IP, regra
+  de merge por confidence, e preservação de campos no merge.
+- `DeviceIdentity` — extração de UUID e normalização de MAC (incluindo o
+  placeholder `"none"` da API Samsung).
+- `DiscoveryConfidence` — pontuação de completude e detecção de nome
+  genérico.
+- `TvDevice.stableKey()` — proteção contra regressão do algoritmo de
+  identidade de pareamento (ver a seção de arquitetura acima para por que
+  isso é crítico).
+
+## Build de release assinado
+
+Nenhuma keystore é commitada neste repositório (nem deveria ser). Para
+gerar um build de release assinado localmente:
+
+1. Gere sua própria keystore:
+   ```bash
+   keytool -genkey -v -keystore smartremote-release.jks \
+     -keyalg RSA -keysize 2048 -validity 10000 -alias smartremote
+   ```
+2. Crie (ou edite) o `local.properties` na raiz do projeto — já ignorado
+   pelo `.gitignore`, nunca commitar — com:
+   ```properties
+   RELEASE_STORE_FILE=/caminho/para/smartremote-release.jks
+   RELEASE_STORE_PASSWORD=...
+   RELEASE_KEY_ALIAS=smartremote
+   RELEASE_KEY_PASSWORD=...
+   ```
+   (as mesmas 4 chaves também podem vir de variáveis de ambiente, útil em CI).
+3. Rode `./gradlew assembleRelease` normalmente — o `signingConfig` só é
+   aplicado quando as 4 propriedades acima existem; sem elas, o build de
+   release continua funcionando (só sai sem assinatura).
+
+O release também já roda com R8/minificação ligados
+(`app/src/main/keepRules/rules.keep` tem as regras de proteção). Como o
+projeto está na AGP 9.2.1 (o DSL `optimization { enable = true }` só vira
+comportamento padrão a partir da AGP 9.3), isso exige a flag
+`android.r8.gradual.support=true` em `gradle.properties` - já incluída
+neste repositório.
 
 ## Stack
 

@@ -16,7 +16,8 @@
         app:title="@string/discovery_title"
         app:titleTextColor="?attr/colorTextPrimary"
         app:navigationIcon="?attr/homeAsUpIndicator"
-        app:navigationIconTint="?attr/colorTextPrimary" />
+        app:navigationIconTint="?attr/colorTextPrimary"
+        app:navigationContentDescription="@string/desc_back" />
 
     <LinearLayout
         android:layout_width="match_parent"

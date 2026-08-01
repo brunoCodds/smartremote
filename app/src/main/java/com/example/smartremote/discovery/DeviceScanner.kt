@@ -93,7 +93,11 @@ class DeviceScanner(context: Context) {
     // descoberta seja "do zero" (ex: um WsDiscoveryScanner hipotético),
     // basta adicionar aqui.
     private val primaryScanners: List<DiscoveryScanner> = listOf(
-        SsdpScanner(),
+        // SsdpScanner agora recebe Context (v0.8) só para adquirir o
+        // WifiManager.MulticastLock necessário para o multicast do SSDP
+        // funcionar de forma confiável em mais dispositivos - ver o KDoc
+        // da classe. Nenhuma outra mudança de contrato.
+        SsdpScanner(context),
         MdnsScanner(context)
     )
 
