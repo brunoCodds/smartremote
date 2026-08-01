@@ -13,13 +13,51 @@ import java.net.SocketTimeoutException
 import java.net.URL
 
 /**
- * Descoberta via SSDP (UPnP): envia um M-SEARCH multicast e escuta as
+ * Descoberta via SSDP (UPnP): envia M-SEARCH multicast e escuta as
  * respostas das TVs na rede. Quando possível, busca o XML de descrição do
  * dispositivo (LOCATION) para extrair fabricante e modelo reais.
  *
  * Chamada de forma síncrona/bloqueante - deve rodar em background thread.
+ *
+ * *** EVOLUÇÃO - ETAPA 1 do plano de descoberta robusta: múltiplos Search
+ * Targets ***
+ * Antes, um único M-SEARCH era enviado com `ST: ssdp:all`. Na teoria do
+ * UPnP isso deveria bastar - mas na prática várias TVs implementam SSDP de
+ * forma incompleta e só respondem de forma confiável a um ST ESPECÍFICO do
+ * ecossistema delas (DIAL, UDAP da LG, MediaRenderer, ECP da Roku - ver
+ * [Constants.SSDP_SEARCH_TARGETS]). Essa é a causa mais provável do
+ * cenário relatado: um app comercial encontra uma TV Samsung que o nosso
+ * não encontrava.
+ *
+ * Agora [scan] envia um M-SEARCH por ST da lista, todos na mesma janela de
+ * escuta (mesmo socket, mesmo deadline). A mesma TV física normalmente
+ * responde a mais de um ST (ex: uma Samsung pode responder tanto a
+ * `ssdp:all` quanto a `dial:1`) - isso é esperado e já é tratado pela
+ * dedup por uuid (extraído do USN) que já existia antes desta mudança, sem
+ * precisar de nenhuma alteração na lógica de parsing/dedup. Continua sendo
+ * a MESMA API pública (`scan(onDeviceFound, onFinished, onError)`) - quem
+ * chama (DeviceScanner) não precisa saber que agora são vários M-SEARCH.
+ *
+ * Melhoria de dedup independente de IP (prioridade UUID -> deviceId -> USN
+ * -> MAC -> nome+modelo -> IP, com nível de confiança por descoberta) e o
+ * diagnóstico estruturado por evento agora vivem, respectivamente, em
+ * [DeviceIdentity]/[DiscoveryAggregator] e [DiscoveryDiagnostics] - camadas
+ * que ficam ACIMA deste scanner (no [DeviceScanner]/[DiscoveryCache]).
+ * Este scanner continua só emitindo TvDevice "cru" pelos callbacks; quem
+ * decide identidade/merge é o Aggregator, não ele.
+ *
+ * Implementa [DiscoveryScanner] (interface comum a todo scanner desta
+ * camada - ver seu KDoc) e agora também suporta [stop] de verdade: fechar o
+ * socket em uso desbloqueia o `receive()` e encerra a busca antes do
+ * deadline, sem propagar isso como [onError] (ver o tratamento de
+ * `stopRequested` em [scan]).
  */
-class SsdpScanner {
+class SsdpScanner : DiscoveryScanner {
+
+    override val name: String = "SSDP"
+
+    @Volatile private var activeSocket: MulticastSocket? = null
+    @Volatile private var stopRequested = false
 
     companion object {
         // TAG e limite usados apenas pelos logs temporários de diagnóstico
@@ -28,41 +66,57 @@ class SsdpScanner {
         private const val DIAG_TAG = "SsdpDiagnostic"
         private const val DIAG_XML_SNIPPET_LENGTH = 500
 
-        // Como o M-SEARCH usa ST: ssdp:all, uma única TV física responde
-        // várias vezes - uma por serviço/dispositivo embutido que ela
-        // anuncia (rootdevice, MediaRenderer, serviço do fabricante etc).
+        // Uma única TV física responde várias vezes nesta rodada de scan:
+        // uma vez por serviço/dispositivo embutido que ela anuncia sob
+        // ssdp:all (rootdevice, MediaRenderer, serviço do fabricante etc),
+        // E MAIS uma vez para cada Search Target adicional que ela
+        // reconheça dentre os enviados (ver Constants.SSDP_SEARCH_TARGETS -
+        // ex: a mesma TV pode responder tanto a ssdp:all quanto a dial:1).
         // Cada resposta vem com um USN diferente, mas todos compartilham o
         // mesmo prefixo "uuid:<UUID>" - essa é a parte realmente estável
         // que identifica a TV, então é ela (e só ela) que vira o deviceId
-        // usado como TvDevice.stableKey(). Sem isso, a mesma TV aparece
-        // duplicada na lista de descoberta uma vez por serviço anunciado.
+        // usado como TvDevice.stableKey(). Sem isso, a mesma TV apareceria
+        // duplicada na lista de descoberta uma vez por resposta recebida.
         private val USN_UUID_REGEX = Regex("uuid:[^:\\s]+")
     }
 
-    fun scan(
+    override fun scan(
         onDeviceFound: (TvDevice) -> Unit,
         onFinished: () -> Unit,
         onError: (String) -> Unit
     ) {
+        stopRequested = false
+        DiscoveryDiagnostics.log(name, DiscoveryEventType.SCAN_STARTED)
+
         var socket: MulticastSocket? = null
         try {
             val group = InetAddress.getByName(Constants.SSDP_MULTICAST_ADDRESS)
             socket = MulticastSocket()
             socket.soTimeout = Constants.SSDP_SOCKET_TIMEOUT_MS
+            activeSocket = socket
 
-            val searchMessage = buildString {
-                append("M-SEARCH * HTTP/1.1\r\n")
-                append("HOST: ${Constants.SSDP_MULTICAST_ADDRESS}:${Constants.SSDP_MULTICAST_PORT}\r\n")
-                append("MAN: \"ssdp:discover\"\r\n")
-                append("MX: 3\r\n")
-                append("ST: ${Constants.SSDP_SEARCH_TARGET}\r\n")
-                append("\r\n")
-            }.toByteArray()
-
-            val packet = DatagramPacket(
-                searchMessage, searchMessage.size, group, Constants.SSDP_MULTICAST_PORT
-            )
-            socket.send(packet)
+            // Um M-SEARCH por Search Target (ver Constants.SSDP_SEARCH_TARGETS
+            // e o KDoc da classe) - todos enviados antes de começar a
+            // escutar, na mesma janela de recebimento abaixo. Continuam
+            // sendo enviados via multicast: qualquer TV na rede que
+            // reconheça QUALQUER um desses STs responde de volta (unicast)
+            // para este mesmo socket.
+            Constants.SSDP_SEARCH_TARGETS.forEach { searchTarget ->
+                try {
+                    val searchMessage = buildSearchMessage(searchTarget)
+                    val packet = DatagramPacket(
+                        searchMessage, searchMessage.size, group, Constants.SSDP_MULTICAST_PORT
+                    )
+                    socket.send(packet)
+                    Log.d(DIAG_TAG, "M-SEARCH enviado com ST=\"$searchTarget\"")
+                    DiscoveryDiagnostics.log(name, DiscoveryEventType.REQUEST_SENT, "M-SEARCH ST=\"$searchTarget\"")
+                } catch (e: Exception) {
+                    // Falha ao enviar UM dos STs não deve abortar a busca
+                    // inteira - os demais STs (e o que já foi enviado)
+                    // continuam valendo para esta rodada.
+                    Log.w(DIAG_TAG, "Falha ao enviar M-SEARCH com ST=\"$searchTarget\": ${e.message}")
+                }
+            }
 
             val buffer = ByteArray(2048)
             val deadline = System.currentTimeMillis() + Constants.SSDP_TOTAL_TIMEOUT_MS
@@ -72,7 +126,7 @@ class SsdpScanner {
             // respondeu várias vezes ao ssdp:all (uma vez por serviço).
             val seenStableIds = mutableSetOf<String>()
 
-            while (System.currentTimeMillis() < deadline) {
+            while (System.currentTimeMillis() < deadline && !stopRequested) {
                 try {
                     val response = DatagramPacket(buffer, buffer.size)
                     socket.receive(response)
@@ -83,12 +137,35 @@ class SsdpScanner {
                 }
             }
         } catch (e: Exception) {
-            onError("Erro na descoberta SSDP: ${e.message}")
+            // Se o socket foi fechado de propósito por stop(), receive()
+            // lança uma exceção (não SocketTimeoutException) - isso é
+            // esperado nesse caso e não deve virar onError.
+            if (!stopRequested) {
+                DiscoveryDiagnostics.log(name, DiscoveryEventType.SCAN_ERROR, e.message ?: e.toString())
+                onError("Erro na descoberta SSDP: ${e.message}")
+            }
         } finally {
+            activeSocket = null
             socket?.close()
+            DiscoveryDiagnostics.log(name, DiscoveryEventType.SCAN_FINISHED)
             onFinished()
         }
     }
+
+    override fun stop() {
+        stopRequested = true
+        activeSocket?.close()
+    }
+
+    /** Monta a mensagem M-SEARCH (texto HTTP-like sobre UDP) para um [searchTarget] específico. */
+    private fun buildSearchMessage(searchTarget: String): ByteArray = buildString {
+        append("M-SEARCH * HTTP/1.1\r\n")
+        append("HOST: ${Constants.SSDP_MULTICAST_ADDRESS}:${Constants.SSDP_MULTICAST_PORT}\r\n")
+        append("MAN: \"ssdp:discover\"\r\n")
+        append("MX: 3\r\n")
+        append("ST: $searchTarget\r\n")
+        append("\r\n")
+    }.toByteArray()
 
     private fun parseResponse(raw: String, ip: String?, seenStableIds: MutableSet<String>): TvDevice? {
         if (ip == null) return null
@@ -102,10 +179,14 @@ class SsdpScanner {
             .toMap()
 
         val location = headers["LOCATION"]
-        Log.d(DIAG_TAG, "Resposta SSDP de $ip -> LOCATION=\"$location\" SERVER=\"${headers["SERVER"]}\"")
+        Log.d(
+            DIAG_TAG,
+            "Resposta SSDP de $ip -> ST=\"${headers["ST"]}\" LOCATION=\"$location\" SERVER=\"${headers["SERVER"]}\""
+        )
 
         if (location == null) {
             Log.w(DIAG_TAG, "Descartando resposta de $ip: header LOCATION ausente. Headers brutos: $headers")
+            DiscoveryDiagnostics.log(name, DiscoveryEventType.DEVICE_DISCARDED, "$ip: header LOCATION ausente")
             return null
         }
 
@@ -118,6 +199,7 @@ class SsdpScanner {
         // em vez de buscar o XML e notificar onDeviceFound outra vez.
         if (stableId != null && !seenStableIds.add(stableId)) {
             Log.d(DIAG_TAG, "Ignorando resposta duplicada de $ip (mesma TV, stableId=$stableId)")
+            DiscoveryDiagnostics.log(name, DiscoveryEventType.DEVICE_DISCARDED, "$ip: resposta duplicada nesta rodada (stableId=$stableId)")
             return null
         }
 
@@ -139,7 +221,7 @@ class SsdpScanner {
         )
         Log.d(DIAG_TAG, "OS decidido para $ip: $os (manufacturer=${details?.manufacturer}, modelName=${details?.modelName}, deviceType=${details?.deviceType}, server=\"$server\")")
 
-        return TvDevice(
+        val device = TvDevice(
             name = details?.friendlyName ?: server.takeIf { it.isNotBlank() } ?: "Dispositivo SSDP",
             brand = details?.manufacturer,
             model = details?.modelName,
@@ -150,6 +232,11 @@ class SsdpScanner {
             deviceId = stableId,
             connected = false
         )
+
+        DiscoveryDiagnostics.log(name, DiscoveryEventType.DEVICE_CREATED, "$ip -> nome=\"${device.name}\" marca=${device.brand} modelo=${device.model}")
+        DiscoveryDiagnostics.log(name, DiscoveryEventType.DEVICE_FORWARDED, "$ip encaminhado ao DiscoveryAggregator")
+
+        return device
     }
 
     /**

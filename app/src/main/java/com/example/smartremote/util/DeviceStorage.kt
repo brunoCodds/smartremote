@@ -130,6 +130,11 @@ object DeviceStorage {
         put("os", device.os.name)
         put("deviceId", device.deviceId)
         put("connected", device.connected)
+        // Campo novo (evolução da camada de Discovery) - opcional,
+        // persistido só para não perder a informação se um dia o app
+        // passar a usá-la fora da descoberta (ex: Wake-on-LAN). Nunca
+        // participa de stableKey() - ver TvDevice.kt.
+        put("mac", device.mac)
     }
 
     private fun deviceFromJson(json: JSONObject): TvDevice {
@@ -143,7 +148,10 @@ object DeviceStorage {
             protocol = DeviceProtocol.valueOf(json.getString("protocol")),
             os = TvOperatingSystem.valueOf(json.optString("os", TvOperatingSystem.UNKNOWN.name)),
             deviceId = json.optString("deviceId").takeIf { it.isNotBlank() },
-            connected = json.optBoolean("connected", false)
+            connected = json.optBoolean("connected", false),
+            // ausente em dados salvos antes desta evolução - optString já
+            // devolve "" nesse caso, then vira null normalmente.
+            mac = json.optString("mac").takeIf { it.isNotBlank() }
         )
     }
 
