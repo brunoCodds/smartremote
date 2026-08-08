@@ -1,9 +1,31 @@
 # Smart Remote
 
+[![Licença: GPL v3](https://img.shields.io/badge/Licen%C3%A7a-GPLv3-blue.svg)](./LICENSE)
+
 Controle remoto universal para Smart TVs, escrito em Kotlin nativo (Android
 View system, sem Compose/MVVM/DI) — descobre TVs na rede local, pareia, e
 controla via WebSocket, com uma tela de diagnóstico embutida para depurar
 conexão e comandos em tempo real.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="screenshots/tela-principal.jpg" width="100%" alt="Tela principal com o controle remoto"/>
+      <br/><sub>Controle remoto</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="screenshots/painel-diagnostico.jpg" width="100%" alt="Tela de busca e pareamento de TVs"/>
+      <br/><sub>Descoberta de TVs</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="screenshots/descoberta-tvs.jpg" width="100%" alt="Painel de diagnóstico de conexão"/>
+      <br/><sub>Painel de diagnóstico</sub>
+    </td>
+    
+  </tr>
+</table>
 
 > **v0.8** — fase de correção de arquitetura e robustez (bugs reais da
 > camada de Discovery, testes automatizados, CI, acessibilidade), sobre a
@@ -212,6 +234,35 @@ neste repositório.
 
 ## Licença
 
-Ainda não definida. Se pretende deixar o projeto aberto para outras
-pessoas usarem/contribuírem, vale adicionar um arquivo `LICENSE` (MIT e
-Apache 2.0 são as escolhas mais comuns para projetos Android hobby/OSS).
+Este projeto está licenciado sob a **GNU General Public License v3.0**
+(GPL-3.0) — veja o arquivo [`LICENSE`](./LICENSE) para o texto completo e
+oficial.
+
+**O que isso significa na prática:**
+
+- Qualquer pessoa é livre para usar, estudar, modificar e redistribuir
+  este código — **inclusive comercialmente** — desde que mantenha a mesma
+  licença (GPL-3.0) e disponibilize o código-fonte correspondente (o seu
+  próprio ou o modificado) a quem receber o software.
+- **Uso comercial:** a GPL-3.0 permite explicitamente vender, cobrar ou
+  distribuir comercialmente o software. O que ela não permite é fechar o
+  código: se você redistribuir (gratuitamente ou não), precisa manter a
+  GPL e fornecer o código-fonte sob os mesmos termos.
+- **Quer usar de forma fechada/proprietária?** Se a sua empresa quer
+  incorporar este código num produto sem as obrigações da GPL (sem
+  precisar abrir o código-fonte do que for construído em cima), **entre
+  em contato** para discutirmos uma licença comercial separada. Isso é
+  **só um convite**, não uma exigência adicional da GPL — você já pode
+  usar o software comercialmente sem falar comigo, contanto que respeite
+  a GPL normalmente.
+- Contato: abra uma
+  [issue](https://github.com/brunoCodds/smartremote/issues) ou procure
+  brunoCodds no GitHub.
+
+> Esta licença se aplica a todo o histórico do projeto — versões
+> anteriores (incluindo v0.7 e v0.8, que não continham um arquivo
+> `LICENSE` explícito) também são consideradas licenciadas sob GPL-3.0
+> por esta declaração, assim como todas as versões futuras — sem
+> necessidade de reescrever tags/commits antigos já publicados.
+
+Copyright © 2026 brunoCodds.
