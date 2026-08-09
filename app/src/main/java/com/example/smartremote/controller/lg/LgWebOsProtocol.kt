@@ -83,11 +83,37 @@ object LgWebOsProtocol {
      *   de teclas do webOS (fonte comunitária, não documentação oficial
      *   da Plex ou da LG).
      *
-     * Apps SEM entrada aqui propositalmente (DISNEY_PLUS, MAX,
-     * APPLE_TV_PLUS, PARAMOUNT_PLUS, CRUNCHYROLL, GLOBOPLAY): nenhuma
-     * fonte confiável encontrada com o App ID desses apps especificamente
-     * para webOS (os IDs de iOS/tvOS/Android são completamente diferentes
-     * e não servem aqui). RemoteKey continua existindo no enum, mas
+     * *** v0.9, item 2 - completados nesta versão ***
+     * - DISNEY_PLUS: "com.disney.disneyplus-prod", relatado em mais de
+     *   uma lista comunitária de App IDs (drivers de controle universal
+     *   RTI) para o app oficial da Disney+ em TVs LG webOS. Sem fonte
+     *   oficial da LG/Disney, mas convergência entre fontes independentes.
+     * - APPLE_TV_PLUS: "com.apple.appletv" - id do app oficial "Apple TV"
+     *   da LG Content Store (mesmo app que hoje inclui o catálogo do
+     *   Apple TV+, ver KDoc de RemoteKey.APPLE_TV_PLUS), também de listas
+     *   comunitárias de drivers RTI. Existe também um "com.apple.appletv.web"
+     *   documentado nas mesmas fontes para uma variante/versão anterior -
+     *   se este ID parar de funcionar em algum modelo, essa é a próxima
+     *   alternativa a testar.
+     * - MAX: "com.wbd.stream" - app atual da Warner Bros. Discovery pós
+     *   rebrand de HBO Max para Max. As mesmas fontes comunitárias também
+     *   listam o id antigo "com.hbo.hbomax" (versão pré-rebrand, pode
+     *   ainda ser o instalado em TVs mais antigas que não atualizaram o
+     *   app) - se "com.wbd.stream" falhar em algum aparelho, esta é a
+     *   alternativa a testar manualmente.
+     *
+     * Continuam SEM entrada aqui (PARAMOUNT_PLUS, CRUNCHYROLL, GLOBOPLAY):
+     * nenhuma fonte confiável encontrada com o App ID desses apps
+     * especificamente para webOS nesta rodada de pesquisa (os IDs de
+     * iOS/tvOS/Android são completamente diferentes e não servem aqui).
+     * Sobre o GLOBOPLAY em particular: diferente da Samsung (Tizen, onde
+     * o Globoplay é oficialmente suportado desde 2016), não foi
+     * encontrada confirmação de que a Globo sequer distribui um app
+     * oficial para LG webOS hoje - inclusive uma página oficial de
+     * "dispositivos compatíveis" do Globoplay lista Samsung Tizen e
+     * Android TV, mas não menciona LG webOS. Por segurança, o app
+     * continua sem ID aqui em vez de arriscar um ID incorreto/inexistente.
+     * RemoteKey continua existindo no enum para os três, mas
      * LgWebOsController.APP_LAUNCH_MAP não tem entrada - a UI trata como
      * "não suportado nesta TV" via TvController.supportedApps(), mesmo
      * padrão já usado pela Samsung para o Crunchyroll.
@@ -96,6 +122,9 @@ object LgWebOsProtocol {
     val YOUTUBE_APP_ID = "youtube.leanback.v4"
     val PRIME_VIDEO_APP_ID = "amazon"
     val PLEX_APP_ID = "cdp-30"
+    val DISNEY_PLUS_APP_ID = "com.disney.disneyplus-prod"
+    val APPLE_TV_PLUS_APP_ID = "com.apple.appletv"
+    val MAX_APP_ID = "com.wbd.stream"
 
     // ===== Identidade "signed" do manifest =====
     // Estes valores (appId, vendorId, nomes localizados, serial e a lista
