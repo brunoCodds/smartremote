@@ -2,6 +2,21 @@
 
 [![Licença: GPL v3](https://img.shields.io/badge/Licen%C3%A7a-GPLv3-blue.svg)](./LICENSE)
 
+[![LinkedIn: Bruno Otávio](https://img.shields.io/badge/LinkedIn%3A-Bruno%20Ot%C3%A1vio-blue?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/bruno-ot%C3%A1vio-silva-de-oliveira-865930332/)
+
+Controle remoto universal para Smart TVs, escrito em Kotlin nativo (Android
+View system, sem Compose/MVVM/DI) — descobre TVs na rede local, pareia, e
+controla via WebSocket, com uma tela de diagnóstico embutida para depurar
+conexão e comandos em tempo real.
+
+Nessa versão vou fazer 3 commits separados (mais fácil de revisar e reverter individualmente se algo quebrar), a versão ja esta pronta, mas para facilitar o estudo do codigo prefiro fazer assim:
+
+v 0.9 - Reconexão automática;
+
+v 0.9.1 - App IDs LG;
+
+v 0.9.2 - Android TV / Google TV;
+
 Controle remoto universal para Smart TVs, escrito em Kotlin nativo (Android
 View system, sem Compose/MVVM/DI) — descobre TVs na rede local, pareia, e
 controla via WebSocket, com uma tela de diagnóstico embutida para depurar
@@ -27,12 +42,13 @@ conexão e comandos em tempo real.
   </tr>
 </table>
 
-> **v0.8** — fase de correção de arquitetura e robustez (bugs reais da
-> camada de Discovery, testes automatizados, CI, acessibilidade), sobre a
-> base da v0.7 (evolução completa da camada de descoberta de dispositivos —
-> múltiplos protocolos, deduplicação inteligente, diagnóstico estruturado).
-> Sem mudança de comportamento observável em relação à v0.7. Veja
-> [Descoberta de TVs](#descoberta-de-tvs) para detalhes da descoberta.
+> **v0.9** — reconexão automática de verdade (detecção de queda,
+> backoff, retomada proativa ao voltar pro app, reação a mudança de
+> rede), App IDs faltantes completados na LG, e o primeiro fabricante
+> novo desde a v0.7: **Android TV / Google TV**, com pareamento por
+> código de 6 dígitos e sessão de controle via Protobuf sobre TLS mútuo.
+> Sobre a base da v0.8 (fase de correção de arquitetura e robustez).
+> Nenhuma regressão pretendida no fluxo já existente de Samsung/LG.
 
 ## Funcionalidades
 
@@ -48,6 +64,11 @@ conexão e comandos em tempo real.
 - **Descoberta e pareamento de TVs** na rede local (SSDP/UPnP + mDNS +
   confirmação via API nativa da Samsung), com feedback claro de status
   (Conectando.../Pareando.../Conectada).
+- **Reconexão automática**: detecta quedas de conexão não pedidas pelo
+  usuário e tenta reconectar sozinho, com backoff (não agressivo),
+  reagindo tanto a voltar para o app quanto a mudanças de rede
+  (Wi-Fi caiu e voltou) — sem nunca "spammar" popups de pareamento na TV
+  quando a tentativa é silenciosa/automática.
 - **Múltiplas TVs pareadas simultaneamente** — troca de TV ativa sem perder
   o pareamento das demais; reconexão automática, ao abrir o app, sempre com
   a última TV efetivamente usada (não a primeira pareada).
@@ -63,7 +84,7 @@ conexão e comandos em tempo real.
 |---|---|---|
 | Samsung | Tizen | ✅ Controle via WebSocket (`SamsungTizenController`) |
 | LG | webOS | ✅ Controle via WebSocket/SSAP (`LgWebOsController`) |
-| Sony/TCL/Philips/Hisense | Android TV / Google TV | 🔜 Planejado |
+| Sony/TCL/Philips/Hisense | Android TV / Google TV | ✅ Controle via Protobuf/TLS mútuo (`AndroidTvController`) |
 | Amazon | Fire OS | 🔜 Planejado |
 | Roku | Roku OS | 🔜 Planejado |
 | Hisense | VIDAA | 🔜 Planejado |
@@ -117,8 +138,10 @@ app/src/main/java/com/example/smartremote/
 │                   fabricante) + UI de busca/pareamento
 ├── manager/        TvManager (fachada única da UI para TVs pareadas/
 │                   conectadas) + ConnectionManager (estado da conexão ativa)
-├── controller/     Um TvController por fabricante (Samsung/Tizen, LG/webOS),
-│                   cada um isolado no próprio protocolo de rede
+│                   + ReconnectionManager (backoff/retry automático, v0.9)
+├── controller/     Um TvController por fabricante (Samsung/Tizen, LG/webOS,
+│                   Android TV/Google TV), cada um isolado no próprio
+│                   protocolo de rede
 ├── model/          TvDevice, RemoteKey, enums de protocolo/SO
 ├── util/           Constants, DeviceStorage (persistência), CredentialStore
 │                   (tokens de pareamento), NetworkUtils
@@ -140,6 +163,70 @@ Princípios que o projeto segue (e que qualquer contribuição deve manter):
 - **`TvDevice.stableKey()`** é a identidade de pareamento/credenciais — não
   depende do IP (que muda com renovação de DHCP), e é diferente da
   identidade multi-critério usada só durante a descoberta.
+
+## Novidades da v0.9
+
+### 1. Reconexão automática
+
+Antes da v0.9, uma queda de conexão (Wi-Fi instável, TV que desliga a
+tela, timeout do socket) deixava o app "preso" mostrando conectado até o
+próximo comando falhar — e reabrir o app nunca reconectava sozinho, só
+depois do primeiro comando manual. Agora:
+
+- Toda queda de conexão **não pedida pelo usuário** é detectada e
+  distinguida de uma desconexão explícita (`TvManager.disconnect()`).
+- Reconecta sozinho com **backoff** (2s, 5s, 10s, 20s, 40s, depois sempre
+  60s) — nunca em loop agressivo.
+- Ao voltar para o app (`onStart`), tenta reconectar **proativamente**
+  com a última TV usada, em vez de ficar passivo.
+- Reage a **mudanças de rede** via `ConnectivityManager` (Wi-Fi caiu e
+  voltou) — não depende só de timeout.
+- **Nunca** dispara pareamento sozinho durante uma tentativa automática:
+  se a credencial salva não existir mais ou for rejeitada, desiste e
+  exige ação manual do usuário (sem "spammar" popups na TV).
+
+Ver `manager/ReconnectionManager.kt` e o novo
+`TvConnectionListener.onConnectionLost()`.
+
+### 2. App IDs completados na LG
+
+`Disney+`, `Apple TV(+)` e `Max` agora têm App ID confirmado no
+`LgWebOsController` (fonte documentada no KDoc de cada um).
+`Paramount+`, `Crunchyroll` e `Globoplay` continuam sem ID confiável
+para webOS — a UI mostra esses apps desabilitados nessa TV, em vez de um
+comando silenciosamente ignorado.
+
+### 3. Suporte a Android TV / Google TV
+
+Fabricante novo, protocolo bem diferente do JSON-sobre-WebSocket de
+LG/Samsung — "Android TV Remote Service v2" (o mesmo do app oficial
+"Google TV"):
+
+- **Descoberta**: já reconhecia essas TVs via mDNS
+  (`_androidtvremote2._tcp`) desde antes desta versão.
+- **Pareamento**: a TV exibe um código de 6 dígitos na tela, que o
+  usuário digita num diálogo simples no app — bem diferente do popup de
+  "Permitir?" de Samsung/LG. O algoritmo de verificação (SHA-256 sobre
+  módulo/expoente RSA dos dois certificados + o código) está documentado
+  em detalhe no KDoc de `AndroidTvRemoteProtocol.computePairingSecret`.
+- **Identidade criptográfica**: a TV exige TLS mútuo — o app gera e
+  guarda uma chave RSA-2048 inteiramente dentro do **AndroidKeyStore**
+  (nunca exportada, diferente do token de texto simples de Samsung/LG).
+- **Transporte**: TLS puro (não WebSocket) em duas portas — 6467 só para
+  pareamento, 6466 para a sessão já pareada — com framing de 1 byte de
+  tamanho por mensagem Protobuf.
+- **Apps**: abertos por deep link (URL), não por App ID numérico/alfa.
+
+Ver o pacote `controller/androidtv/` — `AndroidTvKeystoreManager`,
+`AndroidTvRemoteProtocol`, `AndroidTvSocketClient`, `AndroidTvController`.
+
+**Limitações conhecidas desta versão** (documentadas no código, para
+revisão): envio de texto livre (`sendText`) ainda não suportado para
+Android TV (mesma situação da LG hoje); reconexão automática de uma
+sessão já pareada sempre trata falha como recuperável (não há como
+distinguir com certeza "rede fora do ar" de "TV esqueceu o certificado"
+só pela exceção TLS); código de pareamento digitado errado exige tocar
+"Conectar" de novo, em vez de uma nova tentativa inline no mesmo diálogo.
 
 ## Requisitos
 
@@ -179,6 +266,14 @@ em todo push/PR para `main`. Cobertura atual de testes unitários:
   identidade de pareamento (ver a seção de arquitetura acima para por que
   isso é crítico).
 
+> **Nota da v0.9**: nenhum teste automatizado novo foi adicionado para
+> `ReconnectionManager`, os controllers Samsung/LG atualizados, ou o
+> `AndroidTvController`/`AndroidTvRemoteProtocol` novos — a cobertura
+> acima é a mesma de antes desta versão. Validação manual (compilar,
+> parear com uma TV Android TV real, forçar quedas de Wi-Fi) é
+> recomendada antes de ir para produção. Ficou como próximo passo, não
+> coberto nesta entrega.
+
 ## Build de release assinado
 
 Nenhuma keystore é commitada neste repositório (nem deveria ser). Para
@@ -212,7 +307,13 @@ neste repositório.
 ## Stack
 
 - **Kotlin** puro, sem Compose — Android Views + ViewBinding.
-- **OkHttp** para WebSocket com as TVs.
+- **OkHttp** para WebSocket com as TVs Samsung/LG.
+- **Protobuf** (`protobuf-javalite`, sem plugin protoc/codegen — mensagens
+  montadas campo a campo) + **socket TLS bruto com TLS mútuo** para
+  Android TV/Google TV (protocolo não é WebSocket).
+- **AndroidKeyStore** para a identidade criptográfica (chave privada RSA)
+  usada no pareamento com Android TV — nunca exportada para
+  SharedPreferences/texto puro.
 - **RecyclerView + Material Components** para as listas/bottom sheets.
 - Persistência simples via `SharedPreferences` + JSON nativo
   (`org.json`) — sem Room/DataStore.
@@ -221,12 +322,18 @@ neste repositório.
 
 ## Roadmap
 
-- [ ] Scanners de descoberta "do zero" para LG, Android TV, Roku, Fire TV
-      e VIDAA (a arquitetura de Discovery já está pronta para recebê-los).
-- [ ] Suporte de **controle** (não só descoberta) para os fabricantes acima.
-- [ ] Lançamento de apps de streaming via protocolo nativo de cada
-      fabricante (hoje `supportedApps()` já existe por `TvController`, mas
-      poucos apps têm App ID confiável mapeado).
+- [x] ~~Suporte de controle (Android TV/Google TV)~~ — feito na v0.9.
+- [x] ~~Reconexão automática~~ — feito na v0.9.
+- [ ] Scanners/controle "do zero" para Roku, Fire TV e VIDAA (a
+      arquitetura de Discovery já está pronta para recebê-los).
+- [ ] Envio de texto livre (`sendText`) para Android TV — protocolo tem
+      mensagens de IME para isso, mas sem documentação pública confiável
+      o bastante ainda (ver "Limitações conhecidas" da v0.9 acima).
+- [ ] App IDs faltantes (Paramount+/Crunchyroll na LG, Crunchyroll na
+      Samsung, Paramount+/Crunchyroll/Globoplay confirmados em mais
+      fabricantes).
+- [ ] Nova tentativa inline no diálogo de código do Android TV, quando o
+      código digitado estiver errado (hoje exige reconectar de novo).
 - [ ] Listener passivo de `NOTIFY ssdp:alive` (captura TVs que ligam durante
       a janela de busca).
 - [ ] Varredura de sub-rede por porta conhecida como fallback manual

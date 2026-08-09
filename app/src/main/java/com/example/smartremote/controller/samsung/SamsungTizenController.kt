@@ -44,8 +44,24 @@ class SamsungTizenController(
     private var currentListener: TvConnectionListener? = null
     private var pairingTimeoutRunnable: Runnable? = null
 
-    override fun connect(listener: TvConnectionListener) {
+    /**
+     * *** NOVO - v0.9, item 1 ***. `true` só entre o instante em que
+     * [disconnect] é chamado (pedido explícito do usuário/TvManager) e o
+     * fim do fechamento do socket. Usada por [onSocketClosed]/
+     * [onSocketFailure] para distinguir uma queda de conexão PEDIDA
+     * (nenhuma notificação de reconexão deve sair daqui - quem pediu já
+     * sabe) de uma queda INESPERADA (candidata a reconexão automática via
+     * [TvConnectionListener.onConnectionLost]).
+     */
+    @Volatile private var explicitDisconnect = false
+
+    /** Ver KDoc de [TvController.connect]. */
+    private var isAutomaticReconnect = false
+
+    override fun connect(listener: TvConnectionListener, isAutomaticReconnect: Boolean) {
         currentListener = listener
+        explicitDisconnect = false
+        this.isAutomaticReconnect = isAutomaticReconnect
         DiagnosticManager.updateDevice(device)
         DiagnosticManager.setController(CONTROLLER_NAME)
         DiagnosticManager.setLastError(null)
@@ -54,12 +70,30 @@ class SamsungTizenController(
         if (savedToken != null) {
             DiagnosticManager.setToken(savedToken)
             connectWithToken(savedToken)
-        } else {
-            startPairing()
+            return
         }
+
+        if (isAutomaticReconnect) {
+            // Reconexão automática (background/proativa ao voltar pro
+            // foreground) SEM token salvo: não há como reconectar sem
+            // exibir um popup de pareamento na TV, e isso nunca deve
+            // acontecer sem o usuário estar olhando/esperando. Desiste
+            // silenciosamente e sinaliza "não recuperável" para o
+            // ReconnectionManager parar de tentar - o usuário reconecta
+            // manualmente pela tela de Configurações quando quiser.
+            DiagnosticManager.log(
+                "Reconexão automática cancelada: TV Samsung sem token salvo (exigiria novo pareamento)",
+                DiagnosticLogType.INFO
+            )
+            notifyConnectionLost(recoverable = false)
+            return
+        }
+
+        startPairing()
     }
 
     override fun disconnect() {
+        explicitDisconnect = true
         cancelPairingTimeout()
         socketClient.close()
         connected = false
@@ -149,11 +183,25 @@ class SamsungTizenController(
     private fun onUnauthorizedEvent(hadToken: Boolean) {
         socketClient.close()
         if (hadToken) {
-            // Token salvo não é mais válido (ex: TV resetada/desparelhada) - descarta e reinicia o pareamento.
+            // Token salvo não é mais válido (ex: TV resetada/desparelhada) - descarta.
             DiagnosticManager.log("Erro de autenticação", DiagnosticLogType.ERROR)
-            DiagnosticManager.setLastError("Token inválido - iniciando novo pareamento")
             DiagnosticManager.setToken(null)
             CredentialStore.clear(context, credentialDeviceId, Constants.SAMSUNG_CREDENTIAL_TYPE)
+
+            if (isAutomaticReconnect) {
+                // *** v0.9, item 1 ***: em reconexão automática, NUNCA
+                // reinicia o pareamento sozinho (abriria popup na TV sem
+                // o usuário olhando) - só sinaliza "não recuperável" para
+                // o ReconnectionManager desistir e deixar o usuário
+                // reparear manualmente.
+                connected = false
+                DiagnosticManager.setConnectionStatus("Desconectado")
+                DiagnosticManager.setLastError("Token inválido - repareie manualmente em Configurações")
+                notifyConnectionLost(recoverable = false)
+                return
+            }
+
+            DiagnosticManager.setLastError("Token inválido - iniciando novo pareamento")
             startPairing()
         } else {
             connected = false
@@ -166,18 +214,37 @@ class SamsungTizenController(
 
     private fun onSocketFailure(message: String) {
         cancelPairingTimeout()
+        val wasConnected = connected
         connected = false
         DiagnosticManager.setConnectionStatus("Desconectado")
         DiagnosticManager.log("Erro de conexão: $message", DiagnosticLogType.ERROR)
         DiagnosticManager.setLastError(message)
+
+        if (wasConnected && !explicitDisconnect) {
+            // *** v0.9, item 1 ***: já estávamos conectados e o usuário
+            // não pediu desconexão - isto é uma queda inesperada (rede
+            // caiu, TV desligou, etc.), não uma falha de tentativa nova.
+            // Candidata a reconexão automática.
+            notifyConnectionLost(recoverable = true)
+            return
+        }
         notifyError("Erro de conexão: $message")
     }
 
     private fun onSocketClosed() {
+        val wasConnected = connected
         if (connected) {
             connected = false
             DiagnosticManager.setConnectionStatus("Desconectado")
             DiagnosticManager.log("Conexão encerrada", DiagnosticLogType.NETWORK)
+        }
+
+        if (wasConnected && !explicitDisconnect) {
+            // *** v0.9, item 1 ***: socket fechou sozinho (não foi
+            // TvManager.disconnect() que causou isto) enquanto estávamos
+            // conectados - queda inesperada, candidata a reconexão
+            // automática com backoff.
+            notifyConnectionLost(recoverable = true)
         }
     }
 
@@ -218,6 +285,8 @@ class SamsungTizenController(
     private fun notifyConnected() = mainHandler.post { currentListener?.onConnected() }
     private fun notifyPairingRequired() = mainHandler.post { currentListener?.onPairingRequired() }
     private fun notifyError(message: String) = mainHandler.post { currentListener?.onError(message) }
+    private fun notifyConnectionLost(recoverable: Boolean) =
+        mainHandler.post { currentListener?.onConnectionLost(recoverable) }
 
     // ===================== COMANDOS =====================
 

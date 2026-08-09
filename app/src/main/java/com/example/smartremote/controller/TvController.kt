@@ -15,7 +15,21 @@ import com.example.smartremote.model.RemoteKey
  * RemoteKey ganha um valor novo, de forma não-destrutiva.
  */
 interface TvController {
-    fun connect(listener: TvConnectionListener)
+
+    /**
+     * @param isAutomaticReconnect *** NOVO - v0.9, item 1 ***. `true`
+     * quando esta chamada vem de [com.example.smartremote.manager.ReconnectionManager]
+     * (retry silencioso em background ou reconexão proativa ao voltar
+     * para o foreground), nunca de uma ação explícita do usuário na tela
+     * de descoberta. Implementações devem usar esta flag para NUNCA
+     * iniciar um pareamento novo sem credencial salva quando ela for
+     * `true` (o que exibiria um popup de confirmação na TV sem que o
+     * usuário estivesse olhando/esperando isso) - nesse caso, a
+     * implementação deve chamar
+     * [TvConnectionListener.onConnectionLost] com `recoverable = false`
+     * imediatamente e retornar, em vez de abrir o socket.
+     */
+    fun connect(listener: TvConnectionListener, isAutomaticReconnect: Boolean = false)
     fun disconnect()
     fun isConnected(): Boolean
 
@@ -55,4 +69,15 @@ interface TvController {
      * isso.
      */
     fun supportedApps(): Set<RemoteKey>
+
+    /**
+     * *** NOVO - v0.9, item 3 (Android TV) ***
+     *
+     * Recebe o código de 6 dígitos hexadecimais que o usuário digitou no
+     * app, em resposta a um [TvConnectionListener.onPairingCodeRequired].
+     * Corpo padrão vazio: só [com.example.smartremote.controller.androidtv.AndroidTvController]
+     * usa isso de fato - Samsung/LG nunca chamam onPairingCodeRequired, e
+     * portanto nunca deveriam receber uma chamada aqui.
+     */
+    fun submitPairingCode(code: String) {}
 }

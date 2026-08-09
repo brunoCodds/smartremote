@@ -18,6 +18,7 @@ import com.example.smartremote.diagnostic.DiagnosticLogEntry
 import com.example.smartremote.diagnostic.DiagnosticManager
 import com.example.smartremote.diagnostic.DiagnosticState
 import com.example.smartremote.discovery.DeviceDiscoveryActivity
+import com.example.smartremote.manager.ReconnectionManager
 import com.example.smartremote.manager.TvManager
 import com.example.smartremote.model.RemoteKey
 import com.example.smartremote.ui.AppsBottomSheet
@@ -89,6 +90,24 @@ class MainActivity : AppCompatActivity() {
         enableFullscreenMode()
         setupClickListeners()
         setupDiagnosticPanel()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // *** v0.9, item 1 ***: cobre tanto a abertura fria do app quanto
+        // o retorno de background - reconecta proativamente com a última
+        // TV conectada em vez de ficar passivo esperando um comando do
+        // usuário para só aí descobrir que está desconectado.
+        ReconnectionManager.startNetworkMonitor(applicationContext)
+        TvManager.reconnectIfNeeded(applicationContext)
+    }
+
+    override fun onStop() {
+        // Monitor de rede só precisa estar ativo com a tela em primeiro
+        // plano - evita callback duplicado/vazado se onStart rodar de
+        // novo antes de um onStop anterior ser processado.
+        ReconnectionManager.stopNetworkMonitor()
+        super.onStop()
     }
 
     override fun onDestroy() {
@@ -350,15 +369,19 @@ class MainActivity : AppCompatActivity() {
      * feita em TvManager.pairDevice() para reconectar sempre com a TV
      * que foi de fato usada por último.
      */
+    /**
+     * Registra a MainActivity como observadora do DiagnosticManager. A
+     * tentativa de reconexão automática com a última TV conectada NÃO
+     * acontece mais aqui - ver [onStart]/[TvManager.reconnectIfNeeded]
+     * (*** v0.9, item 1 ***). Motivo: onCreate só roda na abertura "fria"
+     * do app; onStart roda tanto na abertura fria quanto toda vez que o
+     * app volta para o foreground vindo de background, que é justamente
+     * o outro cenário descrito no pedido da v0.9 ("abrir o app, mesmo
+     * com uma TV pareada e na mesma rede, ele não reconecta
+     * automaticamente").
+     */
     private fun setupDiagnosticPanel() {
         DiagnosticManager.addListener(diagnosticListener)
-        TvManager.getLastConnectedDevice(applicationContext)?.let { device ->
-            TvManager.connect(applicationContext, device, object : TvConnectionListener {
-                override fun onConnected() { /* painel de diagnóstico já reflete o estado via DiagnosticManager */ }
-                override fun onPairingRequired() { /* não deveria ocorrer numa reconexão com token salvo */ }
-                override fun onError(message: String) { /* fica desconectado; usuário pode reconectar em Configurações */ }
-            })
-        }
     }
 
     /** Abre o painel se estiver fechado, ou fecha se estiver aberto. */

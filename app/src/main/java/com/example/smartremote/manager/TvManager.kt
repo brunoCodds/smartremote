@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.Log
 import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.controller.TvController
+import com.example.smartremote.controller.androidtv.AndroidTvController
+import com.example.smartremote.controller.androidtv.AndroidTvKeystoreManager
 import com.example.smartremote.controller.lg.LgWebOsController
 import com.example.smartremote.controller.samsung.SamsungTizenController
 import com.example.smartremote.diagnostic.DiagnosticLogType
@@ -122,10 +124,21 @@ object TvManager {
         DeviceStorage.remove(context, key)
 
         device?.let {
-            val credentialType = credentialTypeFor(it.os)
-            if (credentialType != null) {
-                val credentialDeviceId = it.deviceId ?: it.ip
-                CredentialStore.clear(context, credentialDeviceId, credentialType)
+            val credentialDeviceId = it.deviceId ?: it.ip
+            if (it.os == TvOperatingSystem.ANDROID_TV || it.os == TvOperatingSystem.GOOGLE_TV) {
+                // *** v0.9, item 3 ***: diferente de Samsung/LG (um
+                // simples CredentialStore.clear() já basta), aqui existe
+                // uma entrada de verdade no AndroidKeyStore que precisa
+                // ser apagada explicitamente - ver KDoc de
+                // AndroidTvKeystoreManager.deleteKeyPair() (que também já
+                // limpa o CredentialStore por baixo, então não chamamos
+                // CredentialStore.clear() de novo aqui).
+                AndroidTvKeystoreManager(context, credentialDeviceId).deleteKeyPair()
+            } else {
+                val credentialType = credentialTypeFor(it.os)
+                if (credentialType != null) {
+                    CredentialStore.clear(context, credentialDeviceId, credentialType)
+                }
             }
         }
 
@@ -166,10 +179,34 @@ object TvManager {
      * DiagnosticManager é limpo para não misturar logs de dispositivos
      * diferentes.
      */
-    fun connect(context: Context, device: TvDevice, listener: TvConnectionListener) {
-        Log.d(DIAG_TAG, "TvManager.connect() recebeu device: $device (key=${device.stableKey()})")
+    /**
+     * Inicia a conexão/pareamento com [device], escolhendo o TvController
+     * correto conforme o sistema operacional detectado na descoberta.
+     * Qualquer conexão anterior é encerrada antes de iniciar uma nova, e o
+     * DiagnosticManager é limpo para não misturar logs de dispositivos
+     * diferentes.
+     *
+     * @param isAutomaticReconnect *** NOVO - v0.9, item 1 ***. `true`
+     * quando esta chamada vem de [ReconnectionManager] (retry silencioso
+     * em background) ou de [reconnectIfNeeded] (proativa ao voltar pro
+     * foreground) - nunca de uma ação explícita do usuário. Repassado ao
+     * controller (ver [TvController.connect]) e usado aqui para: (1) não
+     * limpar o DiagnosticManager a cada tentativa de retry, preservando o
+     * histórico para o usuário entender o que aconteceu, e (2) decidir o
+     * que fazer quando o controller sinaliza [TvConnectionListener.onError]
+     * durante uma tentativa automática (ver abaixo).
+     */
+    fun connect(
+        context: Context,
+        device: TvDevice,
+        listener: TvConnectionListener,
+        isAutomaticReconnect: Boolean = false
+    ) {
+        Log.d(DIAG_TAG, "TvManager.connect() recebeu device: $device (key=${device.stableKey()}, automatico=$isAutomaticReconnect)")
         currentController?.disconnect()
-        DiagnosticManager.clear()
+        if (!isAutomaticReconnect) {
+            DiagnosticManager.clear()
+        }
 
         val controller = createControllerFor(context, device)
         if (controller == null) {
@@ -180,38 +217,111 @@ object TvManager {
         currentController = controller
         connectionManager.connect(device)
 
-        controller.connect(object : TvConnectionListener {
-            override fun onConnected() {
-                DiagnosticManager.log(
-                    "[LG-PAIRING] 6/6 - TvManager.onConnected() recebido do controller (${controller::class.simpleName}); marcando ConnectionManager e repassando para o listener da UI",
-                    DiagnosticLogType.INFO
-                )
-                connectionManager.markConnected()
-                listener.onConnected()
-                DiagnosticManager.log("[LG-PAIRING] 6/6 - listener.onConnected() da UI retornou (repasse concluído)", DiagnosticLogType.INFO)
-            }
+        controller.connect(
+            object : TvConnectionListener {
+                override fun onConnected() {
+                    DiagnosticManager.log(
+                        "[LG-PAIRING] 6/6 - TvManager.onConnected() recebido do controller (${controller::class.simpleName}); marcando ConnectionManager e repassando para o listener da UI",
+                        DiagnosticLogType.INFO
+                    )
+                    connectionManager.markConnected()
+                    // *** v0.9, item 1 ***: qualquer reconexão automática
+                    // pendente (backoff agendado) deixa de fazer sentido -
+                    // já estamos conectados de novo.
+                    ReconnectionManager.onReconnected()
+                    listener.onConnected()
+                    DiagnosticManager.log("[LG-PAIRING] 6/6 - listener.onConnected() da UI retornou (repasse concluído)", DiagnosticLogType.INFO)
+                }
 
-            override fun onPairingRequired() {
-                DiagnosticManager.log(
-                    "[LG-PAIRING] TvManager.onPairingRequired() recebido do controller (${controller::class.simpleName}); repassando para o listener da UI",
-                    DiagnosticLogType.INFO
-                )
-                listener.onPairingRequired()
-            }
+                override fun onPairingRequired() {
+                    DiagnosticManager.log(
+                        "[LG-PAIRING] TvManager.onPairingRequired() recebido do controller (${controller::class.simpleName}); repassando para o listener da UI",
+                        DiagnosticLogType.INFO
+                    )
+                    // *** v0.9, item 1 ***: se a TV está pedindo confirmação
+                    // de novo - mesmo que tenha sido uma tentativa
+                    // automática que chegou até aqui (não deveria, já que os
+                    // controllers evitam iniciar pareamento novo quando
+                    // isAutomaticReconnect=true e não há credencial salva,
+                    // mas cobre também o caso de credencial salva rejeitada
+                    // NA HORA por um controller que ainda assim decida pedir
+                    // confirmação) - paramos qualquer retry automático
+                    // agendado, para não virar uma enxurrada de popups na TV.
+                    ReconnectionManager.cancel()
+                    listener.onPairingRequired()
+                }
 
-            override fun onError(message: String) {
-                DiagnosticManager.log(
-                    "[LG-PAIRING] TvManager.onError() recebido do controller (${controller::class.simpleName}): $message",
-                    DiagnosticLogType.ERROR
-                )
-                connectionManager.disconnect()
-                listener.onError(message)
-            }
-        })
+                override fun onError(message: String) {
+                    DiagnosticManager.log(
+                        "[LG-PAIRING] TvManager.onError() recebido do controller (${controller::class.simpleName}): $message",
+                        DiagnosticLogType.ERROR
+                    )
+                    connectionManager.disconnect()
+                    listener.onError(message)
+                    if (isAutomaticReconnect) {
+                        // Tentativa automática falhou por um motivo que não
+                        // foi sinalizado como "não recuperável" via
+                        // onConnectionLost(false) (ex: TV inalcançável na
+                        // rede agora mesmo) - continua tentando com backoff.
+                        ReconnectionManager.scheduleReconnect(context.applicationContext, device)
+                    }
+                }
+
+                override fun onConnectionLost(recoverable: Boolean) {
+                    DiagnosticManager.log(
+                        "[LG-PAIRING] TvManager.onConnectionLost(recoverable=$recoverable) recebido do controller (${controller::class.simpleName})",
+                        DiagnosticLogType.INFO
+                    )
+                    connectionManager.disconnect()
+                    listener.onConnectionLost(recoverable)
+                    if (recoverable) {
+                        ReconnectionManager.scheduleReconnect(context.applicationContext, device)
+                    } else {
+                        // Ex: credencial salva foi rejeitada, ou reconexão
+                        // automática não tinha credencial nenhuma para usar
+                        // - exige ação do usuário, não adianta insistir.
+                        ReconnectionManager.cancel()
+                    }
+                }
+            },
+            isAutomaticReconnect
+        )
+    }
+
+    /**
+     * *** NOVO - v0.9, item 1 ***
+     *
+     * Tenta reconectar PROATIVAMENTE com a última TV conectada
+     * ([getLastConnectedDevice]), em vez de ficar passivo esperando o
+     * usuário mandar um comando para só aí descobrir que está
+     * desconectado. Chamada pela MainActivity ao voltar para o
+     * foreground (onStart) - cobre tanto a abertura "fria" do app quanto
+     * o retorno de background.
+     *
+     * Não faz nada se: já existe uma conexão ativa, ou não há nenhuma TV
+     * pareada. Usa `isAutomaticReconnect = true` (mesma lógica de
+     * segurança contra popups de pareamento sem o usuário olhando que se
+     * aplica ao retry em background).
+     */
+    fun reconnectIfNeeded(context: Context) {
+        if (isConnected()) return
+        val device = getLastConnectedDevice(context) ?: return
+
+        DiagnosticManager.log("Reconexão proativa ao voltar para o app (device=${device.stableKey()})", DiagnosticLogType.INFO)
+        connect(context, device, object : TvConnectionListener {
+            override fun onConnected() {}
+            override fun onPairingRequired() {}
+            override fun onError(message: String) {}
+        }, isAutomaticReconnect = true)
     }
 
     /** Encerra a conexão ativa, se existir. Seguro chamar mesmo sem conexão. Não afeta o pareamento. */
     fun disconnect() {
+        // *** v0.9, item 1 ***: desconexão pedida pelo usuário cancela
+        // qualquer reconexão automática agendada - senão o app tentaria
+        // reconectar sozinho segundos depois do usuário ter pedido
+        // justamente o contrário.
+        ReconnectionManager.cancel()
         currentController?.disconnect()
         currentController = null
         connectionManager.disconnect()
@@ -261,6 +371,19 @@ object TvManager {
      */
     fun getSupportedApps(): Set<RemoteKey> = currentController?.supportedApps() ?: emptySet()
 
+    /**
+     * *** NOVO - v0.9, item 3 (Android TV) ***
+     *
+     * Repassa o código de 6 dígitos digitado pelo usuário (em resposta a
+     * [TvConnectionListener.onPairingCodeRequired]) para o controller
+     * ativo. Só tem efeito de fato durante um pareamento Android TV em
+     * andamento - para qualquer outro fabricante/situação, o controller
+     * ignora silenciosamente (ver corpo padrão de [TvController.submitPairingCode]).
+     */
+    fun submitPairingCode(code: String) {
+        currentController?.submitPairingCode(code)
+    }
+
     /** Chave (stableKey) da TV atualmente conectada, ou null se nenhuma conexão ativa. */
     fun getConnectedDeviceKey(): String? {
         val device = connectionManager.getCurrentDevice() ?: return null
@@ -271,6 +394,8 @@ object TvManager {
         val controller = when (device.os) {
             TvOperatingSystem.TIZEN -> SamsungTizenController(context.applicationContext, device)
             TvOperatingSystem.WEBOS -> LgWebOsController(context.applicationContext, device)
+            TvOperatingSystem.ANDROID_TV, TvOperatingSystem.GOOGLE_TV ->
+                AndroidTvController(context.applicationContext, device)
             else -> null
         }
         Log.d(
@@ -290,6 +415,7 @@ object TvManager {
     private fun credentialTypeFor(os: TvOperatingSystem): String? = when (os) {
         TvOperatingSystem.TIZEN -> Constants.SAMSUNG_CREDENTIAL_TYPE
         TvOperatingSystem.WEBOS -> Constants.LG_CREDENTIAL_TYPE
+        TvOperatingSystem.ANDROID_TV, TvOperatingSystem.GOOGLE_TV -> Constants.ANDROID_TV_CREDENTIAL_TYPE
         else -> null
     }
 }

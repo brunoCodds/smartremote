@@ -89,6 +89,12 @@ class LgWebOsController(
     private var pointerSocketReady = false
     private var pairingTimeoutRunnable: Runnable? = null
 
+    /** Ver KDoc equivalente em SamsungTizenController - mesmo propósito. */
+    @Volatile private var explicitDisconnect = false
+
+    /** Ver KDoc de [TvController.connect]. */
+    private var isAutomaticReconnect = false
+
     /**
      * Tradução RemoteKey -> nome de botão do pointer socket. Nomes
      * conforme documentados pelo binding webOS do Home Assistant e
@@ -108,11 +114,27 @@ class LgWebOsController(
      * físicas são mecanismos diferentes, mas convergem no mesmo
      * sendRemoteKey - ver TvController.sendRemoteKey).
      */
+    /**
+     * Apps de streaming lançáveis via [LgWebOsProtocol.URI_LAUNCH_APP].
+     * Checado ANTES de [KEY_BUTTON_MAP] em [sendRemoteKey], mesma ordem
+     * de prioridade usada por SamsungTizenController (App IDs e teclas
+     * físicas são mecanismos diferentes, mas convergem no mesmo
+     * sendRemoteKey - ver TvController.sendRemoteKey).
+     *
+     * *** v0.9, item 2 ***: DISNEY_PLUS/APPLE_TV_PLUS/MAX adicionados
+     * nesta versão - ver KDoc de cada *_APP_ID em [LgWebOsProtocol] para a
+     * fonte de cada um. PARAMOUNT_PLUS/CRUNCHYROLL/GLOBOPLAY continuam
+     * fora do mapa (sem App ID confiável encontrado para webOS) - ver o
+     * mesmo KDoc.
+     */
     private val APP_LAUNCH_MAP: Map<RemoteKey, String> = mapOf(
         RemoteKey.NETFLIX to LgWebOsProtocol.NETFLIX_APP_ID,
         RemoteKey.PRIME_VIDEO to LgWebOsProtocol.PRIME_VIDEO_APP_ID,
         RemoteKey.YOUTUBE to LgWebOsProtocol.YOUTUBE_APP_ID,
-        RemoteKey.PLEX to LgWebOsProtocol.PLEX_APP_ID
+        RemoteKey.PLEX to LgWebOsProtocol.PLEX_APP_ID,
+        RemoteKey.DISNEY_PLUS to LgWebOsProtocol.DISNEY_PLUS_APP_ID,
+        RemoteKey.APPLE_TV_PLUS to LgWebOsProtocol.APPLE_TV_PLUS_APP_ID,
+        RemoteKey.MAX to LgWebOsProtocol.MAX_APP_ID
     )
 
     private val KEY_BUTTON_MAP: Map<RemoteKey, String> = mapOf(
@@ -140,8 +162,10 @@ class LgWebOsController(
         RemoteKey.PLAY_PAUSE to "PAUSE"
     )
 
-    override fun connect(listener: TvConnectionListener) {
+    override fun connect(listener: TvConnectionListener, isAutomaticReconnect: Boolean) {
         this.listener = listener
+        this.explicitDisconnect = false
+        this.isAutomaticReconnect = isAutomaticReconnect
 
         val credentialDeviceId = device.deviceId ?: device.ip
         val savedClientKey = CredentialStore.get(context, credentialDeviceId, Constants.LG_CREDENTIAL_TYPE)
@@ -164,6 +188,20 @@ class LgWebOsController(
             "LG webOS: iniciando conexão com ${device.ip} (deviceId=$credentialDeviceId, clientKey salvo? ${!savedClientKey.isNullOrBlank()})",
             DiagnosticLogType.INFO
         )
+
+        if (isAutomaticReconnect && savedClientKey.isNullOrBlank()) {
+            // *** v0.9, item 1 ***: mesma lógica da Samsung - reconexão
+            // automática sem client-key salva abriria um popup de
+            // pareamento na TV sem o usuário olhando. Desiste
+            // silenciosamente e sinaliza "não recuperável".
+            DiagnosticManager.log(
+                "Reconexão automática cancelada: TV LG sem client-key salva (exigiria novo pareamento)",
+                DiagnosticLogType.INFO
+            )
+            DiagnosticManager.setConnectionStatus("Desconectado")
+            mainHandler.post { listener.onConnectionLost(recoverable = false) }
+            return
+        }
 
         mainSocket.connect(buildMainSocketUrl(device.ip), LgWebOsSocketClient.Listener { event ->
             // IMPORTANTE: este listener é chamado pelo OkHttp na thread de
@@ -188,17 +226,29 @@ class LgWebOsController(
 
                     is LgWebOsSocketClient.SocketEvent.Closed -> {
                         DiagnosticManager.log("LG webOS: socket principal fechado (${event.reason})", DiagnosticLogType.INFO)
+                        val wasConnected = connected
                         connected = false
                         DiagnosticManager.setConnectionStatus("Desconectado")
+                        if (wasConnected && !explicitDisconnect) {
+                            // *** v0.9, item 1 ***: mesma lógica da Samsung
+                            // - queda inesperada enquanto conectados,
+                            // candidata a reconexão automática.
+                            this.listener?.onConnectionLost(recoverable = true)
+                        }
                     }
 
                     is LgWebOsSocketClient.SocketEvent.Failure -> {
                         cancelPairingTimeout()
                         DiagnosticManager.log("LG webOS: falha no socket principal - ${event.message}", DiagnosticLogType.ERROR)
+                        val wasConnected = connected
                         connected = false
                         DiagnosticManager.setConnectionStatus("Desconectado")
                         DiagnosticManager.setLastError(event.message)
-                        this.listener?.onError("Falha ao conectar na TV LG: ${event.message}")
+                        if (wasConnected && !explicitDisconnect) {
+                            this.listener?.onConnectionLost(recoverable = true)
+                        } else {
+                            this.listener?.onError("Falha ao conectar na TV LG: ${event.message}")
+                        }
                     }
                 }
             }
@@ -318,6 +368,7 @@ class LgWebOsController(
     }
 
     override fun disconnect() {
+        explicitDisconnect = true
         cancelPairingTimeout()
         DiagnosticManager.log("LG webOS: desconectando (pointer socket + socket principal)", DiagnosticLogType.INFO)
         pointerSocket?.close()
