@@ -22,6 +22,8 @@ View system, sem Compose/MVVM/DI) — descobre TVs na rede local, pareia, e
 controla via WebSocket, com uma tela de diagnóstico embutida para depurar
 conexão e comandos em tempo real.
 
+Uso este app diariamente para controlar minha TV desde a v0.7 — meu controle remoto físico quebrou, então esse é o app que eu realmente uso no dia a dia, não um protótipo de estudo.
+
 ## Screenshots
 
 <table>
@@ -49,6 +51,10 @@ conexão e comandos em tempo real.
 > código de 6 dígitos e sessão de controle via Protobuf sobre TLS mútuo.
 > Sobre a base da v0.8 (fase de correção de arquitetura e robustez).
 > Nenhuma regressão pretendida no fluxo já existente de Samsung/LG.
+
+Antes da v0.9, uma queda de conexão (Wi-Fi instável, TV que desliga a tela, timeout do socket — às vezes só de a tela do celular apagar) deixava o app "preso". E esse foi o problema que mais me incomodou usando o app no dia a dia, então virou prioridade da v0.9.
+
+
 
 ## Funcionalidades
 
