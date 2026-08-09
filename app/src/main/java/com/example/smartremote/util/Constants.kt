@@ -103,4 +103,28 @@ object Constants {
     const val SAMSUNG_DISCOVERY_API_PATH = "/api/v2/"
     const val SAMSUNG_DISCOVERY_CONNECT_TIMEOUT_MS = 1500
     const val SAMSUNG_DISCOVERY_READ_TIMEOUT_MS = 1500
+
+    // ===== Android TV / Google TV (Android TV Remote Service v2) =====
+    // *** NOVO - v0.9, item 3 ***. Ver KDoc completo do protocolo em
+    // AndroidTvRemoteProtocol - resumo aqui é só de onde vêm os números.
+    /** Porta usada SÓ durante o pareamento (troca de PairingMessage em TLS). */
+    const val ANDROID_TV_PAIRING_PORT = 6467
+    /** Porta usada para a sessão já pareada (troca de RemoteMessage em TLS). */
+    const val ANDROID_TV_REMOTE_PORT = 6466
+    /**
+     * Tipo de credencial no CredentialStore para Android TV - mas ao
+     * contrário de SAMSUNG_CREDENTIAL_TYPE/LG_CREDENTIAL_TYPE (um token de
+     * texto simples), aqui o valor salvo não é a chave privada em si (essa
+     * fica no Android Keystore, nunca exportável) - é só o ALIAS usado no
+     * Keystore para esta TV, para saber qual entrada procurar depois. Ver
+     * AndroidTvKeystoreManager para a decisão completa de onde/como a
+     * chave privada é guardada.
+     */
+    const val ANDROID_TV_CREDENTIAL_TYPE = "androidtv_keystore_alias"
+    /** Prefixo do alias no AndroidKeyStore - o restante é o deviceId/IP da TV, para isolar a chave por TV pareada. */
+    const val ANDROID_TV_KEYSTORE_ALIAS_PREFIX = "smartremote_androidtv_"
+    const val ANDROID_TV_PAIRING_TIMEOUT_MS = 60_000L
+    /** Nome exibido para a TV durante o pareamento (equivalente ao SAMSUNG_APP_NAME/LG_APP_NAME). */
+    const val ANDROID_TV_CLIENT_NAME = "SmartRemote"
+    const val ANDROID_TV_SERVICE_NAME = "SmartRemote"
 }

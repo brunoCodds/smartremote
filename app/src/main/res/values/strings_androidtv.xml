@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings novas da v0.9, item 3 (pareamento com código - Android TV).
+  Mesmo padrão de strings_discovery.xml: basta manter este arquivo em
+  res/values/ - o Android mescla automaticamente com os demais.
+-->
+<resources>
+    <string name="connection_status_waiting_pairing_code">Digite o código exibido na TV</string>
+    <string name="androidtv_pairing_code_dialog_title">Código exibido na TV</string>
+    <string name="androidtv_pairing_code_dialog_message">A TV está exibindo um código de 6 dígitos. Digite-o abaixo para concluir o pareamento.</string>
+    <string name="androidtv_pairing_code_hint">Ex: A1B2C3</string>
+    <string name="androidtv_pairing_code_confirm">Confirmar</string>
+    <string name="androidtv_pairing_code_cancel">Cancelar</string>
+    <string name="androidtv_pairing_code_invalid">Digite os 6 dígitos exibidos na TV</string>
+</resources>

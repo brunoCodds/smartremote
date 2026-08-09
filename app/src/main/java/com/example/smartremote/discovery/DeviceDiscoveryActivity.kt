@@ -176,12 +176,64 @@ class DeviceDiscoveryActivity : AppCompatActivity() {
                 binding.txtConnectionStatus.text = getString(R.string.connection_status_pairing)
             }
 
+            override fun onPairingCodeRequired() {
+                // *** v0.9, item 3 (Android TV) ***: diferente de
+                // onPairingRequired() (Samsung/LG - só um popup na TV
+                // pra aceitar), aqui o usuário precisa DIGITAR um código
+                // que a TV está exibindo - ver KDoc completo em
+                // AndroidTvRemoteProtocol.computePairingSecret.
+                binding.txtConnectionStatus.text = getString(R.string.connection_status_waiting_pairing_code)
+                showAndroidTvPairingCodeDialog()
+            }
+
             override fun onError(message: String) {
                 setConnectingState(false)
                 binding.txtConnectionStatus.text = message
                 refreshPairedDevicesSection()
             }
         })
+    }
+
+    /**
+     * *** NOVO - v0.9, item 3 (Android TV) ***
+     *
+     * Diálogo simples (não uma tela nova nem um BottomSheet - deliberado,
+     * para não ampliar o escopo desta versão além do estritamente
+     * necessário para o pareamento funcionar) que pede o código de 6
+     * dígitos exibido na TV e repassa via [TvManager.submitPairingCode].
+     * Fechar o diálogo (Cancelar/tocar fora) não desfaz a tentativa de
+     * conexão em andamento - só cancela a DIGITAÇÃO; se o usuário mudar
+     * de ideia de verdade, ele usa o botão de conectar/cancelar normal da
+     * tela (a conexão de pareamento é encerrada nesse fluxo já existente,
+     * não por este diálogo).
+     */
+    private fun showAndroidTvPairingCodeDialog() {
+        val input = android.widget.EditText(this).apply {
+            hint = getString(R.string.androidtv_pairing_code_hint)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS
+            filters = arrayOf(android.text.InputFilter.LengthFilter(6))
+        }
+        val paddingPx = (16 * resources.displayMetrics.density).toInt()
+        val container = android.widget.FrameLayout(this).apply {
+            setPadding(paddingPx, paddingPx / 2, paddingPx, 0)
+            addView(input)
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.androidtv_pairing_code_dialog_title)
+            .setMessage(R.string.androidtv_pairing_code_dialog_message)
+            .setView(container)
+            .setCancelable(false)
+            .setPositiveButton(R.string.androidtv_pairing_code_confirm) { _, _ ->
+                val code = input.text?.toString()?.trim().orEmpty()
+                if (code.length != 6) {
+                    Toast.makeText(this, R.string.androidtv_pairing_code_invalid, Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                TvManager.submitPairingCode(code)
+            }
+            .setNegativeButton(R.string.androidtv_pairing_code_cancel, null)
+            .show()
     }
 
     /** Bloqueia novas buscas/seleções enquanto a conexão está em andamento. */

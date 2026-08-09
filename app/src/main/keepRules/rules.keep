@@ -37,3 +37,15 @@
 # membros) só para deixar stack traces de crash mais legíveis em produção
 # - não é uma exigência funcional, é conveniência de diagnóstico.
 -keepnames class com.example.smartremote.model.** { *; }
+
+# ===== v0.9, item 3 - Android TV (Protobuf) =====
+#
+# AndroidTvRemoteProtocol usa só CodedOutputStream/CodedInputStream
+# (com.google.protobuf:protobuf-javalite) - primitivas de baixo nível
+# chamadas diretamente pelo próprio código (nunca via reflection, nunca
+# via classes MessageLite geradas). Por isso, diferente do que seria
+# necessário se este projeto gerasse classes .proto, NENHUMA regra de
+# keep adicional é necessária aqui - R8 já enxerga essas chamadas
+# normalmente, como qualquer outra biblioteca Java comum. Este comentário
+# existe só para deixar registrado que a ausência de regras é
+# intencional, não um esquecimento.

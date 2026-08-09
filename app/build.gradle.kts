@@ -152,6 +152,8 @@ dependencies {
     // usavam libs.* ***
     implementation(libs.androidx.recyclerview)
     implementation(libs.okhttp)
+    // *** v0.9, item 3 (Android TV) - ver comentário em libs.versions.toml ***
+    implementation(libs.protobuf.javalite)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
