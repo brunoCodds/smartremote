@@ -503,5 +503,4 @@ oficial.
 > por esta declaração, assim como todas as versões futuras — sem
 > necessidade de reescrever tags/commits antigos já publicados.
 
-Copyright © 2026 brunoCodds.
-READMEEOF
+Copyright © 2026 brunoCodds
