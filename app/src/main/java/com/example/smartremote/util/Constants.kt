@@ -127,4 +127,17 @@ object Constants {
     /** Nome exibido para a TV durante o pareamento (equivalente ao SAMSUNG_APP_NAME/LG_APP_NAME). */
     const val ANDROID_TV_CLIENT_NAME = "SmartRemote"
     const val ANDROID_TV_SERVICE_NAME = "SmartRemote"
+
+    // ===== v0.9.3, item 3 - Menu lateral (links externos) =====
+    // Link usado pelo item "Compartilhar app" (Intent.ACTION_SEND) - hoje
+    // aponta para o repositório GitHub porque não existe link de
+    // loja/Play Store ainda (decisão explícita do usuário para esta
+    // versão). Isolado aqui de propósito: quando existir um link de loja,
+    // a troca é questão de mudar esta linha só, em vez de caçar o valor
+    // espalhado em algum layout/Activity.
+    const val SHARE_APP_URL = "https://github.com/brunoCodds/smartremote"
+
+    // Links do rodapé do menu lateral - abrem no navegador.
+    const val AUTHOR_GITHUB_URL = "https://github.com/brunoCodds"
+    const val AUTHOR_LINKEDIN_URL = "https://www.linkedin.com/in/bruno-otávio-silva-de-oliveira-865930332"
 }

@@ -47,5 +47,10 @@
     <attr name="colorDanger" format="color" />
     <attr name="colorOnDanger" format="color" />
     <attr name="colorSuccess" format="color" />
+    <!-- *** NOVO - v0.9.3, item 2 ***: não existia nenhum atributo semântico
+         para "aviso" no projeto - ERROR já tinha colorDanger, RESPONSE já
+         reaproveita colorSuccess, mas WARNING (DiagnosticLogType) não tinha
+         nada equivalente, então foi necessário criar este. -->
+    <attr name="colorWarning" format="color" />
 
 </resources>

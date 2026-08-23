@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 
     <application
+        android:name=".SmartRemoteApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -27,6 +28,20 @@
 
         <activity
             android:name=".discovery.DeviceDiscoveryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmartRemote" />
+
+        <!-- *** NOVO - v0.9.3, item 3 *** -->
+        <activity
+            android:name=".faq.FaqActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SmartRemote" />
+
+        <!-- *** NOVO - v0.9.3, item 4 *** -->
+        <activity
+            android:name=".diagnostic.DeepDiagnosticActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SmartRemote" />

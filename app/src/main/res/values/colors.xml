@@ -35,6 +35,10 @@
     <color name="danger_500">#E53935</color>
     <color name="on_danger">#FFFFFF</color>
     <color name="success_500">#43A047</color>
+    <!-- *** NOVO - v0.9.3, item 2 ***: amber, para DiagnosticLogType.WARNING
+         no painel de diagnóstico - nem grave o suficiente para colorDanger,
+         nem neutro o suficiente para ficar sem nenhum destaque. -->
+    <color name="warning_500">#F5A623</color>
 
     <!-- •••••••••• Apps de streaming (cor de marca própria — fora do sistema de accent) •••••••••• -->
     <color name="netflix_red">#E50914</color>

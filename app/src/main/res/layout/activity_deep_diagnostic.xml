@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    *** v0.9.3, item 4 ***: tela com dados CRUS e completos (ao contrário
+    do painel simples do item 2) - bloco de Dispositivo/Conexão em texto
+    literal "campo: valor" (sem o formato "Rótulo....valor" tratado do
+    painel simples), e DOIS logs independentes e roláveis lado a lado
+    verticalmente (peso 1 cada): o de conexão (mesma fonte do painel
+    simples, DiagnosticManager, mas SEM o corte/limite visual que o painel
+    sobreposto ao controle remoto tem) e o de descoberta
+    (DiscoveryDiagnostics - "por que outras TVs não foram encontradas").
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurfaceDeep"
+    tools:context=".diagnostic.DeepDiagnosticActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurfaceDeep"
+        app:title="@string/deep_diagnostic_title"
+        app:titleTextColor="?attr/colorTextPrimary"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:navigationIconTint="?attr/colorTextPrimary"
+        app:navigationContentDescription="@string/desc_back" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp">
+
+        <!-- Bloco "Dispositivo" - dump literal campo:valor de todo o DiagnosticState (menos o log, que vira as listas abaixo). -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/deep_diagnostic_section_device"
+            android:textAppearance="@style/TextAppearance.Fluent.SectionTitle" />
+
+        <TextView
+            android:id="@+id/txtDeepDevice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="monospace"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="3dp"
+            android:textColor="?attr/colorAccent"
+            android:textIsSelectable="true"
+            android:textSize="11sp"
+            tools:text="ip: 192.168.0.15\nbrand: Samsung" />
+
+        <!-- Bloco "Conexão" -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/deep_diagnostic_section_connection"
+            android:textAppearance="@style/TextAppearance.Fluent.SectionTitle" />
+
+        <TextView
+            android:id="@+id/txtDeepConnection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="monospace"
+            android:includeFontPadding="false"
+            android:lineSpacingExtra="3dp"
+            android:textColor="?attr/colorAccent"
+            android:textIsSelectable="true"
+            android:textSize="11sp"
+            tools:text="connectionStatus: Conectado\nisAutoReconnecting: false" />
+
+        <!-- Log de eventos de conexão (DiagnosticManager - mesma fonte do painel simples, sem tratamento/corte). -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/deep_diagnostic_section_events"
+            android:textAppearance="@style/TextAppearance.Fluent.SectionTitle" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerDeepEvents"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:scrollbars="vertical"
+                tools:listitem="@layout/item_diagnostic_log" />
+
+            <TextView
+                android:id="@+id/txtDeepEventsEmpty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/deep_diagnostic_events_empty"
+                android:textAppearance="@style/TextAppearance.Fluent.Caption" />
+
+        </FrameLayout>
+
+        <!-- Log de eventos de descoberta (DiscoveryDiagnostics - última busca de TVs realizada nesta sessão). -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/deep_diagnostic_section_discovery"
+            android:textAppearance="@style/TextAppearance.Fluent.SectionTitle" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerDeepDiscovery"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:scrollbars="vertical"
+                tools:listitem="@layout/item_diagnostic_log" />
+
+            <TextView
+                android:id="@+id/txtDeepDiscoveryEmpty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/deep_diagnostic_discovery_empty"
+                android:textAppearance="@style/TextAppearance.Fluent.Caption" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

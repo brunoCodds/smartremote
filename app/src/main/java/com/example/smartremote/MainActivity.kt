@@ -1,29 +1,37 @@
 package com.example.smartremote
 
+import android.animation.ObjectAnimator
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.View
+import android.view.animation.LinearInterpolator
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.databinding.ActivityMainBinding
-import com.example.smartremote.diagnostic.DiagnosticLogEntry
+import com.example.smartremote.diagnostic.DeepDiagnosticActivity
 import com.example.smartremote.diagnostic.DiagnosticManager
 import com.example.smartremote.diagnostic.DiagnosticState
 import com.example.smartremote.discovery.DeviceDiscoveryActivity
+import com.example.smartremote.faq.FaqActivity
 import com.example.smartremote.manager.ReconnectionManager
 import com.example.smartremote.manager.TvManager
 import com.example.smartremote.model.RemoteKey
 import com.example.smartremote.ui.AppsBottomSheet
 import com.example.smartremote.ui.RemoteKeypadBottomSheet
 import com.example.smartremote.ui.TextInputBottomSheet
+import com.example.smartremote.util.Constants
+import com.example.smartremote.util.LanguageManager
 import java.util.Locale
 
 /**
@@ -46,14 +54,38 @@ class MainActivity : AppCompatActivity() {
         private const val DIAGNOSTIC_ANIM_DURATION_MS = 200L
         private const val DIAGNOSTIC_SLIDE_DISTANCE_DP = 40f
         private const val DIAGNOSTIC_LABEL_COLUMN_WIDTH = 18
+
+        // ===== v0.9.3, item 1 - Indicador "Reconectando" =====
+        private const val RECONNECT_FADE_DURATION_MS = 200L
+        private const val RECONNECT_ROTATION_DURATION_MS = 900L
     }
 
-    /** Recebe as atualizações do DiagnosticManager e apenas repassa para renderDiagnostic(). */
-    private val diagnosticListener = DiagnosticManager.Listener { state, logs ->
-        renderDiagnostic(state, logs)
+    /**
+     * Recebe as atualizações do DiagnosticManager e repassa tanto para
+     * renderDiagnostic() (painel de debug) quanto para
+     * updateReconnectIndicator() (*** NOVO - v0.9.3, item 1 ***) - os dois
+     * lêem do mesmo DiagnosticState, só mudam de apresentação.
+     *
+     * *** v0.9.3 (correção pós-lançamento) ***: o parâmetro `logs` não é
+     * mais usado aqui - o stream de log foi removido do painel simples a
+     * pedido explícito (só os blocos TV/Última atividade continuam).
+     * Continua chegando porque é a mesma assinatura de
+     * [DiagnosticManager.Listener] usada por
+     * [com.example.smartremote.diagnostic.DeepDiagnosticActivity], que
+     * ainda precisa dele.
+     */
+    private val diagnosticListener = DiagnosticManager.Listener { state, _ ->
+        renderDiagnostic(state)
+        updateReconnectIndicator(state)
     }
 
     private var isDiagnosticPanelOpen = false
+
+    /** *** NOVO - v0.9.3, item 1 ***: evita reabrir/reanimar o indicador à toa em atualizações que não mudam o estado ligado/desligado (ex: um novo log chegando enquanto já está visível). */
+    private var isReconnectIndicatorVisible = false
+
+    /** *** NOVO - v0.9.3, item 1 ***: referência para poder cancelar a rotação (bateria/CPU) quando o indicador é escondido. */
+    private var reconnectRotationAnimator: ObjectAnimator? = null
 
     /**
      * Resultado do reconhecimento de voz do Android (usado pelo botão
@@ -90,6 +122,7 @@ class MainActivity : AppCompatActivity() {
         enableFullscreenMode()
         setupClickListeners()
         setupDiagnosticPanel()
+        setupDrawer() // *** NOVO - v0.9.3, item 3 ***
     }
 
     override fun onStart() {
@@ -112,6 +145,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         DiagnosticManager.removeListener(diagnosticListener)
+        stopReconnectRotation() // *** NOVO - v0.9.3, item 1 ***: evita animator rodando após a Activity morrer
         super.onDestroy()
     }
 
@@ -130,8 +164,10 @@ class MainActivity : AppCompatActivity() {
             // Diagnóstico (painel de debug, apenas dev)
             btnInfo.setOnClickListener { toggleDiagnosticPanel() }
 
-            // Configurações (procurar/conectar TV)
-            btnSettings.setOnClickListener { openDeviceDiscovery() }
+            // Menu lateral (v0.9.3, item 3) - antes ia direto para a
+            // descoberta; agora abre o drawer, que tem "Pareamento de TV"
+            // como um dos itens (ver setupDrawer()).
+            btnSettings.setOnClickListener { drawerLayout.openDrawer(GravityCompat.START) }
 
             // Topo
             btnPower.setOnClickListener { power() }
@@ -172,6 +208,128 @@ class MainActivity : AppCompatActivity() {
     /** Abre a tela de descoberta/pareamento de Smart TVs na rede local. */
     private fun openDeviceDiscovery() {
         startActivity(Intent(this, DeviceDiscoveryActivity::class.java))
+    }
+
+    // ===================== MENU LATERAL (v0.9.3, item 3) =====================
+
+    /**
+     * Wiring dos itens do drawer (ver res/layout/drawer_content.xml,
+     * incluído em activity_main.xml via `<include>` com id
+     * `drawerContent` - os ids internos do include são acessados como
+     * `binding.drawerContent.<id>`, padrão normal de ViewBinding com
+     * `<include>`).
+     *
+     * Cada item fecha o drawer (`closeDrawer`) antes de disparar sua ação -
+     * evita a sensação de "menu ainda meio aberto por cima" ao voltar de
+     * uma Activity nova, e no caso do diálogo de idioma evita o dialog
+     * abrindo com o drawer ainda visível atrás dele.
+     */
+    private fun setupDrawer() {
+        // *** NOVO - v0.9.3, item 3 ***: sem isso, o botão "voltar" do
+        // Android com o drawer aberto sairia da MainActivity em vez de só
+        // fechar o menu (comportamento padrão quando nada intercepta o
+        // back). O callback começa desabilitado e só liga/desliga junto
+        // com o estado real do drawer (DrawerListener abaixo) - assim ele
+        // nunca "rouba" o back em telas/estados onde não devia.
+        val backCallback = object : OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                closeDrawer()
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, backCallback)
+        binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) = Unit
+            override fun onDrawerStateChanged(newState: Int) = Unit
+            override fun onDrawerOpened(drawerView: View) {
+                backCallback.isEnabled = true
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                backCallback.isEnabled = false
+            }
+        })
+
+        with(binding.drawerContent) {
+            itemPairing.setOnClickListener {
+                closeDrawer()
+                openDeviceDiscovery()
+            }
+            itemDeepDiagnostic.setOnClickListener {
+                closeDrawer()
+                startActivity(Intent(this@MainActivity, DeepDiagnosticActivity::class.java))
+            }
+            itemFaq.setOnClickListener {
+                closeDrawer()
+                startActivity(Intent(this@MainActivity, FaqActivity::class.java))
+            }
+            itemShare.setOnClickListener {
+                closeDrawer()
+                shareApp()
+            }
+            itemLanguage.setOnClickListener {
+                closeDrawer()
+                showLanguagePicker()
+            }
+            itemGithub.setOnClickListener {
+                closeDrawer()
+                openExternalLink(Constants.AUTHOR_GITHUB_URL)
+            }
+            itemLinkedin.setOnClickListener {
+                closeDrawer()
+                openExternalLink(Constants.AUTHOR_LINKEDIN_URL)
+            }
+        }
+    }
+
+    private fun closeDrawer() {
+        binding.drawerLayout.closeDrawer(GravityCompat.START)
+    }
+
+    /**
+     * `Intent.ACTION_SEND` (texto simples) com o link do repositório GitHub
+     * - ver KDoc de [Constants.SHARE_APP_URL] para o porquê de ser esse
+     * link e não um de loja/Play Store por enquanto.
+     */
+    private fun shareApp() {
+        val shareText = getString(R.string.share_app_text, Constants.SHARE_APP_URL)
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+        }
+        startActivity(Intent.createChooser(intent, getString(R.string.share_app_chooser_title)))
+    }
+
+    /** Abre um link externo (GitHub/LinkedIn do rodapé do menu) no navegador padrão do aparelho. */
+    private fun openExternalLink(url: String) {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+
+    /**
+     * Diálogo simples com as 4 opções fixas de idioma (ver
+     * [LanguageManager] para o porquê de não haver uma opção "padrão do
+     * sistema"). A opção correspondente ao idioma atual já vem marcada.
+     * Ao escolher, [LanguageManager.setLanguage] já cuida de recriar as
+     * Activities visíveis com o novo idioma - não é preciso `recreate()`
+     * manual aqui.
+     */
+    private fun showLanguagePicker() {
+        val languages = LanguageManager.AppLanguage.values()
+        val labels = arrayOf(
+            getString(R.string.language_option_pt),
+            getString(R.string.language_option_en),
+            getString(R.string.language_option_es),
+            getString(R.string.language_option_fr)
+        )
+        val currentIndex = languages.indexOf(LanguageManager.getCurrentLanguage())
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.language_dialog_title)
+            .setSingleChoiceItems(labels, currentIndex) { dialog, which ->
+                LanguageManager.setLanguage(this, languages[which])
+                dialog.dismiss()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     // ===================== AÇÕES - TOPO =====================
@@ -379,6 +537,11 @@ class MainActivity : AppCompatActivity() {
      * o outro cenário descrito no pedido da v0.9 ("abrir o app, mesmo
      * com uma TV pareada e na mesma rede, ele não reconecta
      * automaticamente").
+     *
+     * *** v0.9.3 (correção pós-lançamento) ***: não configura mais nenhum
+     * RecyclerView aqui - o stream de log foi removido do painel simples
+     * (ver KDoc de [diagnosticListener] e o layout de `panelDiagnostic`
+     * em activity_main.xml).
      */
     private fun setupDiagnosticPanel() {
         DiagnosticManager.addListener(diagnosticListener)
@@ -420,36 +583,62 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Único ponto que escreve nos TextViews do painel. Chamado sempre que o
-     * DiagnosticManager notifica uma mudança de estado ou um novo log -
-     * o painel não precisa ser fechado/reaberto para refletir alterações.
+     * Único ponto que escreve nos TextViews/RecyclerView do painel simples.
+     * Chamado sempre que o DiagnosticManager notifica uma mudança de
+     * estado ou um novo log - o painel não precisa ser fechado/reaberto
+     * para refletir alterações.
+     *
+     * *** v0.9.3 (correção pós-lançamento) - painel simplificado para
+     * leigos ***: só 2 blocos - "TV" (Nome + Status) e "Última atividade"
+     * (Erro + Ping). O stream de log cru também foi removido (ver KDoc de
+     * [diagnosticListener]). Os campos técnicos (IP, protocolo, nome da
+     * classe do controller, token, passos de log) não desapareceram do
+     * app - continuam disponíveis por inteiro no Diagnóstico Aprofundado
+     * (ver [com.example.smartremote.diagnostic.DeepDiagnosticActivity]),
+     * só saíram deste painel porque ele é voltado a "minha TV está
+     * funcionando?", não a depuração de protocolo.
      */
-    private fun renderDiagnostic(state: DiagnosticState, logs: List<DiagnosticLogEntry>) {
-        binding.txtDiagnosticInfo.text = buildDiagnosticInfoText(state)
-        binding.txtDiagnosticLogs.text = buildDiagnosticLogsText(logs)
-        binding.scrollDiagnosticLogs.post {
-            binding.scrollDiagnosticLogs.fullScroll(View.FOCUS_DOWN)
-        }
+    private fun renderDiagnostic(state: DiagnosticState) {
+        binding.txtDiagnosticTv.text = buildDiagnosticTvText(state)
+        binding.txtDiagnosticActivity.text = buildDiagnosticActivityText(state)
     }
 
-    private fun buildDiagnosticInfoText(state: DiagnosticState): String = listOf(
-        diagnosticLine("IP", state.ip ?: "—"),
-        diagnosticLine("Marca", state.brand ?: "—"),
-        diagnosticLine("Modelo", state.model ?: "—"),
-        diagnosticLine("Sistema", formatDiagnosticOs(state.os)),
-        diagnosticLine("Controlador", state.controllerName ?: "—"),
-        diagnosticLine("Protocolo", formatDiagnosticProtocol(state.protocol)),
-        diagnosticLine("Status", state.connectionStatus),
-        diagnosticLine("Ping", state.pingMs?.let { "$it ms" } ?: "—"),
-        diagnosticLine("Token", state.tokenMasked ?: "—"),
-        diagnosticLine("Último comando", state.lastCommand ?: "—"),
-        diagnosticLine("Resposta", state.lastResponse ?: "—"),
-        diagnosticLine("Erro", state.lastError ?: "—")
-    ).joinToString(separator = "\n")
+    /**
+     * Nome legível da TV (reaproveita [buildReconnectDeviceLabel], mesma
+     * lógica "Marca Modelo" já usada no indicador de reconexão - item 1)
+     * + status da conexão, já traduzido (ver [DiagnosticState.connectionStatus],
+     * que os TvControllers agora setam via `context.getString(R.string.status_*)`).
+     */
+    private fun buildDiagnosticTvText(state: DiagnosticState): String {
+        val na = getString(R.string.diagnostic_value_unavailable)
+        return listOf(
+            diagnosticLine(getString(R.string.diagnostic_label_name), buildReconnectDeviceLabel(state) ?: na),
+            diagnosticLine(getString(R.string.diagnostic_label_status), state.connectionStatus)
+        ).joinToString(separator = "\n")
+    }
 
-    private fun buildDiagnosticLogsText(logs: List<DiagnosticLogEntry>): String {
-        if (logs.isEmpty()) return "Nenhum evento registrado ainda."
-        return logs.joinToString(separator = "\n") { entry -> "[${entry.timestamp}] ${entry.message}" }
+    /**
+     * *** CORREÇÃO - v0.9.3 (pós-lançamento) ***
+     * - "Ping" nunca era medido por NENHUM fabricante - `DiagnosticManager.setPing()`
+     *   existia mas nada chamava. Corrigido com
+     *   [com.example.smartremote.manager.PingMonitor], que mede o tempo de
+     *   conexão TCP até a porta de controle da TV a cada 10s enquanto
+     *   conectado.
+     * - "Último comando" e "Resposta" foram REMOVIDOS deste painel a
+     *   pedido explícito: são nomes técnicos de protocolo (ex: "KEY_HOME",
+     *   "KEY_VOLUP") que não significam nada para um usuário comum e só
+     *   ocupavam espaço de tela. `DiagnosticManager.setLastCommand()`/
+     *   `setLastResponse()` continuam sendo chamados normalmente (o dado
+     *   não deixou de ser coletado) - só não aparecem mais AQUI. Quem
+     *   quiser ver esse detalhe cru continua tendo o Diagnóstico
+     *   Aprofundado (item 4), que mostra esses dois campos por inteiro.
+     */
+    private fun buildDiagnosticActivityText(state: DiagnosticState): String {
+        val na = getString(R.string.diagnostic_value_unavailable)
+        return listOf(
+            diagnosticLine(getString(R.string.diagnostic_label_last_error), state.lastError ?: na),
+            diagnosticLine(getString(R.string.diagnostic_label_ping), state.pingMs?.let { getString(R.string.diagnostic_value_ping_format, it) } ?: na)
+        ).joinToString(separator = "\n")
     }
 
     /** Formata "Rótulo....................valor", alinhado em coluna monoespaçada. */
@@ -458,23 +647,111 @@ class MainActivity : AppCompatActivity() {
         return label + ".".repeat(dotsCount) + value
     }
 
-    private fun formatDiagnosticOs(rawOs: String?): String = when (rawOs) {
-        "TIZEN" -> "Tizen"
-        "WEBOS" -> "webOS"
-        "ANDROID_TV" -> "Android TV"
-        "GOOGLE_TV" -> "Google TV"
-        "ROKU_OS" -> "Roku OS"
-        "FIRE_OS" -> "Fire OS"
-        "VIDAA" -> "VIDAA"
-        null, "UNKNOWN" -> "—"
-        else -> rawOs
+    // ===================== INDICADOR "RECONECTANDO" (v0.9.3, item 1) =====================
+
+    /**
+     * Liga/desliga o indicador "Reconectando a {TV}..." a partir de
+     * [DiagnosticState.isAutoReconnecting]. Chamado a cada atualização do
+     * DiagnosticManager (mesmo listener do painel de debug), mas só de
+     * fato mexe na UI quando o valor de [DiagnosticState.isAutoReconnecting]
+     * MUDOU em relação ao que já estava sendo exibido - evita reiniciar a
+     * animação de rotação ou reanimar o fade a cada novo log que chega
+     * durante uma reconexão já em andamento.
+     */
+    private fun updateReconnectIndicator(state: DiagnosticState) {
+        if (state.isAutoReconnecting == isReconnectIndicatorVisible) {
+            // Já está no estado certo - só atualiza o texto (o nome/marca
+            // da TV pode ter chegado um instante depois do flag ligar).
+            if (state.isAutoReconnecting) {
+                binding.txtReconnecting.text = buildReconnectText(state)
+            }
+            return
+        }
+
+        if (state.isAutoReconnecting) {
+            binding.txtReconnecting.text = buildReconnectText(state)
+            showReconnectIndicator()
+        } else {
+            hideReconnectIndicator()
+        }
     }
 
-    private fun formatDiagnosticProtocol(rawProtocol: String?): String = when (rawProtocol) {
-        "SSDP" -> "SSDP (UPnP)"
-        "MDNS" -> "mDNS"
-        null -> "—"
-        else -> rawProtocol
+    /**
+     * Mostra o indicador com fade-in (mesmo padrão de duração/curva usado em
+     * [openDiagnosticPanel], mas só com alpha - o indicador não desliza,
+     * só aparece/desaparece no lugar) e inicia a rotação contínua do ícone.
+     */
+    private fun showReconnectIndicator() {
+        isReconnectIndicatorVisible = true
+        with(binding.containerReconnecting) {
+            animate().cancel()
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate().alpha(1f).setDuration(RECONNECT_FADE_DURATION_MS).start()
+        }
+        startReconnectRotation()
+    }
+
+    /**
+     * Esconde o indicador com fade-out e PARA a animação de rotação -
+     * requisito explícito do item 1: não gastar bateria/CPU girando um
+     * ícone invisível em segundo plano.
+     */
+    private fun hideReconnectIndicator() {
+        isReconnectIndicatorVisible = false
+        with(binding.containerReconnecting) {
+            animate().cancel()
+            animate()
+                .alpha(0f)
+                .setDuration(RECONNECT_FADE_DURATION_MS)
+                .withEndAction { visibility = View.GONE }
+                .start()
+        }
+        stopReconnectRotation()
+    }
+
+    private fun startReconnectRotation() {
+        if (reconnectRotationAnimator?.isRunning == true) return
+        reconnectRotationAnimator = ObjectAnimator.ofFloat(binding.imgReconnecting, View.ROTATION, 0f, 360f).apply {
+            duration = RECONNECT_ROTATION_DURATION_MS
+            repeatCount = ObjectAnimator.INFINITE
+            interpolator = LinearInterpolator()
+            start()
+        }
+    }
+
+    private fun stopReconnectRotation() {
+        reconnectRotationAnimator?.cancel()
+        reconnectRotationAnimator = null
+        binding.imgReconnecting.rotation = 0f
+    }
+
+    /**
+     * Formato do nome exibido: "Marca Modelo" (ex: "Samsung Q60") quando os
+     * dois estiverem disponíveis - mais legível que só o IP ou só a marca.
+     * Cai para marca OU modelo isolado se só um dos dois vier preenchido, e
+     * para o [DiagnosticState.name] (nome bruto salvo na descoberta) como
+     * último recurso antes de desistir e usar a versão genérica da string
+     * ("Reconectando..." sem nome nenhum), conforme pedido no item 1.
+     */
+    private fun buildReconnectDeviceLabel(state: DiagnosticState): String? {
+        val brand = state.brand?.trim()?.takeIf { it.isNotEmpty() }
+        val model = state.model?.trim()?.takeIf { it.isNotEmpty() }
+        return when {
+            brand != null && model != null -> "$brand $model"
+            brand != null -> brand
+            model != null -> model
+            else -> state.name?.trim()?.takeIf { it.isNotEmpty() }
+        }
+    }
+
+    private fun buildReconnectText(state: DiagnosticState): String {
+        val label = buildReconnectDeviceLabel(state)
+        return if (label != null) {
+            getString(R.string.reconnecting_with_name, label)
+        } else {
+            getString(R.string.reconnecting_generic)
+        }
     }
 
     // ===================== HELPERS REUTILIZÁVEIS =====================

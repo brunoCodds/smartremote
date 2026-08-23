@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    *** v0.9.3, item 3 ***: root passou de um ConstraintLayout puro para um
+    DrawerLayout com dois filhos - o conteúdo principal (o mesmo
+    ConstraintLayout id=root de sempre, ainda com todo o layout original
+    dentro, sem nenhuma mudança estrutural interna) e o menu lateral
+    (drawerContent, gravity=start). Nada dentro do ConstraintLayout id=root
+    mudou de posição/constraint por causa disso - só ganhou um pai a mais.
+-->
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/root"
+    android:id="@+id/contentRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurfaceDeep"
@@ -34,7 +50,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ===================== CONFIGURAÇÕES (descoberta/pareamento de TV) ===================== -->
+    <!-- ===================== MENU LATERAL (abre o drawer - v0.9.3, item 3) ===================== -->
     <ImageView
         android:id="@+id/btnSettings"
         style="@style/Widget.Fluent.IconCircle.Secondary"
@@ -42,7 +58,7 @@
         android:layout_height="48dp"
         android:padding="12dp"
         android:src="@drawable/ic_settings"
-        android:contentDescription="@string/desc_settings"
+        android:contentDescription="@string/desc_open_menu"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -349,7 +365,7 @@
         android:layout_marginBottom="8dp"
         android:gravity="center"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/containerReconnecting"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rowVolumeChannel">
@@ -414,7 +430,55 @@
 
     </LinearLayout>
 
-    <!-- ===================== PAINEL DE DIAGNÓSTICO (overlay, apenas dev — visual "console") ===================== -->
+    <!-- ===================== INDICADOR "RECONECTANDO" (v0.9.3, item 1) =====================
+         Só aparece durante reconexão AUTOMÁTICA (backoff em segundo plano ou
+         tentativa proativa ao voltar pro app) - nunca durante um pareamento
+         manual novo, que já tem seu próprio feedback na tela de descoberta.
+         Controlado por MainActivity.showReconnectIndicator()/hideReconnectIndicator(),
+         a partir de DiagnosticState.isAutoReconnecting. GONE por padrão para
+         não ocupar espaço nenhum enquanto não está em uso (ver rowStreaming,
+         que cede espaço para este container quando ele fica visível). -->
+    <LinearLayout
+        android:id="@+id/containerReconnecting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible">
+
+        <ImageView
+            android:id="@+id/imgReconnecting"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_reconnecting"
+            android:tint="?attr/colorTextSecondary"
+            android:contentDescription="@string/desc_reconnecting_icon" />
+
+        <TextView
+            android:id="@+id/txtReconnecting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textAppearance="@style/TextAppearance.Fluent.Caption"
+            tools:text="Reconectando a Samsung Q60…" />
+
+    </LinearLayout>
+
+    <!-- ===================== PAINEL DE DIAGNÓSTICO (overlay, apenas dev — visual "console") =====================
+         *** v0.9.3 (correção pós-lançamento) - painel SIMPLIFICADO para
+         leigos ***: só os blocos "TV" (Nome + Status) e "Última
+         atividade" (Erro + Ping). O stream de log cru (passos técnicos
+         tipo "[LG-PAIRING] 3/6", nomes de mensagem de protocolo etc.) foi
+         REMOVIDO deste painel a pedido explícito - não é algo que um
+         usuário comum vá interpretar, e ocupava a maior parte da tela.
+         Esse stream não desapareceu do app: ele é exatamente o que o
+         Diagnóstico Aprofundado (item 4, `DeepDiagnosticActivity`) mostra
+         por inteiro, para quem quiser ver o processo passo a passo. -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/panelDiagnostic"
         android:layout_width="0dp"
@@ -428,53 +492,78 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/txtDiagnosticInfo"
+        <LinearLayout
+            android:id="@+id/groupDiagnosticInfo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="64dp"
             android:clickable="false"
             android:focusable="false"
-            android:fontFamily="monospace"
-            android:includeFontPadding="false"
-            android:lineSpacingExtra="4dp"
-            android:textColor="?attr/colorAccent"
-            android:textIsSelectable="false"
-            android:textSize="12sp"
+            android:orientation="vertical"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="IP................192.168.0.15\nMarca.............Samsung" />
+            app:layout_constraintTop_toTopOf="parent">
 
-        <ScrollView
-            android:id="@+id/scrollDiagnosticLogs"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="32dp"
-            android:clickable="false"
-            android:focusable="false"
-            android:scrollbars="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/txtDiagnosticInfo">
+            <!-- Seção: TV (Nome/Status - só o essencial para quem não é dev) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/diagnostic_section_tv"
+                android:textAppearance="@style/TextAppearance.Fluent.SectionTitle"
+                android:textSize="10sp" />
 
             <TextView
-                android:id="@+id/txtDiagnosticLogs"
-                android:layout_width="match_parent"
+                android:id="@+id/txtDiagnosticTv"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:clickable="false"
                 android:focusable="false"
                 android:fontFamily="monospace"
                 android:includeFontPadding="false"
-                android:lineSpacingExtra="2dp"
-                android:textColor="?attr/colorTextPrimary"
+                android:lineSpacingExtra="4dp"
+                android:textColor="?attr/colorAccent"
                 android:textIsSelectable="false"
-                android:textSize="11sp"
-                tools:text="[10:20:31] Conectado\n[10:20:34] KEY_HOME" />
+                android:textSize="12sp"
+                tools:text="Nome..............Samsung Q60\nStatus............Conectado" />
 
-        </ScrollView>
+            <!-- Seção: Última atividade (Erro/Ping - "Último comando"/"Resposta"
+                 removidos a pedido explícito: texto técnico de protocolo,
+                 sem valor para o usuário comum, ocupava espaço à toa) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/diagnostic_section_activity"
+                android:textAppearance="@style/TextAppearance.Fluent.SectionTitle"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/txtDiagnosticActivity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:clickable="false"
+                android:focusable="false"
+                android:fontFamily="monospace"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="4dp"
+                android:textColor="?attr/colorAccent"
+                android:textIsSelectable="false"
+                android:textSize="12sp"
+                tools:text="Erro..............—\nPing..............32 ms" />
+
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+<!-- ^ fim do conteúdo principal (id=root). A partir daqui, filho do DrawerLayout. -->
+
+<include
+    android:id="@+id/drawerContent"
+    layout="@layout/drawer_content"
+    android:layout_width="300dp"
+    android:layout_height="match_parent"
+    android:layout_gravity="start" />
+
+</androidx.drawerlayout.widget.DrawerLayout>

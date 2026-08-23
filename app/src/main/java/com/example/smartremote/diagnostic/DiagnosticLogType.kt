@@ -2,9 +2,12 @@ package com.example.smartremote.diagnostic
 
 /**
  * Classifica a natureza de cada evento registrado no log de diagnóstico.
- * Usado apenas para categorização/depuração - não altera a exibição atual
- * do painel (que mantém o texto sempre branco, sem cores/ícones por tipo),
- * mas deixa a estrutura pronta caso isso seja necessário no futuro.
+ *
+ * Cada tipo determina a cor da linha correspondente no Diagnóstico
+ * Aprofundado (ver [DiagnosticLogAdapter]) - o stream de log não aparece
+ * mais no painel simples (removido a pedido explícito: era texto técnico
+ * de protocolo sem valor para o usuário comum). Antes disso era usado
+ * apenas para categorização/depuração, sem efeito visual nenhum.
  */
 enum class DiagnosticLogType {
     INFO,

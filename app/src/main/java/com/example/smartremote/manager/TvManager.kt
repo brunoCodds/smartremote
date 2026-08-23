@@ -2,6 +2,7 @@ package com.example.smartremote.manager
 
 import android.content.Context
 import android.util.Log
+import com.example.smartremote.R
 import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.controller.TvController
 import com.example.smartremote.controller.androidtv.AndroidTvController
@@ -210,7 +211,17 @@ object TvManager {
 
         val controller = createControllerFor(context, device)
         if (controller == null) {
-            listener.onError("TV ainda não suportada nesta versão")
+            // *** v0.9.3, item 1 ***: este retorno antecipado não passa
+            // pelo wrapper de TvConnectionListener abaixo (que é quem
+            // normalmente aciona ReconnectionManager.scheduleReconnect/cancel
+            // para desligar o indicador) - se não desligarmos aqui, uma
+            // reconexão automática com uma TV que ficou sem controller
+            // suportado deixaria o indicador "Reconectando..." preso ligado
+            // para sempre.
+            if (isAutomaticReconnect) {
+                ReconnectionManager.cancel()
+            }
+            listener.onError(context.getString(R.string.error_tv_not_supported))
             return
         }
 
@@ -229,6 +240,8 @@ object TvManager {
                     // pendente (backoff agendado) deixa de fazer sentido -
                     // já estamos conectados de novo.
                     ReconnectionManager.onReconnected()
+                    // *** NOVO - v0.9.3 (correção: Ping nunca era medido) ***
+                    controlPortFor(device.os)?.let { port -> PingMonitor.start(device.ip, port) }
                     listener.onConnected()
                     DiagnosticManager.log("[LG-PAIRING] 6/6 - listener.onConnected() da UI retornou (repasse concluído)", DiagnosticLogType.INFO)
                 }
@@ -257,6 +270,7 @@ object TvManager {
                         DiagnosticLogType.ERROR
                     )
                     connectionManager.disconnect()
+                    PingMonitor.stop() // *** NOVO - v0.9.3 ***
                     listener.onError(message)
                     if (isAutomaticReconnect) {
                         // Tentativa automática falhou por um motivo que não
@@ -273,6 +287,7 @@ object TvManager {
                         DiagnosticLogType.INFO
                     )
                     connectionManager.disconnect()
+                    PingMonitor.stop() // *** NOVO - v0.9.3 ***
                     listener.onConnectionLost(recoverable)
                     if (recoverable) {
                         ReconnectionManager.scheduleReconnect(context.applicationContext, device)
@@ -307,6 +322,12 @@ object TvManager {
         if (isConnected()) return
         val device = getLastConnectedDevice(context) ?: return
 
+        // *** NOVO - v0.9.3, item 1 ***: liga o indicador já nesta primeira
+        // tentativa proativa, antes mesmo de qualquer backoff ser agendado -
+        // se ela falhar, o onError abaixo aciona o ReconnectionManager, que
+        // mantém o flag ligado; se tiver sucesso, onConnected desliga via
+        // ReconnectionManager.onReconnected().
+        DiagnosticManager.setAutoReconnecting(true)
         DiagnosticManager.log("Reconexão proativa ao voltar para o app (device=${device.stableKey()})", DiagnosticLogType.INFO)
         connect(context, device, object : TvConnectionListener {
             override fun onConnected() {}
@@ -322,9 +343,23 @@ object TvManager {
         // reconectar sozinho segundos depois do usuário ter pedido
         // justamente o contrário.
         ReconnectionManager.cancel()
+        PingMonitor.stop() // *** NOVO - v0.9.3 ***
         currentController?.disconnect()
         currentController = null
         connectionManager.disconnect()
+    }
+
+    /**
+     * *** NOVO - v0.9.3 ***: porta de controle usada por [PingMonitor] para
+     * medir a latência até a TV, por sistema operacional. `null` para
+     * sistemas ainda sem TvController implementado (o ping simplesmente
+     * não roda nesse caso - não há conexão ativa de qualquer forma).
+     */
+    private fun controlPortFor(os: TvOperatingSystem): Int? = when (os) {
+        TvOperatingSystem.TIZEN -> Constants.SAMSUNG_WS_PORT
+        TvOperatingSystem.WEBOS -> Constants.LG_WS_PORT
+        TvOperatingSystem.ANDROID_TV, TvOperatingSystem.GOOGLE_TV -> Constants.ANDROID_TV_REMOTE_PORT
+        else -> null
     }
 
     fun isConnected(): Boolean = connectionManager.isConnected()
@@ -336,6 +371,18 @@ object TvManager {
      * tecla. Se não houver nenhuma TV conectada no momento, registra o
      * mesmo aviso genérico que o controller usaria para o caso de
      * desconexão - aqui de forma independente de fabricante.
+     *
+     * *** CORREÇÃO - v0.9.3 ("Último comando" do painel simples nunca
+     * aparecia para TVs LG) ***: `setLastCommand` é chamado AQUI, no único
+     * ponto de entrada por onde toda tecla passa, independente de
+     * fabricante - antes disso, cada TvController precisava lembrar de
+     * chamar `DiagnosticManager.setLastCommand()` no seu próprio código, e
+     * o `LgWebOsController.sendRemoteKey()` nunca chamava (só registrava
+     * no log técnico) para o caminho comum de teclas do controle remoto,
+     * então "Último comando" ficava sempre vazio para TVs LG. Centralizar
+     * aqui garante que funciona para todo fabricante, inclusive os que
+     * ainda serão implementados no futuro (Roku, Fire TV etc.), sem
+     * depender de cada controller lembrar de instrumentar isso.
      */
     fun sendRemoteKey(key: RemoteKey) {
         val controller = currentController
@@ -343,13 +390,15 @@ object TvManager {
             DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
             return
         }
+        DiagnosticManager.setLastCommand(key.name)
         controller.sendRemoteKey(key)
     }
 
     /**
      * Envia um texto livre (teclado digitado ou voz reconhecida) para a
      * TV atualmente conectada. Mesmo padrão de [sendRemoteKey]: não sabe
-     * nada sobre o protocolo do fabricante, só delega.
+     * nada sobre o protocolo do fabricante, só delega - e também
+     * centraliza [DiagnosticManager.setLastCommand] pelo mesmo motivo.
      */
     fun sendText(text: String) {
         val controller = currentController
@@ -357,6 +406,7 @@ object TvManager {
             DiagnosticManager.log("Falha ao enviar comando: TV desconectada", DiagnosticLogType.ERROR)
             return
         }
+        DiagnosticManager.setLastCommand("Texto (${text.length} caractere(s))")
         controller.sendText(text)
     }
 

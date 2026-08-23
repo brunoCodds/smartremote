@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Smart Remote</string>
+
+    <string name="desc_power">Turn TV on/off</string>
+    <string name="desc_keyboard">Number pad</string>
+    <string name="desc_abc">Text keyboard</string>
+    <string name="desc_assistant">Voice assistant</string>
+    <string name="desc_dpad_up">Navigate up</string>
+    <string name="desc_dpad_down">Navigate down</string>
+    <string name="desc_dpad_left">Navigate left</string>
+    <string name="desc_dpad_right">Navigate right</string>
+    <string name="desc_dpad_ok">Select</string>
+    <string name="desc_back">Back</string>
+    <string name="desc_home">Home</string>
+    <string name="desc_play_pause">Play/Pause</string>
+    <string name="desc_volume_up">Volume up</string>
+    <string name="desc_volume_down">Volume down</string>
+    <string name="desc_channel_up">Next channel</string>
+    <string name="desc_channel_down">Previous channel</string>
+    <string name="desc_netflix">Open Netflix</string>
+    <string name="desc_prime">Open Prime Video</string>
+    <string name="desc_globoplay">Open Globoplay</string>
+
+    <string name="desc_mute">Mute</string>
+
+    <string name="desc_color_red">Red</string>
+    <string name="desc_color_green">Green</string>
+    <string name="desc_color_yellow">Yellow</string>
+    <string name="desc_color_blue">Blue</string>
+    <string name="keypad_text_mode_button">ABC — type text</string>
+
+    <string name="text_input_hint_note">Works when the TV has an active text field (e.g. an app\'s search box)</string>
+    <string name="text_input_send_button">Send</string>
+    <string name="text_input_sent_toast">Sent</string>
+
+    <string name="voice_prompt">Speak now…</string>
+    <string name="voice_no_speech_recognized">Didn\'t catch that, try again</string>
+    <string name="voice_not_available">Speech recognition isn\'t available on this device</string>
+
+    <string name="desc_apps">Open apps</string>
+    <string name="apps_bottom_sheet_title">Apps</string>
+    <string name="desc_youtube">Open YouTube</string>
+    <string name="desc_disney_plus">Open Disney+</string>
+    <string name="desc_max">Open Max</string>
+    <string name="desc_apple_tv_plus">Open Apple TV+</string>
+    <string name="desc_paramount_plus">Open Paramount+</string>
+    <string name="desc_crunchyroll">Open Crunchyroll</string>
+    <string name="desc_plex">Open Plex</string>
+    <string name="app_not_supported_toast">Not supported on this TV yet</string>
+
+    <!-- ===== v0.9.3, item 1 - "Reconnecting" indicator ===== -->
+    <string name="reconnecting_with_name">Reconnecting to %1$s…</string>
+    <string name="reconnecting_generic">Reconnecting…</string>
+    <string name="desc_reconnecting_icon">Reconnecting automatically</string>
+
+    <!-- ===== v0.9.3, item 2 - Simple diagnostic panel (colored + grouped) ===== -->
+    <string name="diagnostic_log_line_format">[%1$s] %2$s</string>
+    <string name="diagnostic_section_tv">TV</string>
+    <string name="diagnostic_section_activity">Last activity</string>
+
+    <!-- ===== v0.9.3, item 3 - Side menu ===== -->
+    <string name="desc_open_menu">Open menu</string>
+    <string name="drawer_item_pairing">TV pairing</string>
+    <string name="drawer_item_deep_diagnostic">Deep diagnostics</string>
+    <string name="drawer_item_faq">FAQ</string>
+    <string name="drawer_item_share">Share app</string>
+    <string name="drawer_item_language">Change language</string>
+    <string name="drawer_footer_github">GitHub</string>
+    <string name="drawer_footer_linkedin">LinkedIn</string>
+    <string name="share_app_text">Check out Smart Remote, an app to control your Smart TV from your phone:\n%1$s</string>
+    <string name="share_app_chooser_title">Share Smart Remote</string>
+
+    <string name="language_dialog_title">Choose a language</string>
+    <string name="language_option_pt">Português</string>
+    <string name="language_option_en">English</string>
+    <string name="language_option_es">Español</string>
+    <string name="language_option_fr">Français</string>
+
+    <!-- ===== v0.9.3, item 3 - FAQ ===== -->
+    <string name="faq_title">FAQ</string>
+    <string name="faq_q1">Why doesn\'t my TV show up in the search?</string>
+    <string name="faq_a1">The TV and phone need to be on the same Wi-Fi network. The search uses local multicast (SSDP/mDNS), which doesn\'t cross different networks (e.g. phone on mobile data, TV on Wi-Fi) and doesn\'t work if the router has "client isolation" (AP isolation) enabled. Make sure the TV is on and try searching again.</string>
+    <string name="faq_q2">Why can\'t I open apps (Netflix, YouTube, etc.) on my Samsung TV?</string>
+    <string name="faq_a2">Samsung silently disabled this feature on newer Tizen TVs (2022 onward). The remote control keys still work normally, only direct app launching stopped working. This isn\'t an issue specific to Smart Remote, and there\'s no confirmed free workaround at this time.</string>
+    <string name="faq_q3">Do I need to pair again every time I open the app?</string>
+    <string name="faq_a3">No. After the first pairing, the credential is saved on your phone (with security appropriate to the manufacturer) and reconnection happens automatically. You only need to pair again if the TV is factory reset, manually unpaired from the TV\'s side, or if the app is uninstalled.</string>
+    <string name="faq_q4">Why does the TV sometimes disconnect on its own, and what does the app do about it?</string>
+    <string name="faq_a4">This can happen due to Wi-Fi instability or the TV itself closing the connection due to inactivity. The app detects this and automatically tries to reconnect on its own. If automatic reconnection isn\'t possible (for example, if the TV requires pairing again), the app doesn\'t keep retrying by itself — to avoid flooding the TV screen with confirmation prompts — and you\'ll need to reconnect manually from the pairing screen.</string>
+    <string name="faq_q5">Why does a streaming app show up disabled in my TV\'s app grid?</string>
+    <string name="faq_a5">Not every app has a confirmed way to be launched automatically on every TV manufacturer/model. When that hasn\'t been confirmed, the app avoids guessing (which could open the wrong app) and shows that app as unavailable specifically on that TV.</string>
+    <string name="faq_q6">Does the app work with the TV on a different network than the phone (mobile data, another Wi-Fi)?</string>
+    <string name="faq_a6">No. Both search and control only happen on the local network. If your phone is on mobile data or a different Wi-Fi network than the TV, the app won\'t find or control the TV.</string>
+    <string name="desc_faq_expand">Expand/collapse answer</string>
+
+    <!-- ===== v0.9.3, item 4 - Deep diagnostics ===== -->
+    <string name="deep_diagnostic_title">Deep diagnostics</string>
+    <string name="deep_diagnostic_section_device">Device</string>
+    <string name="deep_diagnostic_section_connection">Connection</string>
+    <string name="deep_diagnostic_section_events">Event log (connection)</string>
+    <string name="deep_diagnostic_section_discovery">Event log (last search)</string>
+    <string name="deep_diagnostic_events_empty">No connection events logged yet.</string>
+    <string name="deep_diagnostic_discovery_empty">No TV search has been run in this session yet.</string>
+
+    <string name="error_tv_not_supported">This TV isn\'t supported yet in this version</string>
+    <string name="error_lg_connect_failed">Failed to connect to the LG TV: %1$s</string>
+    <string name="error_lg_confirmation_timeout">Timed out waiting for confirmation on the TV</string>
+    <string name="error_samsung_connection_refused">The TV refused the connection</string>
+    <string name="error_samsung_connection_error">Connection error: %1$s</string>
+    <string name="error_samsung_confirmation_timeout">Timed out waiting for confirmation on the TV</string>
+    <string name="error_androidtv_pairing_closed">Pairing connection closed by the TV before completing</string>
+    <string name="error_androidtv_pairing_failed">Failed to pair with the TV: %1$s</string>
+    <string name="error_androidtv_internal_identity_lost">Internal error: pairing identity lost</string>
+    <string name="error_androidtv_pairing_rejected">The TV rejected the pairing (wrong or expired code)</string>
+    <string name="error_androidtv_wrong_code">Wrong code — check the code shown on the TV and try connecting again</string>
+    <string name="error_androidtv_internal_key_type">Internal pairing error (key type)</string>
+    <string name="error_androidtv_pairing_timeout">Timed out pairing with the TV</string>
+    <string name="error_androidtv_connect_failed">Failed to connect to the Android TV: %1$s</string>
+
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_waiting_tv_confirmation">Waiting for confirmation on the TV</string>
+    <string name="status_reconnecting">Reconnecting</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_pairing">Pairing</string>
+
+    <string name="diagnostic_label_name">Name</string>
+    <string name="diagnostic_label_status">Status</string>
+    <string name="diagnostic_label_ping">Ping</string>
+    <string name="diagnostic_label_last_error">Error</string>
+    <string name="diagnostic_value_unavailable">—</string>
+    <string name="diagnostic_value_ping_format">%1$d ms</string>
+
+    <string name="error_samsung_token_invalid_manual_repair">Invalid token — repair manually from the pairing screen</string>
+    <string name="error_samsung_token_invalid_new_pairing">Invalid token — starting a new pairing</string>
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="discovery_title">Rechercher des TV</string>
+    <string name="discovery_scan_button">Rechercher des TV</string>
+    <string name="discovery_refresh_button">Actualiser</string>
+    <string name="discovery_connect_button">Connecter</string>
+    <string name="discovery_saved_section_title">TV associées</string>
+    <string name="discovery_forget_button">Oublier</string>
+    <string name="discovery_disconnect_button">Déconnecter</string>
+    <string name="discovery_empty_state">Aucune TV trouvée. Vérifiez que le téléphone et la TV sont sur le même réseau Wi-Fi.</string>
+    <string name="device_unknown_brand">Fabricant inconnu</string>
+    <string name="device_subtitle_format">%1$s • %2$s • %3$s</string>
+    <string name="device_saved_format">TV enregistrée : %1$s</string>
+    <string name="device_connected_format">TV connectée : %1$s</string>
+    <string name="device_paired_badge">Associée</string>
+    <string name="device_connected_badge">Connectée</string>
+    <string name="connection_status_connecting">Connexion en cours…</string>
+    <string name="connection_status_pairing">Confirmez la connexion sur la TV</string>
+    <string name="desc_open_discovery">Configurer la TV (appui long)</string>
+    <string name="desc_diagnostic">Mode diagnostic</string>
+</resources>

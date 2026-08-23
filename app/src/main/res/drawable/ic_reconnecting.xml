@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Ícone de "carregando/reconectando": um arco de 3/4 de círculo (não um
+    círculo fechado) - a rotação contínua (ver MainActivity.startReconnectIndicatorAnimation)
+    só fica visualmente clara como "girando" por causa do gap. Mesmo espírito
+    visual de um spinner nativo do Material, redesenhado como path único para
+    seguir o padrão dos demais ic_*.xml do projeto (sem <group>, sem <clip-path>).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M12,4V1L8,5l4,4V6c3.31,0 6,2.69 6,6c0,1.01 -0.25,1.97 -0.7,2.8l1.46,1.46C19.54,15.03 20,13.57 20,12
+                           C20,7.58 16.42,4 12,4zM12,18c-3.31,0 -6,-2.69 -6,-6c0,-1.01 0.25,-1.97 0.7,-2.8L5.24,7.74
+                           C4.46,8.97 4,10.43 4,12c0,4.42 3.58,8 8,8v3l4,-4l-4,-4V18z" />
+</vector>

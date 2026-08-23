@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Item individual do log de diagnóstico (painel simples). Um TextView por
+    entrada em vez de um SpannableStringBuilder gigante à mão - mais simples
+    de colorir por DiagnosticLogType (ver DiagnosticLogAdapter.bind) e mais
+    consistente com o resto do projeto, que já usa RecyclerView em outras
+    listas (ex: item_tv_device.xml).
+-->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/txtLogEntry"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="2dp"
+    android:fontFamily="monospace"
+    android:includeFontPadding="false"
+    android:lineSpacingExtra="2dp"
+    android:textIsSelectable="false"
+    android:textSize="11sp"
+    tools:text="[10:20:31] Conectado"
+    tools:textColor="?attr/colorSuccess" />

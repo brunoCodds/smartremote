@@ -46,6 +46,7 @@
         <item name="colorDanger">@color/danger_500</item>
         <item name="colorOnDanger">@color/on_danger</item>
         <item name="colorSuccess">@color/success_500</item>
+        <item name="colorWarning">@color/warning_500</item> <!-- *** NOVO - v0.9.3, item 2 *** -->
 
         <!-- •••• Mantém os componentes stock do Material3 coerentes com o Fluent •••• -->
         <item name="colorPrimary">?attr/colorAccent</item>

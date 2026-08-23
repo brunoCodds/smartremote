@@ -23,6 +23,5 @@
     <string name="connection_status_connecting">Conectando…</string>
     <string name="connection_status_pairing">Confirme a conexão na TV</string>
     <string name="desc_open_discovery">Configurar TV (pressione e segure)</string>
-    <string name="desc_settings">Configurações — procurar e conectar TV</string>
     <string name="desc_diagnostic">Modo de diagnóstico</string>
 </resources>

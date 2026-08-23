@@ -53,4 +53,121 @@
     <string name="desc_crunchyroll">Abrir Crunchyroll</string>
     <string name="desc_plex">Abrir Plex</string>
     <string name="app_not_supported_toast">Ainda não suportado nesta TV</string>
+
+    <!-- ===== v0.9.3, item 1 - Indicador "Reconectando" ===== -->
+    <!-- %1$s = nome legível da TV (ex: "Samsung Q60") - ver MainActivity.buildReconnectDeviceLabel() -->
+    <string name="reconnecting_with_name">Reconectando a %1$s…</string>
+    <string name="reconnecting_generic">Reconectando…</string>
+    <string name="desc_reconnecting_icon">Reconectando automaticamente</string>
+
+    <!-- ===== v0.9.3, item 2 - Painel de diagnóstico simples (colorido + agrupado) ===== -->
+    <string name="diagnostic_log_line_format">[%1$s] %2$s</string>
+    <!-- *** v0.9.3 (correção pós-lançamento) - simplificação para leigos:
+         "Identificação" + "Conexão" viraram uma única seção "TV". *** -->
+    <string name="diagnostic_section_tv">TV</string>
+    <string name="diagnostic_section_activity">Última atividade</string>
+
+    <!-- ===== v0.9.3, item 3 - Menu lateral ===== -->
+    <string name="desc_open_menu">Abrir menu</string>
+    <string name="drawer_item_pairing">Pareamento de TV</string>
+    <string name="drawer_item_deep_diagnostic">Diagnóstico Aprofundado</string>
+    <string name="drawer_item_faq">Perguntas frequentes</string>
+    <string name="drawer_item_share">Compartilhar app</string>
+    <string name="drawer_item_language">Mudar idioma</string>
+    <string name="drawer_footer_github">GitHub</string>
+    <string name="drawer_footer_linkedin">LinkedIn</string>
+    <string name="share_app_text">Confira o Smart Remote, um app para controlar sua Smart TV pelo celular:\n%1$s</string>
+    <string name="share_app_chooser_title">Compartilhar Smart Remote</string>
+
+    <!-- Diálogo "Mudar idioma" - 4 opções fixas (nenhuma opção "padrão do sistema" - decisão explícita do escopo). -->
+    <string name="language_dialog_title">Escolha o idioma</string>
+    <string name="language_option_pt">Português</string>
+    <string name="language_option_en">English</string>
+    <string name="language_option_es">Español</string>
+    <string name="language_option_fr">Français</string>
+
+    <!-- ===== v0.9.3, item 3 - FAQ (conteúdo definitivo, ver prompt v0.9.3) ===== -->
+    <string name="faq_title">Perguntas frequentes</string>
+    <string name="faq_q1">Por que minha TV não aparece na busca?</string>
+    <string name="faq_a1">A TV e o celular precisam estar na mesma rede Wi-Fi. A busca usa multicast local (SSDP/mDNS), que não atravessa redes diferentes (ex: celular no 4G, TV no Wi-Fi) nem funciona se o roteador tiver "isolamento de cliente" (AP isolation) ativado. Confirme que a TV está ligada e tente buscar de novo.</string>
+    <string name="faq_q2">Por que não consigo abrir apps (Netflix, YouTube etc) na minha TV Samsung?</string>
+    <string name="faq_a2">A Samsung desativou silenciosamente esse recurso em TVs Tizen mais recentes (2022 em diante). As teclas do controle remoto continuam funcionando normalmente, só o lançamento direto de apps parou de funcionar. Não é um problema do Smart Remote especificamente, e não há uma alternativa gratuita confirmada até o momento.</string>
+    <string name="faq_q3">Preciso parear de novo toda vez que abro o app?</string>
+    <string name="faq_a3">Não. Depois do primeiro pareamento, a credencial fica salva no celular (com segurança adequada ao fabricante) e a reconexão acontece automaticamente. Só é necessário parear de novo se a TV for resetada de fábrica, desparelhada manualmente do lado da TV, ou se o app for desinstalado.</string>
+    <string name="faq_q4">Por que a TV às vezes desconecta sozinha, e o que o app faz sobre isso?</string>
+    <string name="faq_a4">Pode acontecer por instabilidade de Wi-Fi ou a própria TV encerrando a conexão por inatividade. O app detecta isso e tenta reconectar automaticamente sozinho. Se a reconexão automática não for possível (por exemplo, se a TV exigir um novo pareamento), o app não insiste sozinho - para evitar encher a tela da TV de pedidos de confirmação - e é necessário reconectar manualmente pela tela de pareamento.</string>
+    <string name="faq_q5">Por que um app de streaming aparece desabilitado na grade de apps da minha TV?</string>
+    <string name="faq_a5">Nem todo app tem uma forma confirmada de ser aberto automaticamente em todo fabricante/modelo de TV. Quando isso não foi confirmado, o app evita adivinhar (o que poderia abrir o app errado) e mostra esse app como indisponível especificamente nessa TV.</string>
+    <string name="faq_q6">O app funciona com a TV em uma rede diferente do celular (dados móveis, outro Wi-Fi)?</string>
+    <string name="faq_a6">Não. Tanto a busca quanto o controle acontecem só na rede local. Se o celular estiver em dados móveis ou numa rede Wi-Fi diferente da TV, o app não vai encontrar nem controlar a TV.</string>
+    <string name="desc_faq_expand">Expandir/recolher resposta</string>
+
+    <!-- ===== v0.9.3, item 4 - Diagnóstico Aprofundado ===== -->
+    <string name="deep_diagnostic_title">Diagnóstico Aprofundado</string>
+    <string name="deep_diagnostic_section_device">Dispositivo</string>
+    <string name="deep_diagnostic_section_connection">Conexão</string>
+    <string name="deep_diagnostic_section_events">Log de eventos (conexão)</string>
+    <string name="deep_diagnostic_section_discovery">Log de eventos (última busca)</string>
+    <string name="deep_diagnostic_events_empty">Nenhum evento de conexão registrado ainda.</string>
+    <string name="deep_diagnostic_discovery_empty">Nenhuma busca por TVs foi realizada nesta sessão ainda.</string>
+
+    <!-- ===== v0.9.3, item 3 (tradução) - mensagens de erro/status visíveis
+         ao usuário (texto de status na tela de descoberta / toast), antes
+         literais em Kotlin nos TvControllers e no TvManager. Critério
+         usado para decidir o que virou string aqui: qualquer texto que
+         chega literalmente a uma View (txtConnectionStatus.text, Toast) -
+         diferente das mensagens passadas para DiagnosticManager.log()
+         (ex: "[LG-PAIRING] 4/6 - chamando CredentialStore.save(...)"),
+         que continuam como estão: são jargão técnico de protocolo
+         (nomes de mensagens SSAP/Android TV Remote, checkpoints
+         numerados) voltado a quem está literalmente depurando o
+         protocolo (você, ou um usuário avançado no Diagnóstico
+         Aprofundado) - documentado aqui como decisão deliberada, mesmo
+         critério que o próprio prompt já usa para justificar não
+         traduzir "logs técnicos que só aparecem no Diagnóstico
+         Aprofundado/Logcat". -->
+    <string name="error_tv_not_supported">TV ainda não suportada nesta versão</string>
+    <string name="error_lg_connect_failed">Falha ao conectar na TV LG: %1$s</string>
+    <string name="error_lg_confirmation_timeout">Tempo esgotado aguardando confirmação na TV</string>
+    <string name="error_samsung_connection_refused">A TV recusou a conexão</string>
+    <string name="error_samsung_connection_error">Erro de conexão: %1$s</string>
+    <string name="error_samsung_confirmation_timeout">Tempo esgotado aguardando confirmação na TV</string>
+    <string name="error_androidtv_pairing_closed">Conexão de pareamento encerrada pela TV antes de concluir</string>
+    <string name="error_androidtv_pairing_failed">Falha ao parear com a TV: %1$s</string>
+    <string name="error_androidtv_internal_identity_lost">Erro interno: identidade de pareamento perdida</string>
+    <string name="error_androidtv_pairing_rejected">A TV rejeitou o pareamento (código incorreto ou expirado)</string>
+    <string name="error_androidtv_wrong_code">Código incorreto - confira o código exibido na TV e tente conectar de novo</string>
+    <string name="error_androidtv_internal_key_type">Erro interno de pareamento (tipo de chave)</string>
+    <string name="error_androidtv_pairing_timeout">Tempo esgotado ao parear com a TV</string>
+    <string name="error_androidtv_connect_failed">Falha ao conectar na TV Android TV: %1$s</string>
+
+    <!-- ===== v0.9.3, item 3 (tradução) - valores de DiagnosticState.connectionStatus,
+         visíveis na linha "Status" do painel de diagnóstico simples (item 2)
+         e no Diagnóstico Aprofundado (item 4). Setados por 3 controllers
+         diferentes (Samsung/LG/Android TV) - por isso extraídos aqui em vez
+         de deixar cada um com sua cópia da string. -->
+    <string name="status_disconnected">Desconectado</string>
+    <string name="status_connecting">Conectando</string>
+    <string name="status_waiting_tv_confirmation">Aguardando confirmação na TV</string>
+    <string name="status_reconnecting">Reconectando</string>
+    <string name="status_connected">Conectado</string>
+    <string name="status_pairing">Pareando</string>
+
+    <!-- ===== v0.9.3, item 3 (tradução) - rótulos do painel de diagnóstico simples (item 2) ===== -->
+    <!-- *** v0.9.3 (correção pós-lançamento) - diagnostic_label_ip/brand/model/os/controller/protocol/token
+         removidos: eram só do painel simples, que não mostra mais esses
+         campos técnicos (agora exclusivos do Diagnóstico Aprofundado,
+         onde já aparecem como dump cru, sem depender destas strings). *** -->
+    <string name="diagnostic_label_name">Nome</string>
+    <string name="diagnostic_label_status">Status</string>
+    <string name="diagnostic_label_ping">Ping</string>
+    <string name="diagnostic_label_last_error">Erro</string>
+    <string name="diagnostic_value_unavailable">—</string>
+    <string name="diagnostic_value_ping_format">%1$d ms</string>
+
+    <!-- ===== v0.9.3 (correção pós-lançamento) - dois literais que a
+         extração anterior tinha perdido, por só terem passado por
+         setLastError() diretamente (não por onError()/notifyError()). ===== -->
+    <string name="error_samsung_token_invalid_manual_repair">Token inválido - repareie manualmente em Configurações</string>
+    <string name="error_samsung_token_invalid_new_pairing">Token inválido - iniciando novo pareamento</string>
 </resources>

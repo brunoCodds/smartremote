@@ -3,6 +3,7 @@ package com.example.smartremote.controller.androidtv
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.example.smartremote.R
 import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.controller.TvController
 import com.example.smartremote.diagnostic.DiagnosticLogType
@@ -86,7 +87,7 @@ class AndroidTvController(
         DiagnosticManager.updateDevice(device)
         DiagnosticManager.setController(CONTROLLER_NAME)
         DiagnosticManager.setLastError(null)
-        DiagnosticManager.setConnectionStatus("Conectando")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_connecting))
 
         val existingIdentity = keystoreManager.existingIdentity()
         if (existingIdentity != null) {
@@ -119,7 +120,7 @@ class AndroidTvController(
         serverCertificateDuringPairing = null
         identityBeingPaired = null
         connected = false
-        DiagnosticManager.setConnectionStatus("Desconectado")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
         DiagnosticManager.log("Android TV: desconectado", DiagnosticLogType.INFO)
     }
 
@@ -128,7 +129,7 @@ class AndroidTvController(
     // ===================== Pareamento (porta 6467) =====================
 
     private fun startPairing() {
-        DiagnosticManager.setConnectionStatus("Pareando")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_pairing))
         val identity = keystoreManager.ensureKeyPair()
         identityBeingPaired = identity
 
@@ -164,14 +165,14 @@ class AndroidTvController(
                     // nunca acontece em isAutomaticReconnect=true), então
                     // sempre trata como erro simples para o usuário ver.
                     cancelPairingTimeout()
-                    notifyError("Conexão de pareamento encerrada pela TV antes de concluir")
+                    notifyError(context.getString(R.string.error_androidtv_pairing_closed))
                 }
             }
 
             is AndroidTvSocketClient.SocketEvent.Failure -> {
                 cancelPairingTimeout()
                 DiagnosticManager.log("Android TV: falha no socket de pareamento - ${event.message}", DiagnosticLogType.ERROR)
-                notifyError("Falha ao parear com a TV: ${event.message}")
+                notifyError(context.getString(R.string.error_androidtv_pairing_failed, event.message))
             }
         }
     }
@@ -210,14 +211,14 @@ class AndroidTvController(
                     if (identity != null) {
                         connectRemoteSession(identity)
                     } else {
-                        notifyError("Erro interno: identidade de pareamento perdida")
+                        notifyError(context.getString(R.string.error_androidtv_internal_identity_lost))
                     }
                 }
             }
 
             is AndroidTvRemoteProtocol.PairingEvent.Error -> {
                 DiagnosticManager.log("Android TV: TV rejeitou o pareamento (status=${parsed.status})", DiagnosticLogType.ERROR)
-                notifyError("A TV rejeitou o pareamento (código incorreto ou expirado)")
+                notifyError(context.getString(R.string.error_androidtv_pairing_rejected))
             }
 
             AndroidTvRemoteProtocol.PairingEvent.Unknown -> {
@@ -259,13 +260,13 @@ class AndroidTvController(
                 // no momento de digitar, um erro de digitação tende a
                 // ser raro o bastante para essa simplificação valer a
                 // pena nesta versão.
-                notifyError("Código incorreto - confira o código exibido na TV e tente conectar de novo")
+                notifyError(context.getString(R.string.error_androidtv_wrong_code))
             }
 
             AndroidTvRemoteProtocol.PairingSecretResult.UnsupportedKeyType -> {
                 // Não deveria acontecer - AndroidTvKeystoreManager sempre gera RSA.
                 DiagnosticManager.log("Android TV: tipo de chave inesperado durante o pareamento", DiagnosticLogType.ERROR)
-                notifyError("Erro interno de pareamento (tipo de chave)")
+                notifyError(context.getString(R.string.error_androidtv_internal_key_type))
             }
         }
     }
@@ -276,7 +277,7 @@ class AndroidTvController(
             DiagnosticManager.log("Android TV: tempo esgotado aguardando confirmação da TV", DiagnosticLogType.ERROR)
             pairingSocket?.close()
             pairingSocket = null
-            notifyError("Tempo esgotado ao parear com a TV")
+            notifyError(context.getString(R.string.error_androidtv_pairing_timeout))
         }
         pairingTimeoutRunnable = runnable
         mainHandler.postDelayed(runnable, Constants.ANDROID_TV_PAIRING_TIMEOUT_MS)
@@ -290,7 +291,7 @@ class AndroidTvController(
     // ===================== Sessão de controle (porta 6466) =====================
 
     private fun connectRemoteSession(identity: AndroidTvIdentity) {
-        DiagnosticManager.setConnectionStatus("Conectando")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_connecting))
         val client = AndroidTvSocketClient()
         remoteSocket = client
         client.connect(device.ip, Constants.ANDROID_TV_REMOTE_PORT, identity) { event ->
@@ -305,7 +306,7 @@ class AndroidTvController(
                 remoteSocket?.send(AndroidTvRemoteProtocol.buildRemoteConfigureMessage())
                 remoteSocket?.send(AndroidTvRemoteProtocol.buildRemoteSetActiveMessage())
                 connected = true
-                DiagnosticManager.setConnectionStatus("Conectado")
+                DiagnosticManager.setConnectionStatus(context.getString(R.string.status_connected))
                 notifyConnected()
             }
 
@@ -333,7 +334,7 @@ class AndroidTvController(
     private fun onRemoteSessionLost(reason: String) {
         val wasConnected = connected
         connected = false
-        DiagnosticManager.setConnectionStatus("Desconectado")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
         DiagnosticManager.log("Android TV: sessão de controle encerrada ($reason)", DiagnosticLogType.NETWORK)
 
         if (wasConnected && !explicitDisconnect) {
@@ -348,7 +349,7 @@ class AndroidTvController(
     private fun onRemoteSessionFailure(message: String) {
         val wasConnected = connected
         connected = false
-        DiagnosticManager.setConnectionStatus("Desconectado")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
         DiagnosticManager.setLastError(message)
         DiagnosticManager.log("Android TV: falha na sessão de controle - $message", DiagnosticLogType.ERROR)
 
@@ -380,7 +381,7 @@ class AndroidTvController(
         if (isAutomaticReconnect) {
             notifyConnectionLost(recoverable = true)
         } else {
-            notifyError("Falha ao conectar na TV Android TV: $message")
+            notifyError(context.getString(R.string.error_androidtv_connect_failed, message))
         }
     }
 

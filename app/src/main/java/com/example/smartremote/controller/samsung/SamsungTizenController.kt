@@ -3,6 +3,7 @@ package com.example.smartremote.controller.samsung
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.example.smartremote.R
 import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.controller.TvController
 import com.example.smartremote.diagnostic.DiagnosticLogType
@@ -97,7 +98,7 @@ class SamsungTizenController(
         cancelPairingTimeout()
         socketClient.close()
         connected = false
-        DiagnosticManager.setConnectionStatus("Desconectado")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
         DiagnosticManager.log("Desconectado", DiagnosticLogType.INFO)
     }
 
@@ -106,7 +107,7 @@ class SamsungTizenController(
     // ===================== FLUXO DE CONEXÃO/PAREAMENTO =====================
 
     private fun startPairing() {
-        DiagnosticManager.setConnectionStatus("Conectando")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_connecting))
         DiagnosticManager.log("Tentando conectar", DiagnosticLogType.NETWORK)
 
         val url = SamsungProtocol.buildSocketUrl(device.ip, token = null)
@@ -115,7 +116,7 @@ class SamsungTizenController(
 
     private fun connectWithToken(token: String, isReconnectAfterPairing: Boolean = false) {
         if (!isReconnectAfterPairing) {
-            DiagnosticManager.setConnectionStatus("Conectando")
+            DiagnosticManager.setConnectionStatus(context.getString(R.string.status_connecting))
             DiagnosticManager.log("Tentando conectar", DiagnosticLogType.NETWORK)
         }
 
@@ -136,7 +137,7 @@ class SamsungTizenController(
         DiagnosticManager.log("WebSocket conectado", DiagnosticLogType.NETWORK)
         if (!hadToken) {
             DiagnosticManager.log("Solicitando autorização", DiagnosticLogType.INFO)
-            DiagnosticManager.setConnectionStatus("Aguardando confirmação na TV")
+            DiagnosticManager.setConnectionStatus(context.getString(R.string.status_waiting_tv_confirmation))
             DiagnosticManager.log("Aguardando confirmação na TV", DiagnosticLogType.INFO)
             notifyPairingRequired()
             schedulePairingTimeout()
@@ -175,7 +176,7 @@ class SamsungTizenController(
         DiagnosticManager.log("Token salvo", DiagnosticLogType.INFO)
 
         socketClient.close()
-        DiagnosticManager.setConnectionStatus("Reconectando")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_reconnecting))
         DiagnosticManager.log("Reconectando", DiagnosticLogType.NETWORK)
         connectWithToken(newToken, isReconnectAfterPairing = true)
     }
@@ -195,20 +196,20 @@ class SamsungTizenController(
                 // o ReconnectionManager desistir e deixar o usuário
                 // reparear manualmente.
                 connected = false
-                DiagnosticManager.setConnectionStatus("Desconectado")
-                DiagnosticManager.setLastError("Token inválido - repareie manualmente em Configurações")
+                DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
+                DiagnosticManager.setLastError(context.getString(R.string.error_samsung_token_invalid_manual_repair))
                 notifyConnectionLost(recoverable = false)
                 return
             }
 
-            DiagnosticManager.setLastError("Token inválido - iniciando novo pareamento")
+            DiagnosticManager.setLastError(context.getString(R.string.error_samsung_token_invalid_new_pairing))
             startPairing()
         } else {
             connected = false
-            DiagnosticManager.setConnectionStatus("Desconectado")
+            DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
             DiagnosticManager.log("Erro de autenticação", DiagnosticLogType.ERROR)
-            DiagnosticManager.setLastError("A TV recusou a conexão")
-            notifyError("A TV recusou a conexão")
+            DiagnosticManager.setLastError(context.getString(R.string.error_samsung_connection_refused))
+            notifyError(context.getString(R.string.error_samsung_connection_refused))
         }
     }
 
@@ -216,7 +217,7 @@ class SamsungTizenController(
         cancelPairingTimeout()
         val wasConnected = connected
         connected = false
-        DiagnosticManager.setConnectionStatus("Desconectado")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
         DiagnosticManager.log("Erro de conexão: $message", DiagnosticLogType.ERROR)
         DiagnosticManager.setLastError(message)
 
@@ -228,14 +229,14 @@ class SamsungTizenController(
             notifyConnectionLost(recoverable = true)
             return
         }
-        notifyError("Erro de conexão: $message")
+        notifyError(context.getString(R.string.error_samsung_connection_error, message))
     }
 
     private fun onSocketClosed() {
         val wasConnected = connected
         if (connected) {
             connected = false
-            DiagnosticManager.setConnectionStatus("Desconectado")
+            DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
             DiagnosticManager.log("Conexão encerrada", DiagnosticLogType.NETWORK)
         }
 
@@ -250,7 +251,7 @@ class SamsungTizenController(
 
     private fun markConnected() {
         connected = true
-        DiagnosticManager.setConnectionStatus("Conectado")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_connected))
         DiagnosticManager.setLastError(null)
         DiagnosticManager.log("Conectado", DiagnosticLogType.INFO)
         notifyConnected()
@@ -262,11 +263,11 @@ class SamsungTizenController(
         cancelPairingTimeout()
         val runnable = Runnable {
             connected = false
-            DiagnosticManager.setConnectionStatus("Desconectado")
+            DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
             DiagnosticManager.log("Timeout", DiagnosticLogType.ERROR)
-            DiagnosticManager.setLastError("Tempo esgotado aguardando confirmação na TV")
+            DiagnosticManager.setLastError(context.getString(R.string.error_samsung_confirmation_timeout))
             socketClient.close()
-            notifyError("Tempo esgotado aguardando confirmação na TV")
+            notifyError(context.getString(R.string.error_samsung_confirmation_timeout))
         }
         pairingTimeoutRunnable = runnable
         mainHandler.postDelayed(runnable, Constants.SAMSUNG_PAIRING_TIMEOUT_MS)

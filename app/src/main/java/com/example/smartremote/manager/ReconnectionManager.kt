@@ -82,6 +82,12 @@ object ReconnectionManager {
         attempt++
         val delayMs = BACKOFF_SCHEDULE_MS.getOrElse(attempt - 1) { BACKOFF_SCHEDULE_MS.last() }
 
+        // *** NOVO - v0.9.3, item 1 ***: liga o indicador já durante o
+        // AGUARDO do backoff, não só quando a tentativa de socket em si
+        // começa - a experiência desejada é "app sabe que está tentando
+        // reconectar" (ver DiagnosticState.isAutoReconnecting).
+        DiagnosticManager.setAutoReconnecting(true)
+
         DiagnosticManager.log(
             "Reconexão automática: tentativa #$attempt agendada em ${delayMs}ms",
             DiagnosticLogType.INFO
@@ -102,6 +108,7 @@ object ReconnectionManager {
     private fun triggerImmediateRetry(context: Context, device: TvDevice) {
         cancelPending()
         attempt = 0
+        DiagnosticManager.setAutoReconnecting(true) // *** NOVO - v0.9.3, item 1 ***
         DiagnosticManager.log("Rede disponível de novo - tentando reconectar imediatamente", DiagnosticLogType.INFO)
         attemptReconnect(context, device)
     }
@@ -132,6 +139,7 @@ object ReconnectionManager {
     fun onReconnected() {
         cancelPending()
         attempt = 0
+        DiagnosticManager.setAutoReconnecting(false) // *** NOVO - v0.9.3, item 1 ***
     }
 
     /**
@@ -144,6 +152,7 @@ object ReconnectionManager {
     fun cancel() {
         cancelPending()
         attempt = 0
+        DiagnosticManager.setAutoReconnecting(false) // *** NOVO - v0.9.3, item 1 ***
     }
 
     private fun cancelPending() {

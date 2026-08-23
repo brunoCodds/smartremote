@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connection_status_waiting_pairing_code">Enter the code shown on the TV</string>
+    <string name="androidtv_pairing_code_dialog_title">Code shown on the TV</string>
+    <string name="androidtv_pairing_code_dialog_message">The TV is showing a 6-digit code. Enter it below to finish pairing.</string>
+    <string name="androidtv_pairing_code_hint">E.g.: A1B2C3</string>
+    <string name="androidtv_pairing_code_confirm">Confirm</string>
+    <string name="androidtv_pairing_code_cancel">Cancel</string>
+    <string name="androidtv_pairing_code_invalid">Enter the 6 digits shown on the TV</string>
+</resources>

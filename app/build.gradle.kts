@@ -152,6 +152,8 @@ dependencies {
     // usavam libs.* ***
     implementation(libs.androidx.recyclerview)
     implementation(libs.okhttp)
+    // *** NOVO - v0.9.3, item 3 (menu lateral) - ver comentário em libs.versions.toml ***
+    implementation(libs.androidx.drawerlayout)
     // *** v0.9, item 3 (Android TV) - ver comentário em libs.versions.toml ***
     implementation(libs.protobuf.javalite)
     testImplementation(libs.junit)

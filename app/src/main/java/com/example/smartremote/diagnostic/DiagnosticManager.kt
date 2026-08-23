@@ -53,12 +53,13 @@ object DiagnosticManager {
 
     // ===================== ATUALIZAÇÃO DE ESTADO =====================
 
-    /** Atualiza IP/marca/modelo/SO/protocolo a partir do dispositivo selecionado/conectado. */
+    /** Atualiza IP/marca/modelo/nome/SO/protocolo a partir do dispositivo selecionado/conectado. */
     fun updateDevice(device: TvDevice) {
         state = state.copy(
             ip = device.ip,
             brand = device.brand,
             model = device.model,
+            name = device.name,
             os = device.os.name,
             protocol = device.protocol.name
         )
@@ -104,6 +105,26 @@ object DiagnosticManager {
     /** Última mensagem de erro relevante, ou null para limpar (ex: após reconectar com sucesso). */
     fun setLastError(message: String?) {
         state = state.copy(lastError = message)
+        notifyListeners()
+    }
+
+    /**
+     * *** NOVO - v0.9.3, item 1 ***: liga/desliga o indicador de
+     * "Reconectando a {TV}" da tela principal. Chamado exclusivamente pelo
+     * [com.example.smartremote.manager.ReconnectionManager] (campanha de
+     * retry com backoff) e por [com.example.smartremote.manager.TvManager.reconnectIfNeeded]
+     * (tentativa proativa ao voltar para o foreground) - nunca por um
+     * TvController durante uma conexão/pareamento manual. Ver KDoc de
+     * [DiagnosticState.isAutoReconnecting] para o porquê deste campo ser
+     * separado de [setConnectionStatus].
+     *
+     * Não gera entrada de log nem passa por [notifyListeners] duas vezes
+     * à toa: se o valor não mudou, não notifica (evita recomposições e
+     * reinícios da animação de rotação na UI sem necessidade real).
+     */
+    fun setAutoReconnecting(active: Boolean) {
+        if (state.isAutoReconnecting == active) return
+        state = state.copy(isAutoReconnecting = active)
         notifyListeners()
     }
 

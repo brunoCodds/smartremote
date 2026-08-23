@@ -6,55 +6,45 @@
 
 Controle remoto universal para Smart TVs, escrito em Kotlin nativo (Android
 View system, sem Compose/MVVM/DI) — descobre TVs na rede local, pareia, e
-controla via WebSocket, com uma tela de diagnóstico embutida para depurar
-conexão e comandos em tempo real.
+controla via WebSocket, com um painel de diagnóstico simples embutido e uma
+tela de diagnóstico aprofundado para depurar conexão e comandos em tempo
+real.
 
-Nessa versão vou fazer 3 commits separados (mais fácil de revisar e reverter individualmente se algo quebrar), a versão ja esta pronta, mas para facilitar o estudo do codigo prefiro fazer assim:
-
-v 0.9 - Reconexão automática;
-
-v 0.9.1 - App IDs LG;
-
-v 0.9.2 - Android TV / Google TV;
-
-Controle remoto universal para Smart TVs, escrito em Kotlin nativo (Android
-View system, sem Compose/MVVM/DI) — descobre TVs na rede local, pareia, e
-controla via WebSocket, com uma tela de diagnóstico embutida para depurar
-conexão e comandos em tempo real.
-
-Uso este app diariamente para controlar minha TV desde a v0.7 — meu controle remoto físico quebrou, então esse é o app que eu realmente uso no dia a dia, não um protótipo de estudo.
+Uso este app diariamente para controlar minha TV desde a v0.7 — meu
+controle remoto físico quebrou, então esse é o app que eu realmente uso no
+dia a dia, não um protótipo de estudo.
 
 ## Screenshots
 
 <table>
   <tr>
     <td align="center" width="25%">
-      <img src="screenshots/tela-principal.jpg" width="100%" alt="Tela principal com o controle remoto"/>
-      <br/><sub>Controle remoto</sub>
+      <img src="screenshots/tela-principal.jpeg" width="100%" alt="Tela principal com o controle remoto"/>
+      <br/><sub>Controle remoto + adições novas</sub>
     </td>
     <td align="center" width="25%">
-      <img src="screenshots/painel-diagnostico.jpg" width="100%" alt="Tela de busca e pareamento de TVs"/>
-      <br/><sub>Descoberta de TVs</sub>
+      <img src="screenshots/menu-lateral.jpeg" width="100%" alt="Tela de busca e pareamento de TVs"/>
+      <br/><sub>Painel lateral</sub>
     </td>
     <td align="center" width="25%">
-      <img src="screenshots/descoberta-tvs.jpg" width="100%" alt="Painel de diagnóstico de conexão"/>
-      <br/><sub>Painel de diagnóstico</sub>
+      <img src="screenshots/diagnostico-aprofundado.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
+      <br/><sub>Painel de diagnóstico aprofundado</sub>
     </td>
-    
+    <td align="center" width="25%">
+      <img src="screenshots/faq.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
+      <br/><sub>Tela de FAQ</sub>
+    </td>
   </tr>
 </table>
 
-> **v0.9** — reconexão automática de verdade (detecção de queda,
-> backoff, retomada proativa ao voltar pro app, reação a mudança de
-> rede), App IDs faltantes completados na LG, e o primeiro fabricante
-> novo desde a v0.7: **Android TV / Google TV**, com pareamento por
-> código de 6 dígitos e sessão de controle via Protobuf sobre TLS mútuo.
-> Sobre a base da v0.8 (fase de correção de arquitetura e robustez).
-> Nenhuma regressão pretendida no fluxo já existente de Samsung/LG.
 
-Antes da v0.9, uma queda de conexão (Wi-Fi instável, TV que desliga a tela, timeout do socket — às vezes só de a tela do celular apagar) deixava o app "preso". E esse foi o problema que mais me incomodou usando o app no dia a dia, então virou prioridade da v0.9.
-
-
+> **v0.9.3** — indicador de reconexão automática na tela principal, painel
+> de diagnóstico simples reformulado (só o essencial: nome da TV, status,
+> erro e ping), menu lateral novo (pareamento, FAQ, compartilhar app, troca
+> de idioma), uma tela de Diagnóstico Aprofundado separada para quem quer o
+> dado técnico cru, e tradução completa do app para inglês, espanhol e
+> francês. Ver a seção dedicada abaixo para o detalhe de cada item e dos
+> bugs corrigidos no processo.
 
 ## Funcionalidades
 
@@ -74,15 +64,26 @@ Antes da v0.9, uma queda de conexão (Wi-Fi instável, TV que desliga a tela, ti
   usuário e tenta reconectar sozinho, com backoff (não agressivo),
   reagindo tanto a voltar para o app quanto a mudanças de rede
   (Wi-Fi caiu e voltou) — sem nunca "spammar" popups de pareamento na TV
-  quando a tentativa é silenciosa/automática.
+  quando a tentativa é silenciosa/automática. Um indicador discreto
+  ("Reconectando a *Nome da TV*...") aparece na tela principal enquanto
+  isso acontece (v0.9.3).
 - **Múltiplas TVs pareadas simultaneamente** — troca de TV ativa sem perder
   o pareamento das demais; reconexão automática, ao abrir o app, sempre com
   a última TV efetivamente usada (não a primeira pareada).
-- **Painel de diagnóstico** embutido (acessível pelo botão de informação):
-  mostra IP, marca, modelo, sistema, protocolo, status, ping, token
-  (mascarado) e um log cronológico de eventos de conexão — útil tanto para
-  o usuário final entender por que uma TV não conecta quanto para
-  desenvolvimento.
+- **Painel de diagnóstico simples** (acessível pelo botão de informação),
+  pensado para o usuário final, não para depuração de protocolo: nome da
+  TV, status da conexão, último erro (se houver) e ping até a TV.
+- **Menu lateral** (v0.9.3): pareamento de TV, Diagnóstico Aprofundado,
+  perguntas frequentes, compartilhar o app, e troca de idioma — persistida
+  entre aberturas do app.
+- **Diagnóstico Aprofundado** (v0.9.3): tela própria, separada do painel
+  simples, com o dado técnico cru e completo — todos os campos de estado
+  da conexão, o log cronológico e colorido de eventos de conexão, e o log
+  da última busca de TVs (por que uma TV específica não foi encontrada).
+  Útil tanto para desenvolvimento quanto para um usuário avançado
+  investigar um problema específico.
+- **Português, inglês, espanhol e francês** (v0.9.3) — trocável a qualquer
+  momento pelo menu lateral, sem precisar mudar o idioma do sistema.
 
 ## TVs suportadas
 
@@ -129,31 +130,41 @@ nome+modelo → IP`) com pontuação de confiança, para que um resultado mais
 completo sempre substitua um genérico — sem nunca duplicar ou esconder uma
 TV da lista. Cada scanner registra seu próprio ciclo de vida
 (`DiscoveryDiagnostics`), permitindo rastrear exatamente onde e por que uma
-TV específica não foi encontrada.
+TV específica não foi encontrada — hoje visível diretamente no app, na
+seção "Log de eventos (última busca)" do Diagnóstico Aprofundado (v0.9.3),
+sem precisar abrir o Logcat.
 
-A arquitetura foi desenhada para que suportar um fabricante novo (LG,
-Android TV, Roku, Fire TV, VIDAA) seja só criar um scanner que implemente
-`DiscoveryScanner` e registrá-lo — sem alterar o restante do pipeline nem a
-UI.
+A arquitetura foi desenhada para que suportar um fabricante novo (Roku,
+Fire TV, VIDAA) seja só criar um scanner que implemente `DiscoveryScanner`
+e registrá-lo — sem alterar o restante do pipeline nem a UI.
 
 ## Como funciona (visão geral da arquitetura)
 
 ```
 app/src/main/java/com/example/smartremote/
-├── discovery/     Descoberta de TVs na rede (SSDP, mDNS, confirmação por
-│                   fabricante) + UI de busca/pareamento
-├── manager/        TvManager (fachada única da UI para TVs pareadas/
-│                   conectadas) + ConnectionManager (estado da conexão ativa)
-│                   + ReconnectionManager (backoff/retry automático, v0.9)
-├── controller/     Um TvController por fabricante (Samsung/Tizen, LG/webOS,
-│                   Android TV/Google TV), cada um isolado no próprio
-│                   protocolo de rede
-├── model/          TvDevice, RemoteKey, enums de protocolo/SO
-├── util/           Constants, DeviceStorage (persistência), CredentialStore
-│                   (tokens de pareamento), NetworkUtils
-├── diagnostic/      DiagnosticManager — estado/log de conexão exibido no
-│                   painel de diagnóstico da tela principal
-└── ui/             BottomSheets (teclado, texto, apps) da tela principal
+├── discovery/      Descoberta de TVs na rede (SSDP, mDNS, confirmação por
+│                    fabricante) + UI de busca/pareamento + adapter dos
+│                    eventos de descoberta no Diagnóstico Aprofundado
+├── manager/         TvManager (fachada única da UI para TVs pareadas/
+│                    conectadas) + ConnectionManager (estado da conexão
+│                    ativa) + ReconnectionManager (backoff/retry
+│                    automático) + PingMonitor (latência até a TV, v0.9.3)
+├── controller/      Um TvController por fabricante (Samsung/Tizen, LG/webOS,
+│                    Android TV/Google TV), cada um isolado no próprio
+│                    protocolo de rede
+├── model/           TvDevice, RemoteKey, enums de protocolo/SO
+├── util/            Constants, DeviceStorage (persistência), CredentialStore
+│                    (tokens de pareamento), NetworkUtils, LanguageManager
+│                    (troca/persistência de idioma, v0.9.3)
+├── diagnostic/       DiagnosticManager (estado/log de conexão) +
+│                    DiagnosticLogAdapter (log colorido por tipo) +
+│                    DeepDiagnosticActivity (tela de dado técnico cru,
+│                    v0.9.3)
+├── faq/             Tela de perguntas frequentes (v0.9.3)
+├── ui/              BottomSheets (teclado, texto, apps) da tela principal
+└── SmartRemoteApplication.kt
+                     Único propósito: reaplicar o idioma salvo antes de
+                     qualquer Activity abrir (v0.9.3)
 ```
 
 Princípios que o projeto segue (e que qualquer contribuição deve manter):
@@ -162,13 +173,108 @@ Princípios que o projeto segue (e que qualquer contribuição deve manter):
   e o `TvManager` nunca sabem como cada marca fala com sua TV.
 - **`TvManager` é o único ponto de acesso da UI** às TVs pareadas e à
   conexão ativa — decide qual `TvController` usar com base no
-  `TvOperatingSystem` detectado na descoberta.
+  `TvOperatingSystem` detectado na descoberta, e é o único ponto por onde
+  toda tecla enviada passa (o que também o torna o lugar certo para
+  instrumentação central, como `DiagnosticManager.setLastCommand()` desde
+  a v0.9.3 — ver "Novidades da v0.9.3").
 - **Três conceitos que nunca se misturam**: TVs *descobertas* (temporárias,
   recriadas a cada busca), TVs *salvas* (persistentes, podem ser várias) e
   TV *conectada* (uma só, por vez).
 - **`TvDevice.stableKey()`** é a identidade de pareamento/credenciais — não
   depende do IP (que muda com renovação de DHCP), e é diferente da
   identidade multi-critério usada só durante a descoberta.
+- **Painel simples vs. Diagnóstico Aprofundado** (v0.9.3): o painel
+  acessível pelo botão de informação na tela principal é para o usuário
+  final ("minha TV está funcionando?") — nunca deve crescer para incluir
+  jargão técnico de protocolo. Qualquer dado cru (IP, nomes de mensagem de
+  protocolo, passos numerados de um fluxo de pareamento, log completo de
+  eventos) pertence ao Diagnóstico Aprofundado, tela separada e acessível
+  pelo menu lateral.
+
+## Novidades da v0.9.3
+
+### 1. Indicador de reconexão automática
+
+Um indicador discreto ("Reconectando a *Samsung Q60*...", com ícone
+girando) aparece na parte inferior da tela principal enquanto uma
+reconexão automática está em andamento — tanto durante o aguardo do
+backoff quanto durante a tentativa proativa ao voltar para o app. Usa um
+campo dedicado (`DiagnosticState.isAutoReconnecting`), separado do texto
+de `connectionStatus`, porque esse texto já é reaproveitado por outro
+fluxo (reabertura do socket logo após aceitar um pareamento manual na
+Samsung) — misturar os dois faria o indicador aparecer errado durante um
+pareamento novo.
+
+### 2. Painel de diagnóstico simples reformulado
+
+Passou por duas rodadas de simplificação a partir do feedback de uso real:
+
+- Os campos técnicos (IP, protocolo, nome da classe do controller, token)
+  saíram do painel simples — continuam disponíveis por inteiro no
+  Diagnóstico Aprofundado.
+- "Último comando" e "Resposta" também saíram — são nomes técnicos de
+  protocolo (`KEY_HOME`, `KEY_VOLUP` etc.) sem valor para quem só quer
+  saber se a TV está funcionando, e ocupavam espaço de tela à toa.
+- O stream de log cronológico (que mostrava passos técnicos como
+  `[LG-PAIRING] 3/6`) foi removido inteiramente do painel simples — hoje é
+  exclusivo do Diagnóstico Aprofundado.
+
+O que sobrou é só o essencial: **Nome da TV**, **Status**, **Erro** (se
+houver) e **Ping**.
+
+Dois bugs de dados foram corrigidos no processo:
+
+- **"Último comando" nunca aparecia para TVs LG** — `LgWebOsController`
+  nunca chamava `DiagnosticManager.setLastCommand()` no caminho comum de
+  teclas do controle remoto. Corrigido centralizando essa chamada em
+  `TvManager.sendRemoteKey()`/`sendText()`, único ponto por onde toda
+  tecla passa, independente de fabricante.
+- **"Ping" nunca era medido por nenhum fabricante** — o método já existia
+  em `DiagnosticManager`, mas nada o chamava. Criado `PingMonitor`, que
+  mede o tempo de conexão TCP até a porta de controle da TV a cada 10s
+  enquanto conectado (proxy honesta de latência, já que ICMP ping real não
+  é viável no Android sem root).
+
+### 3. Menu lateral, FAQ e troca de idioma
+
+O botão de engrenagem, que antes ia direto para a tela de descoberta,
+agora abre um menu lateral com: Pareamento de TV, Diagnóstico Aprofundado,
+Perguntas frequentes, Compartilhar app, e Mudar idioma — mais links de
+rodapé para o GitHub e LinkedIn do autor.
+
+A troca de idioma usa `AppCompatDelegate.setApplicationLocales` (4 opções
+fixas: Português/English/Español/Français, sem opção "padrão do
+sistema"). A persistência entre reaberturas do app é feita explicitamente
+via `SharedPreferences` + `SmartRemoteApplication.onCreate()` (que
+reaplica o idioma salvo antes de qualquer Activity abrir) — a persistência
+"automática" documentada para o AppCompat não se confirmou na prática
+neste projeto.
+
+A FAQ é uma tela própria com 6 perguntas fixas (por que a TV não aparece
+na busca, por que apps não abrem em Samsungs recentes, se é preciso
+parear de novo sempre, etc.) em formato expansível.
+
+### 4. Diagnóstico Aprofundado
+
+Tela nova, acessível só pelo menu lateral, com o dado técnico cru e
+completo que o painel simples deliberadamente não mostra mais: todos os
+campos de `DiagnosticState` (incluindo os internos, como
+`isAutoReconnecting`), o log cronológico completo de eventos de conexão
+(colorido por tipo — erro, aviso, rede, comando, resposta, informativo), e
+o log da última busca de TVs feita nesta sessão (`DiscoveryDiagnostics`,
+que antes só existia como `Log.d` do Logcat).
+
+### 5. Tradução completa (pt/en/es/fr)
+
+Todo texto visível ao usuário — incluindo mensagens de erro que antes
+estavam hardcoded em português dentro dos `TvController`s, e não só o que
+já vinha em `strings.xml` — foi extraído e traduzido para inglês, espanhol
+e francês. As 4 versões têm exatamente o mesmo conjunto de chaves (sem
+nenhuma faltando ou sobrando em nenhum idioma). Os textos técnicos do log
+de diagnóstico (jargão de protocolo, ex: nomes de mensagem SSAP) foram
+deliberadamente mantidos em português — são conteúdo de depuração, não de
+interface, mesmo critério já usado para justificar por que eles não
+aparecem no painel simples.
 
 ## Novidades da v0.9
 
@@ -272,13 +378,13 @@ em todo push/PR para `main`. Cobertura atual de testes unitários:
   identidade de pareamento (ver a seção de arquitetura acima para por que
   isso é crítico).
 
-> **Nota da v0.9**: nenhum teste automatizado novo foi adicionado para
-> `ReconnectionManager`, os controllers Samsung/LG atualizados, ou o
-> `AndroidTvController`/`AndroidTvRemoteProtocol` novos — a cobertura
-> acima é a mesma de antes desta versão. Validação manual (compilar,
-> parear com uma TV Android TV real, forçar quedas de Wi-Fi) é
-> recomendada antes de ir para produção. Ficou como próximo passo, não
-> coberto nesta entrega.
+> **Nota da v0.9.3**: nenhum teste automatizado novo foi adicionado para
+> `PingMonitor`, `LanguageManager`, `DiagnosticLogAdapter`,
+> `DiscoveryEventAdapter`, `FaqActivity`/`FaqAdapter` ou
+> `DeepDiagnosticActivity` — a cobertura acima continua sendo a mesma de
+> antes desta versão. Validação manual (compilar, testar o menu lateral,
+> forçar uma reconexão automática, trocar de idioma e reabrir o app) é
+> recomendada antes de ir para produção.
 
 ## Build de release assinado
 
@@ -320,16 +426,35 @@ neste repositório.
 - **AndroidKeyStore** para a identidade criptográfica (chave privada RSA)
   usada no pareamento com Android TV — nunca exportada para
   SharedPreferences/texto puro.
-- **RecyclerView + Material Components** para as listas/bottom sheets.
+- **AppCompatDelegate** (`setApplicationLocales`) para troca de idioma em
+  runtime, com persistência própria via `SharedPreferences` (v0.9.3).
+- **RecyclerView + Material Components** para as listas/bottom sheets/FAQ.
+- **DrawerLayout** para o menu lateral (v0.9.3).
 - Persistência simples via `SharedPreferences` + JSON nativo
   (`org.json`) — sem Room/DataStore.
 - Sem MVVM, Repository, DI, LiveData ou Flow — arquitetura deliberadamente
   simples, organizada por responsabilidade de pacote.
 
+## Idiomas
+
+Português (padrão), English, Español e Français — trocável a qualquer
+momento pelo menu lateral (não depende do idioma do sistema operacional).
+Os quatro arquivos de recursos (`values/`, `values-en/`, `values-es/`,
+`values-fr/`) são mantidos com exatamente o mesmo conjunto de chaves;
+qualquer string nova precisa ser adicionada nos 4 arquivos para não
+quebrar essa paridade.
+
 ## Roadmap
 
 - [x] ~~Suporte de controle (Android TV/Google TV)~~ — feito na v0.9.
 - [x] ~~Reconexão automática~~ — feito na v0.9.
+- [x] ~~Indicador visual de reconexão automática~~ — feito na v0.9.3.
+- [x] ~~Tradução do app (inglês/espanhol/francês)~~ — feito na v0.9.3.
+- [x] ~~Tela de diagnóstico técnico separada do painel simples~~ — feito
+      na v0.9.3 (Diagnóstico Aprofundado).
+- [ ] Ícones reais dos apps de streaming na grade de apps (hoje sem ícone
+      de marca — usar os assets oficiais de brand kit de cada serviço,
+      respeitando os termos de uso de cada um).
 - [ ] Scanners/controle "do zero" para Roku, Fire TV e VIDAA (a
       arquitetura de Discovery já está pronta para recebê-los).
 - [ ] Envio de texto livre (`sendText`) para Android TV — protocolo tem
@@ -379,3 +504,4 @@ oficial.
 > necessidade de reescrever tags/commits antigos já publicados.
 
 Copyright © 2026 brunoCodds.
+READMEEOF

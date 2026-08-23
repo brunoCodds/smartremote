@@ -3,6 +3,7 @@ package com.example.smartremote.controller.lg
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import com.example.smartremote.R
 import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.controller.TvController
 import com.example.smartremote.diagnostic.DiagnosticLogType
@@ -179,7 +180,7 @@ class LgWebOsController(
         DiagnosticManager.updateDevice(device)
         DiagnosticManager.setController(CONTROLLER_NAME)
         DiagnosticManager.setLastError(null)
-        DiagnosticManager.setConnectionStatus("Conectando")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_connecting))
         if (!savedClientKey.isNullOrBlank()) {
             DiagnosticManager.setToken(savedClientKey)
         }
@@ -198,7 +199,7 @@ class LgWebOsController(
                 "Reconexão automática cancelada: TV LG sem client-key salva (exigiria novo pareamento)",
                 DiagnosticLogType.INFO
             )
-            DiagnosticManager.setConnectionStatus("Desconectado")
+            DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
             mainHandler.post { listener.onConnectionLost(recoverable = false) }
             return
         }
@@ -228,7 +229,7 @@ class LgWebOsController(
                         DiagnosticManager.log("LG webOS: socket principal fechado (${event.reason})", DiagnosticLogType.INFO)
                         val wasConnected = connected
                         connected = false
-                        DiagnosticManager.setConnectionStatus("Desconectado")
+                        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
                         if (wasConnected && !explicitDisconnect) {
                             // *** v0.9, item 1 ***: mesma lógica da Samsung
                             // - queda inesperada enquanto conectados,
@@ -242,12 +243,12 @@ class LgWebOsController(
                         DiagnosticManager.log("LG webOS: falha no socket principal - ${event.message}", DiagnosticLogType.ERROR)
                         val wasConnected = connected
                         connected = false
-                        DiagnosticManager.setConnectionStatus("Desconectado")
+                        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
                         DiagnosticManager.setLastError(event.message)
                         if (wasConnected && !explicitDisconnect) {
                             this.listener?.onConnectionLost(recoverable = true)
                         } else {
-                            this.listener?.onError("Falha ao conectar na TV LG: ${event.message}")
+                            this.listener?.onError(context.getString(R.string.error_lg_connect_failed, event.message))
                         }
                     }
                 }
@@ -281,7 +282,7 @@ class LgWebOsController(
                 DiagnosticManager.setToken(lgEvent.clientKey)
 
                 connected = true
-                DiagnosticManager.setConnectionStatus("Conectado")
+                DiagnosticManager.setConnectionStatus(context.getString(R.string.status_connected))
                 DiagnosticManager.setLastError(null)
 
                 DiagnosticManager.log("[LG-PAIRING] 5/6 - chamando listener?.onConnected() (listener nulo? ${listener == null})", DiagnosticLogType.INFO)
@@ -293,7 +294,7 @@ class LgWebOsController(
 
             is LgWebOsProtocol.LgEvent.PairingRequired -> {
                 DiagnosticManager.log("[LG-PAIRING] TV pedindo confirmação do usuário (popup exibido) - aguardando aceite", DiagnosticLogType.INFO)
-                DiagnosticManager.setConnectionStatus("Aguardando confirmação na TV")
+                DiagnosticManager.setConnectionStatus(context.getString(R.string.status_waiting_tv_confirmation))
                 listener?.onPairingRequired()
                 schedulePairingTimeout()
             }
@@ -376,7 +377,7 @@ class LgWebOsController(
         pointerSocketReady = false
         mainSocket.close()
         connected = false
-        DiagnosticManager.setConnectionStatus("Desconectado")
+        DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
         listener = null
     }
 
@@ -389,11 +390,11 @@ class LgWebOsController(
         cancelPairingTimeout()
         val runnable = Runnable {
             connected = false
-            DiagnosticManager.setConnectionStatus("Desconectado")
+            DiagnosticManager.setConnectionStatus(context.getString(R.string.status_disconnected))
             DiagnosticManager.log("Timeout aguardando confirmação na TV", DiagnosticLogType.ERROR)
-            DiagnosticManager.setLastError("Tempo esgotado aguardando confirmação na TV")
+            DiagnosticManager.setLastError(context.getString(R.string.error_lg_confirmation_timeout))
             mainSocket.close()
-            listener?.onError("Tempo esgotado aguardando confirmação na TV")
+            listener?.onError(context.getString(R.string.error_lg_confirmation_timeout))
         }
         pairingTimeoutRunnable = runnable
         mainHandler.postDelayed(runnable, Constants.LG_PAIRING_TIMEOUT_MS)
