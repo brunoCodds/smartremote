@@ -407,6 +407,53 @@ class LgWebOsController(
 
     override fun isConnected(): Boolean = connected
 
+    /**
+     * *** NOVO - v0.9.4 (modo cursor/mouse) ***: webOS suporta cursor
+     * nativamente via o mesmo pointer input socket já usado pelos botões
+     * (ver [sendCursorMove]/[sendCursorClick]).
+     */
+    override fun supportsCursorMode(): Boolean = true
+
+    /**
+     * *** NOVO - v0.9.4 ***: reaproveita o [pointerSocket] já existente
+     * (o mesmo usado por [sendRemoteKey] para os botões) - não abre socket
+     * novo. [dx]/[dy] são delta relativo, repassados direto para
+     * [LgWebOsProtocol.buildMoveCommand].
+     *
+     * Silenciosamente descarta (sem log) se desconectado ou se o pointer
+     * socket não estiver pronto. Um gesto de arrastar gera um evento a
+     * cada ~30-50ms (ver throttle na UI) - diferente de [sendRemoteKey],
+     * que loga cada tecla porque é um evento discreto e raro, logar cada
+     * falha de movimento encheria o log cronológico do Diagnóstico
+     * Aprofundado sem nenhum valor de depuração adicional além de "o
+     * pointer socket caiu no meio do gesto" (mesmo raciocínio já
+     * documentado em TvManager.sendCursorMove()).
+     */
+    override fun sendCursorMove(dx: Int, dy: Int) {
+        if (!connected || !pointerSocketReady) return
+        pointerSocket?.send(LgWebOsProtocol.buildMoveCommand(dx, dy))
+    }
+
+    /**
+     * *** NOVO - v0.9.4 ***: clique É um evento discreto (um tap), então
+     * mantém o mesmo padrão de log de sucesso/falha de [sendRemoteKey].
+     */
+    override fun sendCursorClick() {
+        if (!connected) {
+            DiagnosticManager.log("Falha ao enviar clique do cursor: TV LG desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+        if (!pointerSocketReady) {
+            DiagnosticManager.log("Falha ao enviar clique do cursor: pointer socket ainda não está pronto", DiagnosticLogType.ERROR)
+            return
+        }
+        val sent = pointerSocket?.send(LgWebOsProtocol.buildClickCommand()) ?: false
+        DiagnosticManager.log(
+            if (sent) "LG webOS: clique do cursor enviado" else "LG webOS: falha ao enviar clique do cursor, pointer socket indisponível no momento do envio",
+            if (sent) DiagnosticLogType.INFO else DiagnosticLogType.ERROR
+        )
+    }
+
     override fun sendRemoteKey(key: RemoteKey) {
         if (!connected) {
             DiagnosticManager.log("Falha ao enviar comando: TV LG desconectada", DiagnosticLogType.ERROR)

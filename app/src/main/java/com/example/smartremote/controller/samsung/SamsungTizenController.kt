@@ -104,6 +104,53 @@ class SamsungTizenController(
 
     override fun isConnected(): Boolean = connected
 
+    /**
+     * *** NOVO - v0.9.4 (modo cursor/mouse) ***: Tizen suporta cursor
+     * nativamente via o mesmo WebSocket principal já usado pelas teclas
+     * (`ms.remote.control`, só troca `TypeOfRemote` - ver
+     * [SamsungProtocol.buildCursorMoveCommand]/[SamsungProtocol.buildCursorClickCommand]).
+     */
+    override fun supportsCursorMode(): Boolean = true
+
+    /**
+     * *** NOVO - v0.9.4 ***: reaproveita o [socketClient] já existente, o
+     * mesmo WebSocket usado por [sendRemoteKey] - não abre conexão nova.
+     *
+     * Silenciosamente descarta (sem log) se desconectado ou se o envio
+     * falhar - mesmo raciocínio já documentado em
+     * [com.example.smartremote.manager.TvManager.sendCursorMove] e no
+     * equivalente LG: um gesto de arrastar gera um evento a cada
+     * ~30-50ms, então logar cada falha de movimento encheria o log
+     * cronológico do Diagnóstico Aprofundado sem valor de depuração
+     * adicional. [sendCursorClick], por ser um evento discreto, continua
+     * logando normalmente.
+     */
+    override fun sendCursorMove(dx: Int, dy: Int) {
+        if (!connected) return
+        socketClient.send(SamsungProtocol.buildCursorMoveCommand(dx, dy))
+    }
+
+    /**
+     * *** NOVO - v0.9.4 ***: clique É um evento discreto (um tap), então
+     * mantém o mesmo padrão de log de sucesso/falha de [sendRemoteKey].
+     */
+    override fun sendCursorClick() {
+        if (!connected) {
+            DiagnosticManager.log("Falha ao enviar clique do cursor: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+
+        DiagnosticManager.setLastCommand("Cursor: clique")
+        val sent = socketClient.send(SamsungProtocol.buildCursorClickCommand())
+
+        if (!sent) {
+            DiagnosticManager.log("Falha ao enviar clique do cursor: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+
+        DiagnosticManager.log("Comando enviado: Cursor clique (LeftClick)", DiagnosticLogType.NETWORK)
+    }
+
     // ===================== FLUXO DE CONEXÃO/PAREAMENTO =====================
 
     private fun startPairing() {

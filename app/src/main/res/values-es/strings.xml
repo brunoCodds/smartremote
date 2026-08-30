@@ -133,4 +133,12 @@
 
     <string name="error_samsung_token_invalid_manual_repair">Token inválido - reparea manualmente desde la pantalla de emparejamiento</string>
     <string name="error_samsung_token_invalid_new_pairing">Token inválido - iniciando un nuevo emparejamiento</string>
+
+    <!-- ===== v0.9.4 - Modo cursor/ratón ===== -->
+    <string name="desc_cursor_mode_toggle_enter">Activar modo cursor</string>
+    <string name="desc_cursor_mode_toggle_exit">Volver al D-pad</string>
+    <string name="desc_cursor_touchpad">Área táctil del modo cursor - arrastra para mover, toca para hacer clic</string>
+    <string name="cursor_touchpad_hint">Arrastra para mover\nToca para hacer clic</string>
+    <string name="cursor_mode_entered_toast">Modo cursor activado</string>
+    <string name="cursor_mode_exited_toast">Modo D-pad</string>
 </resources>

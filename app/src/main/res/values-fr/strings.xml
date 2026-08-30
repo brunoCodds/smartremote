@@ -133,4 +133,12 @@
 
     <string name="error_samsung_token_invalid_manual_repair">Jeton invalide - réassociez manuellement depuis l\'écran d\'association</string>
     <string name="error_samsung_token_invalid_new_pairing">Jeton invalide - nouvelle association en cours</string>
+
+    <!-- ===== v0.9.4 - Mode curseur/souris ===== -->
+    <string name="desc_cursor_mode_toggle_enter">Activer le mode curseur</string>
+    <string name="desc_cursor_mode_toggle_exit">Revenir au D-pad</string>
+    <string name="desc_cursor_touchpad">Zone tactile du mode curseur - glissez pour déplacer, touchez pour cliquer</string>
+    <string name="cursor_touchpad_hint">Glissez pour déplacer\nTouchez pour cliquer</string>
+    <string name="cursor_mode_entered_toast">Mode curseur activé</string>
+    <string name="cursor_mode_exited_toast">Mode D-pad</string>
 </resources>

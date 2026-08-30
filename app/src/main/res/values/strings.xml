@@ -170,4 +170,12 @@
          setLastError() diretamente (não por onError()/notifyError()). ===== -->
     <string name="error_samsung_token_invalid_manual_repair">Token inválido - repareie manualmente em Configurações</string>
     <string name="error_samsung_token_invalid_new_pairing">Token inválido - iniciando novo pareamento</string>
+
+    <!-- ===== v0.9.4 - Modo cursor/mouse ===== -->
+    <string name="desc_cursor_mode_toggle_enter">Ativar modo cursor</string>
+    <string name="desc_cursor_mode_toggle_exit">Voltar ao D-pad</string>
+    <string name="desc_cursor_touchpad">Área de toque do modo cursor - arraste para mover, toque para clicar</string>
+    <string name="cursor_touchpad_hint">Arraste para mover\nToque para clicar</string>
+    <string name="cursor_mode_entered_toast">Modo cursor ativado</string>
+    <string name="cursor_mode_exited_toast">Modo D-pad</string>
 </resources>

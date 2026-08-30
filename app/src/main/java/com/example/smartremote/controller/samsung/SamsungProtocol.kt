@@ -143,6 +143,67 @@ object SamsungProtocol {
     }
 
     /**
+     * *** NOVO - v0.9.4 (modo cursor/mouse) ***
+     *
+     * Monta o comando de movimento do cursor. Formato vindo de uma
+     * implementação de terceiros (fork do samsungctl usado num componente
+     * do Home Assistant) - **NÃO CONFIRMADO CONTRA UMA TV REAL**, ao
+     * contrário de [buildRemoteControlCommand]/[buildAppLaunchCommand].
+     *
+     * DECISÃO DE RISCO (documentando por não ter fonte definitiva): o
+     * campo se chama "Position", o que sugere posição ABSOLUTA na tela -
+     * diferente do "dx"/"dy" explicitamente relativo do protocolo LG
+     * webOS. Mesmo assim, [x]/[y] aqui são tratados como delta RELATIVO
+     * (mesmo valor de dx/dy recebido de [com.example.smartremote.manager.TvManager.sendCursorMove]),
+     * porque: (1) mantém a mesma interface delta-based já usada por LG e
+     * pela UI, e (2) um app remoto não tem como saber a resolução real da
+     * tela da TV para mandar coordenada absoluta com sentido - a própria
+     * SmartView oficial funciona como trackpad (delta), não como mouse
+     * warp (posição absoluta). SE ao testar numa TV real o cursor "pular"
+     * para um ponto fixo em vez de seguir o dedo, essa suposição está
+     * errada e o campo é absoluto - ajustar aqui antes de prosseguir.
+     *
+     * "Time" também não tem formato confirmado - usa epoch millis como
+     * string (leitura mais natural de um campo de timestamp não
+     * especificado).
+     */
+    fun buildCursorMoveCommand(x: Int, y: Int): String {
+        val position = JSONObject().apply {
+            put("x", x)
+            put("y", y)
+            put("Time", System.currentTimeMillis().toString())
+        }
+        val params = JSONObject().apply {
+            put("Cmd", "Move")
+            put("TypeOfRemote", "ProcessMouseDevice")
+            put("Position", position)
+        }
+        return JSONObject().apply {
+            put("method", "ms.remote.control")
+            put("params", params)
+        }.toString()
+    }
+
+    /**
+     * *** NOVO - v0.9.4 ***
+     *
+     * Monta o comando de clique esquerdo do cursor - mesma fonte/confiança
+     * de [buildCursorMoveCommand], mas sem o campo "Position" incerto, é
+     * só "Cmd"/"TypeOfRemote" (mesmo formato de [buildRemoteControlCommand]
+     * sem os campos de tecla).
+     */
+    fun buildCursorClickCommand(): String {
+        val params = JSONObject().apply {
+            put("Cmd", "LeftClick")
+            put("TypeOfRemote", "ProcessMouseDevice")
+        }
+        return JSONObject().apply {
+            put("method", "ms.remote.control")
+            put("params", params)
+        }.toString()
+    }
+
+    /**
      * Monta a mensagem oficial do protocolo Samsung para enviar um texto
      * livre de uma vez (não simula tecla por tecla). Formato oficial:
      *

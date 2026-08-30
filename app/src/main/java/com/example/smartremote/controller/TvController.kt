@@ -80,4 +80,43 @@ interface TvController {
      * portanto nunca deveriam receber uma chamada aqui.
      */
     fun submitPairingCode(code: String) {}
+
+    /**
+     * *** NOVO - v0.9.4 (modo cursor/mouse) ***
+     *
+     * Se este fabricante suporta o modo cursor/mouse (ver [sendCursorMove]
+     * e [sendCursorClick]). A UI usa isto para habilitar/desabilitar o
+     * botão de alternância entre D-pad e cursor na tela principal - nunca
+     * deve mostrar a opção e falhar silenciosamente ao tocar (mesmo
+     * critério já usado por [supportedApps] para apps de streaming sem App
+     * ID confirmado).
+     *
+     * Default `false`: só [com.example.smartremote.controller.samsung.SamsungTizenController]
+     * e [com.example.smartremote.controller.lg.LgWebOsController] sobrescrevem
+     * para `true` nesta versão. [com.example.smartremote.controller.androidtv.AndroidTvController]
+     * também sobrescreve explicitamente para `false` (em vez de confiar
+     * silenciosamente neste default) - ver o KDoc lá para a pesquisa de
+     * protocolo que embasa essa decisão.
+     */
+    fun supportsCursorMode(): Boolean = false
+
+    /**
+     * *** NOVO - v0.9.4 ***
+     *
+     * Move o cursor na TV por um delta RELATIVO ([dx], [dy] em pixels de
+     * movimento na tela da TV) - mesmo espírito de um touchpad de
+     * notebook, nunca posição absoluta. Implementações que não suportam
+     * cursor (ver [supportsCursorMode]) devem tratar isto como no-op,
+     * idealmente com um log explicando por quê - mesma regra de [sendText]
+     * para fabricantes sem suporte a texto livre. Nunca lançar exceção.
+     */
+    fun sendCursorMove(dx: Int, dy: Int) {}
+
+    /**
+     * *** NOVO - v0.9.4 ***
+     *
+     * Clique esquerdo na posição atual do cursor (equivalente a um toque
+     * curto/tap na área de cursor da UI). Mesmas regras de [sendCursorMove].
+     */
+    fun sendCursorClick() {}
 }

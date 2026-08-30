@@ -425,6 +425,35 @@ class AndroidTvController(
 
     override fun supportedApps(): Set<RemoteKey> = AndroidTvRemoteProtocol.APP_DEEP_LINKS.keys
 
+    /**
+     * *** NOVO - v0.9.4 (modo cursor/mouse) ***: pesquisei o protocolo
+     * "Android TV Remote Service v2" (o mesmo reimplementado campo a campo
+     * em [AndroidTvRemoteProtocol]) e não encontrei nenhum tipo de
+     * mensagem de ponteiro/touchpad/mouse documentado - só tecla
+     * (RemoteKeyInject), IME, launch de app e voz. A navegação nativa do
+     * Android TV é inteiramente por D-pad, diferente de Samsung/LG.
+     * Retorna `false` explicitamente (em vez de confiar silenciosamente no
+     * default da interface) para deixar essa decisão visível aqui, não
+     * escondida em TvController - se no futuro alguém confirmar suporte
+     * real (documentação oficial do Google ou engenharia reversa
+     * confiável), isso vira um item separado.
+     */
+    override fun supportsCursorMode(): Boolean = false
+
+    override fun sendCursorMove(dx: Int, dy: Int) {
+        DiagnosticManager.log(
+            "Android TV: modo cursor não suportado (protocolo v2 não documenta mensagem de ponteiro)",
+            DiagnosticLogType.WARNING
+        )
+    }
+
+    override fun sendCursorClick() {
+        DiagnosticManager.log(
+            "Android TV: modo cursor não suportado (protocolo v2 não documenta mensagem de ponteiro)",
+            DiagnosticLogType.WARNING
+        )
+    }
+
     // ===================== Notificações ao listener (main thread) =====================
 
     private fun notifyConnected() = mainHandler.post { currentListener?.onConnected() }

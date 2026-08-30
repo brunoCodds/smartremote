@@ -211,7 +211,87 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- *** NOVO - v0.9.4 (modo cursor/mouse) ***: agrupa os 5 views
+             do D-pad para poder escondê-los/mostrá-los como uma unidade só
+             (ver MainActivity.setCursorModeActive) - evita 5 chamadas de
+             visibility repetidas no código Kotlin. -->
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/dpadButtonsGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="btnDpadUp,btnDpadDown,btnDpadLeft,btnDpadRight,btnDpadOk" />
+
+        <!-- *** NOVO - v0.9.4 ***: dica central puramente decorativa,
+             mostrada só quando o modo cursor está ativo - não intercepta
+             toque (por trás do cursorTouchpad transparente, que fica
+             depois dela no XML e por isso desenhado/tocável por cima). -->
+        <LinearLayout
+            android:id="@+id/cursorTouchpadHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:alpha="0.45"
+            android:visibility="gone"
+            tools:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_cursor"
+                android:tint="?attr/colorTextSecondary"
+                android:importantForAccessibility="no" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="@string/cursor_touchpad_hint"
+                android:textColor="?attr/colorTextSecondary"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- *** NOVO - v0.9.4 ***: superfície de toque real do modo cursor
+             - transparente, cobre o dpadContainer inteiro, GONE por padrão
+             (ver MainActivity.setCursorModeActive). Fica DEPOIS da dica no
+             XML de propósito, para ficar por cima dela na ordem de
+             desenho/toque (a dica em si não precisa ser tocável). -->
+        <View
+            android:id="@+id/cursorTouchpad"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            android:contentDescription="@string/desc_cursor_touchpad"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- *** NOVO - v0.9.4 (modo cursor/mouse) ***: botão de alternância
+         D-pad/cursor, canto superior direito do dpadContainer (mesmo
+         padrão de posicionamento de btnInfo/btnSettings nos cantos da
+         tela). Habilitado/desabilitado em runtime conforme a TV atual
+         suporta cursor ou não (ver MainActivity.updateCursorToggleAvailability -
+         nunca deve aparecer clicável e falhar silenciosamente ao tocar). -->
+    <ImageView
+        android:id="@+id/btnCursorToggle"
+        style="@style/Widget.Fluent.IconCircle.Secondary"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="10dp"
+        android:src="@drawable/ic_cursor"
+        android:contentDescription="@string/desc_cursor_mode_toggle_enter"
+        app:layout_constraintEnd_toEndOf="@id/dpadContainer"
+        app:layout_constraintTop_toTopOf="@id/dpadContainer" />
+
 
     <!-- ===================== VOLTAR / HOME / PLAY-PAUSE ===================== -->
     <LinearLayout

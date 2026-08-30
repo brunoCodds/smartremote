@@ -322,6 +322,29 @@ object LgWebOsProtocol {
         "type:button\nname:$buttonName\n\n"
 
     /**
+     * *** NOVO - v0.9.4 (modo cursor/mouse) ***
+     *
+     * Monta o comando de movimento do pointer input socket - mesmo socket
+     * e mesmo formato de texto plano de [buildButtonCommand], só troca o
+     * "type". [dx]/[dy] são delta RELATIVO (pixels de movimento do cursor
+     * na TV, não posição absoluta) - mesmo espírito de um touchpad de
+     * notebook. Confirmado de forma consistente entre lgtv2, lgtv-cli e
+     * uma captura de tráfego real do ConnectSDK-Android.
+     */
+    fun buildMoveCommand(dx: Int, dy: Int): String =
+        "type:move\ndx:$dx\ndy:$dy\n\n"
+
+    /**
+     * *** NOVO - v0.9.4 (modo cursor/mouse) ***
+     *
+     * Monta o comando de clique (esquerdo) do pointer input socket - mesmo
+     * socket de [buildButtonCommand]/[buildMoveCommand]. Fonte da mesma
+     * confirmação de [buildMoveCommand].
+     */
+    fun buildClickCommand(): String =
+        "type:click\n\n"
+
+    /**
      * Interpreta uma mensagem de texto (JSON) recebida do WebSocket
      * PRINCIPAL da TV. O pointer socket não manda respostas relevantes
      * nesta fase, então esta função só é usada para o socket principal.

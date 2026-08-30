@@ -434,6 +434,51 @@ object TvManager {
         currentController?.submitPairingCode(code)
     }
 
+    /**
+     * *** NOVO - v0.9.4 (modo cursor/mouse) ***: se a TV atualmente
+     * conectada suporta o modo cursor (ver [TvController.supportsCursorMode]).
+     * `false` sem nenhuma TV conectada - a UI trata isso do mesmo jeito que
+     * [getSupportedApps] retornando vazio (botão de alternância desabilitado).
+     */
+    fun isCursorModeSupported(): Boolean = currentController?.supportsCursorMode() ?: false
+
+    /**
+     * *** NOVO - v0.9.4 ***: delega o movimento relativo do cursor ([dx],
+     * [dy]) ao controller ativo.
+     *
+     * DECISÃO: diferente de [sendRemoteKey]/[sendText], propositalmente
+     * NÃO centraliza `DiagnosticManager.setLastCommand()`/`log()` aqui. A
+     * centralização deles na v0.9.3 fazia sentido porque uma tecla é um
+     * evento discreto e raro (um toque = uma tecla). Um gesto de arrastar
+     * no modo cursor gera um evento de movimento a cada ~30-50ms (ver
+     * throttle na UI) - logar cada um encheria o log cronológico do
+     * Diagnóstico Aprofundado (limite de 100 entradas) em poucos segundos
+     * de uso normal, sem nenhum valor de depuração adicional além de "o
+     * modo cursor está sendo usado". Cada controller continua livre para
+     * logar seus próprios erros pontuais (ex: pointer socket indisponível),
+     * só não deve logar todo movimento bem-sucedido.
+     */
+    fun sendCursorMove(dx: Int, dy: Int) {
+        currentController?.sendCursorMove(dx, dy)
+    }
+
+    /**
+     * *** NOVO - v0.9.4 ***: delega o clique do cursor ao controller ativo.
+     * Diferente de [sendCursorMove], um clique É um evento discreto e pouco
+     * frequente (um tap, não um stream de arrasto) - por isso centraliza
+     * `DiagnosticManager.setLastCommand()` aqui, mesmo critério já usado
+     * por [sendRemoteKey]/[sendText].
+     */
+    fun sendCursorClick() {
+        val controller = currentController
+        if (controller == null) {
+            DiagnosticManager.log("Falha ao enviar clique do cursor: TV desconectada", DiagnosticLogType.ERROR)
+            return
+        }
+        DiagnosticManager.setLastCommand("Cursor: clique")
+        controller.sendCursorClick()
+    }
+
     /** Chave (stableKey) da TV atualmente conectada, ou null se nenhuma conexão ativa. */
     fun getConnectedDeviceKey(): String? {
         val device = connectionManager.getCurrentDevice() ?: return null

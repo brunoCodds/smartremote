@@ -23,12 +23,12 @@ dia a dia, não um protótipo de estudo.
       <br/><sub>Controle remoto + adições novas</sub>
     </td>
     <td align="center" width="25%">
-      <img src="screenshots/menu-lateral.jpeg" width="100%" alt="Tela de busca e pareamento de TVs"/>
-      <br/><sub>Painel lateral</sub>
+      <img src="screenshots/tela-principal-cursor.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
+      <br/><sub>Painel de diagnóstico aprofundado</sub>
     </td>
     <td align="center" width="25%">
-      <img src="screenshots/diagnostico-aprofundado.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
-      <br/><sub>Painel de diagnóstico aprofundado</sub>
+      <img src="screenshots/menu-lateral.jpeg" width="100%" alt="Tela de busca e pareamento de TVs"/>
+      <br/><sub>Painel lateral</sub>
     </td>
     <td align="center" width="25%">
       <img src="screenshots/faq.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
@@ -38,13 +38,7 @@ dia a dia, não um protótipo de estudo.
 </table>
 
 
-> **v0.9.3** — indicador de reconexão automática na tela principal, painel
-> de diagnóstico simples reformulado (só o essencial: nome da TV, status,
-> erro e ping), menu lateral novo (pareamento, FAQ, compartilhar app, troca
-> de idioma), uma tela de Diagnóstico Aprofundado separada para quem quer o
-> dado técnico cru, e tradução completa do app para inglês, espanhol e
-> francês. Ver a seção dedicada abaixo para o detalhe de cada item e dos
-> bugs corrigidos no processo.
+> **v0.9.4** — Um novo botão (ícone de seta, canto superior direito do D-pad) alterna entre a navegação por D-pad tradicional e um modo cursor: a mesma área da tela vira uma superfície de toque — arrastar o dedo move um cursor na tela da TV
 
 ## Funcionalidades
 
@@ -190,6 +184,85 @@ Princípios que o projeto segue (e que qualquer contribuição deve manter):
   protocolo, passos numerados de um fluxo de pareamento, log completo de
   eventos) pertence ao Diagnóstico Aprofundado, tela separada e acessível
   pelo menu lateral.
+
+## Novidades da v0.9.4
+
+### 1. Modo cursor/mouse
+
+Um novo botão (ícone de seta, canto superior direito do D-pad) alterna
+entre a navegação por D-pad tradicional e um **modo cursor**: a mesma
+área da tela vira uma superfície de toque — arrastar o dedo move um
+cursor na tela da TV (delta relativo, escalado por um fator de
+sensibilidade empírico), e um toque curto equivale a um clique esquerdo.
+Não é um recurso novo do lado da TV — a maioria das Smart TVs já suporta
+isso nativamente quando um controle físico ou mouse USB/Bluetooth é
+conectado; o app só está expondo esse recurso já existente.
+
+O botão de alternância só fica habilitado quando a TV atualmente
+conectada suporta cursor (`TvController.supportsCursorMode()`, novo na
+interface, default `false`) — nunca aparece clicável e falha
+silenciosamente ao tocar, mesmo critério já usado para apps de streaming
+sem App ID confirmado. Esse estado é reavaliado a cada atualização de
+diagnóstico, então trocar de TV em tempo de execução (sem fechar o app)
+atualiza o botão corretamente, inclusive forçando a volta ao D-pad se o
+modo cursor estava ativo numa TV que deixou de estar conectada.
+
+**Suporte por fabricante:**
+
+- **LG webOS**: reaproveita o pointer input socket que já existia só para
+  os botões de navegação — os mesmos tipos de mensagem em texto plano
+  (`type:move`/`type:click`), sem abrir nenhuma conexão nova.
+- **Samsung Tizen**: novo para este fabricante, via o mesmo WebSocket
+  principal já usado pelas teclas (`ms.remote.control`, trocando
+  `TypeOfRemote` para `ProcessMouseDevice`). **Atenção**: o formato exato
+  do campo `Position` (`x`/`y`) não vem de uma fonte oficial — foi
+  implementado como delta relativo (mesmo espírito do LG), mas o nome do
+  campo sugere posição absoluta. Se o cursor "pular" para um ponto fixo
+  em vez de seguir o dedo numa TV Samsung real, é sinal de que essa
+  suposição estava errada (ver comentário em
+  `SamsungProtocol.buildCursorMoveCommand` para o raciocínio completo).
+- **Android TV/Google TV**: **não suportado nesta versão** — o protocolo
+  "Android TV Remote Service v2" usado pelo app não documenta nenhum tipo
+  de mensagem de ponteiro/touchpad (só tecla, IME, launch de app e voz).
+  O botão de alternância fica desabilitado quando essa é a TV conectada.
+
+Os eventos de movimento **não** passam pelo log cronológico do
+Diagnóstico Aprofundado nem por `DiagnosticManager.setLastCommand()` — um
+gesto de arrastar gera um evento a cada ~20ms (throttle), e logar cada um
+encheria o log (limite de 100 entradas) em segundos, sem nenhum valor de
+depuração adicional. O clique do cursor, por ser um evento discreto como
+uma tecla, continua sendo logado normalmente.
+
+### 2. Suavização do movimento do cursor (correção pós-lançamento)
+
+Após o lançamento inicial do modo cursor, veio feedback de que o
+movimento estava travando em alguns momentos — mais perceptível com apps
+pesados abertos na TV (YouTube, Netflix). Três ajustes no
+`MainActivity.handleCursorTouch()`:
+
+- **Throttle reduzido de 40ms para 20ms**: o mesmo movimento total passou
+  a ser mandado em pacotes menores e mais frequentes, em vez de saltos
+  grandes e espaçados — mais fácil de uma TV sob carga processar/renderizar
+  de forma fluida.
+- **Pontos históricos do gesto passaram a ser processados**
+  (`MotionEvent.getHistoricalX`/`getHistoricalY`): o Android agrupa vários
+  toques físicos num único `MotionEvent` quando o sistema está ocupado -
+  sem isso, os pontos intermediários do gesto eram descartados e o
+  movimento parecia "pular" em vez de deslizar. Isso também exigiu trocar
+  `event.rawX`/`rawY` por `event.x`/`y` (coordenada local) em todo o
+  método, já que pontos históricos só existem em coordenada local.
+- **Correção de um bug de arredondamento**: o delta acumulado, depois de
+  multiplicado pela sensibilidade e convertido pra `Int`, tinha sua parte
+  fracionária simplesmente descartada a cada envio em vez de guardada para
+  a próxima leva. Em arrastos lentos, isso fazia pequenos movimentos nunca
+  acumularem o suficiente para virar 1 pixel inteiro - o cursor "grudava".
+
+**Importante**: se o travamento persistir especificamente dentro de apps
+como YouTube/Netflix (e não, por exemplo, na tela inicial da TV), é sinal
+de que a causa é a própria TV sob carga de CPU/GPU decodificando vídeo,
+atrasando o processamento das mensagens do pointer socket (LG) ou
+WebSocket (Samsung) - isso está fora do que o app consegue controlar do
+lado do cliente.
 
 ## Novidades da v0.9.3
 
@@ -452,6 +525,9 @@ quebrar essa paridade.
 - [x] ~~Tradução do app (inglês/espanhol/francês)~~ — feito na v0.9.3.
 - [x] ~~Tela de diagnóstico técnico separada do painel simples~~ — feito
       na v0.9.3 (Diagnóstico Aprofundado).
+- [x] ~~Modo cursor/mouse (Samsung e LG)~~ — feito na v0.9.4. Android
+      TV/Google TV ficou de fora por falta de suporte documentado no
+      protocolo (ver "Novidades da v0.9.4").
 - [ ] Ícones reais dos apps de streaming na grade de apps (hoje sem ícone
       de marca — usar os assets oficiais de brand kit de cada serviço,
       respeitando os termos de uso de cada um).

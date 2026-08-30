@@ -4,15 +4,18 @@ import android.animation.ObjectAnimator
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
 import android.speech.RecognizerIntent
 import android.util.Log
 import android.view.HapticFeedbackConstants
+import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -58,6 +61,17 @@ class MainActivity : AppCompatActivity() {
         // ===== v0.9.3, item 1 - Indicador "Reconectando" =====
         private const val RECONNECT_FADE_DURATION_MS = 200L
         private const val RECONNECT_ROTATION_DURATION_MS = 900L
+
+        // ===== v0.9.4 - Modo cursor/mouse =====
+        /** Fator de escala do delta bruto de arrasto (em px de tela) antes de mandar pra TV - ajuste empírico, sem valor "certo" a priori (ver prompt da v0.9.4). */
+        private const val CURSOR_SENSITIVITY = 1.5f
+        /** Intervalo mínimo entre dois comandos de move consecutivos - agrupa o movimento acumulado nesse meio-tempo em vez de mandar um comando por pixel.
+         *  *** AJUSTADO (pós-v0.9.4, feedback de suavidade) ***: era 40ms: reduzido pra distribuir o mesmo movimento total em pacotes menores e mais frequentes,
+         *  em vez de saltos grandes e espaçados - TVs sob carga (apps de streaming tipo YouTube/Netflix competindo por CPU/GPU) têm mais chance de conseguir
+         *  processar/renderizar pacotes pequenos de forma fluida do que absorver um salto grande de uma vez. Ajustável se, na prática, sobrecarregar a TV. */
+        private const val CURSOR_MOVE_THROTTLE_MS = 20L
+        /** Distância total percorrida (em dp) abaixo da qual um gesto é tratado como toque/clique em vez de arrasto. */
+        private const val CURSOR_TAP_MAX_DISTANCE_DP = 12f
     }
 
     /**
@@ -77,6 +91,7 @@ class MainActivity : AppCompatActivity() {
     private val diagnosticListener = DiagnosticManager.Listener { state, _ ->
         renderDiagnostic(state)
         updateReconnectIndicator(state)
+        updateCursorToggleAvailability() // *** NOVO - v0.9.4 ***: suporte a cursor pode mudar (troca de TV) sem reabrir o app
     }
 
     private var isDiagnosticPanelOpen = false
@@ -86,6 +101,24 @@ class MainActivity : AppCompatActivity() {
 
     /** *** NOVO - v0.9.3, item 1 ***: referência para poder cancelar a rotação (bateria/CPU) quando o indicador é escondido. */
     private var reconnectRotationAnimator: ObjectAnimator? = null
+
+    // ===== v0.9.4 - Modo cursor/mouse =====
+    /** `true` enquanto a superfície de toque (cursorTouchpad) está ativa em vez do D-pad tradicional. */
+    private var isCursorModeActive = false
+    /** Timestamp (uptimeMillis) do último comando de move efetivamente enviado - base do throttle. */
+    private var lastCursorMoveSentAt = 0L
+    /** Último ponto bruto (rawX/rawY) recebido no gesto atual - usado para calcular o delta do próximo ACTION_MOVE. */
+    private var cursorLastX = 0f
+    private var cursorLastY = 0f
+    /** Delta acumulado (ainda não enviado) desde o último comando de move - zerado a cada envio. */
+    private var cursorPendingDx = 0f
+    private var cursorPendingDy = 0f
+    /** Distância total (em px) percorrida desde o ACTION_DOWN do gesto atual - usada para decidir tap vs. arrasto no ACTION_UP. */
+    private var cursorTotalDragDistance = 0f
+
+    private val cursorTapMaxDistancePx: Float by lazy {
+        CURSOR_TAP_MAX_DISTANCE_DP * resources.displayMetrics.density
+    }
 
     /**
      * Resultado do reconhecimento de voz do Android (usado pelo botão
@@ -123,6 +156,7 @@ class MainActivity : AppCompatActivity() {
         setupClickListeners()
         setupDiagnosticPanel()
         setupDrawer() // *** NOVO - v0.9.3, item 3 ***
+        setupCursorMode() // *** NOVO - v0.9.4 ***
     }
 
     override fun onStart() {
@@ -508,6 +542,183 @@ class MainActivity : AppCompatActivity() {
     private fun apps() {
         triggerHapticFeedback(binding.btnApps)
         AppsBottomSheet().show(supportFragmentManager, AppsBottomSheet.TAG)
+    }
+
+    // ===================== MODO CURSOR/MOUSE (v0.9.4) =====================
+
+    /**
+     * *** NOVO - v0.9.4 ***: configura o botão de alternância D-pad/cursor
+     * e o OnTouchListener da superfície de toque (binding.cursorTouchpad).
+     * Chamado uma vez em onCreate(), junto dos outros setupXxx().
+     */
+    private fun setupCursorMode() {
+        updateCursorToggleAvailability()
+        binding.btnCursorToggle.setOnClickListener { toggleCursorMode() }
+        binding.cursorTouchpad.setOnTouchListener { view, event -> handleCursorTouch(view, event) }
+    }
+
+    /**
+     * Habilita/desabilita o botão de alternância conforme a TV atualmente
+     * conectada suporta cursor ou não (ver TvController.supportsCursorMode()
+     * via TvManager.isCursorModeSupported()). Chamado uma vez em
+     * setupCursorMode() e de novo a cada atualização de diagnóstico (ver
+     * diagnosticListener) - o suporte pode mudar em runtime (ex: usuário
+     * troca de uma TV LG para uma Android TV sem fechar o app).
+     *
+     * Requisito explícito do prompt: o botão nunca deve aparecer clicável
+     * e falhar silenciosamente ao tocar - por isso isEnabled + alpha
+     * reduzido, não só uma checagem dentro do clique.
+     *
+     * Se o modo cursor estava ativo e a TV deixou de suportar, força a
+     * volta pro D-pad - nunca deixa a superfície de toque ativa sem
+     * suporte real por trás dela.
+     */
+    private fun updateCursorToggleAvailability() {
+        val supported = TvManager.isCursorModeSupported()
+        binding.btnCursorToggle.isEnabled = supported
+        binding.btnCursorToggle.alpha = if (supported) 1f else 0.35f
+        if (!supported && isCursorModeActive) {
+            setCursorModeActive(false)
+        }
+    }
+
+    private fun toggleCursorMode() {
+        triggerHapticFeedback(binding.btnCursorToggle)
+        setCursorModeActive(!isCursorModeActive)
+    }
+
+    /**
+     * Alterna a área do dpadContainer entre D-pad ([binding.dpadButtonsGroup])
+     * e superfície de cursor ([binding.cursorTouchpad] + [binding.cursorTouchpadHint])
+     * - reaproveita a mesma região da tela trocando de conteúdo, em vez de
+     * abrir uma tela nova (requisito explícito do prompt). O fundo do
+     * botão de alternância também muda (mesmo drawable "selecionado" já
+     * usado pelo botão OK do D-pad) para indicar visualmente o modo ativo.
+     */
+    private fun setCursorModeActive(active: Boolean) {
+        isCursorModeActive = active
+        binding.dpadButtonsGroup.visibility = if (active) View.GONE else View.VISIBLE
+        binding.cursorTouchpad.visibility = if (active) View.VISIBLE else View.GONE
+        binding.cursorTouchpadHint.visibility = if (active) View.VISIBLE else View.GONE
+        binding.btnCursorToggle.background = ContextCompat.getDrawable(
+            this,
+            if (active) R.drawable.fluent_bg_button_glass_circle_selected else R.drawable.fluent_bg_button_glass_circle
+        )
+        binding.btnCursorToggle.contentDescription = getString(
+            if (active) R.string.desc_cursor_mode_toggle_exit else R.string.desc_cursor_mode_toggle_enter
+        )
+        showToast(getString(if (active) R.string.cursor_mode_entered_toast else R.string.cursor_mode_exited_toast))
+    }
+
+    /**
+     * Trata o gesto na superfície de toque do modo cursor:
+     * - ACTION_DOWN: guarda o ponto inicial, zera distância acumulada e
+     *   delta pendente.
+     * - ACTION_MOVE: primeiro processa os pontos HISTÓRICOS do evento
+     *   ([MotionEvent.getHistoricalX]/[getHistoricalY] - ver comentário
+     *   abaixo), depois o ponto atual; soma tudo ao delta pendente (não
+     *   substitui - ver KDoc de [cursorPendingDx]) e à distância total
+     *   percorrida (para diferenciar tap de arrasto no ACTION_UP). Só
+     *   manda de fato um comando de rede (TvManager.sendCursorMove) quando
+     *   o throttle ([CURSOR_MOVE_THROTTLE_MS]) permitir - nesse momento
+     *   manda a SOMA acumulada desde o último envio (requisito explícito
+     *   do prompt original: "agrupe o movimento acumulado", não descartar
+     *   os pixels do meio) e preserva a fração não-enviada (ver comentário
+     *   no ponto de envio) em vez de descartá-la.
+     * - ACTION_UP/ACTION_CANCEL: se a distância total percorrida desde o
+     *   DOWN for menor que [cursorTapMaxDistancePx], trata como toque
+     *   curto (clique) em vez de arrasto - TvManager.sendCursorClick().
+     *
+     * Usa coordenadas LOCAIS da view (event.x/y), não rawX/rawY como na
+     * v0.9.4 original - necessário porque os pontos históricos só existem
+     * em coordenada local (não existe getHistoricalRawX pré-API 34). Como
+     * só usamos deltas (não posição absoluta) e a view não se move durante
+     * o gesto, a troca não muda o resultado.
+     *
+     * Retorna `true` para os casos tratados (continua recebendo os
+     * próximos eventos do mesmo gesto); `false` para qualquer outra ação
+     * não tratada.
+     */
+    private fun handleCursorTouch(view: View, event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                cursorLastX = event.x
+                cursorLastY = event.y
+                cursorTotalDragDistance = 0f
+                cursorPendingDx = 0f
+                cursorPendingDy = 0f
+                lastCursorMoveSentAt = 0L
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                // *** AJUSTE (pós-v0.9.4, feedback de suavidade) ***: o
+                // Android agrupa (batching) vários toques físicos num
+                // único MotionEvent quando o sistema está ocupado - sem
+                // processar o histórico, esses pontos intermediários eram
+                // descartados e o gesto parecia "pular" em vez de deslizar,
+                // efeito que fica mais visível justamente quando algo (no
+                // celular ou na TV) está sob carga - o mesmo cenário
+                // relatado com apps de streaming abertos na TV.
+                val historySize = event.historySize
+                for (h in 0 until historySize) {
+                    val hx = event.getHistoricalX(h)
+                    val hy = event.getHistoricalY(h)
+                    val hdx = hx - cursorLastX
+                    val hdy = hy - cursorLastY
+                    cursorPendingDx += hdx
+                    cursorPendingDy += hdy
+                    cursorTotalDragDistance += kotlin.math.hypot(hdx, hdy)
+                    cursorLastX = hx
+                    cursorLastY = hy
+                }
+
+                val dx = event.x - cursorLastX
+                val dy = event.y - cursorLastY
+                cursorLastX = event.x
+                cursorLastY = event.y
+                cursorTotalDragDistance += kotlin.math.hypot(dx, dy)
+                cursorPendingDx += dx
+                cursorPendingDy += dy
+
+                val now = SystemClock.uptimeMillis()
+                if (now - lastCursorMoveSentAt >= CURSOR_MOVE_THROTTLE_MS) {
+                    lastCursorMoveSentAt = now
+                    val scaledDx = cursorPendingDx * CURSOR_SENSITIVITY
+                    val scaledDy = cursorPendingDy * CURSOR_SENSITIVITY
+                    val intDx = scaledDx.toInt()
+                    val intDy = scaledDy.toInt()
+                    if (intDx != 0 || intDy != 0) {
+                        TvManager.sendCursorMove(intDx, intDy)
+                    }
+                    // *** CORREÇÃO (pós-v0.9.4, feedback de suavidade) ***:
+                    // antes zerava pendingDx/Dy pro valor bruto acumulado,
+                    // descartando a fração de pixel que não coube no
+                    // Int enviado. Em arrastos lentos (delta bruto menor
+                    // que 1px por leva) isso fazia o cursor "grudar" -
+                    // nenhum movimento nunca acumulava o suficiente pra
+                    // virar 1 pixel inteiro depois de multiplicar pela
+                    // sensibilidade. Agora guarda essa sobra (já
+                    // convertida de volta pra espaço de tela, dividindo
+                    // pela sensibilidade) pra somar na próxima leva, em
+                    // vez de simplesmente perdê-la.
+                    cursorPendingDx = (scaledDx - intDx) / CURSOR_SENSITIVITY
+                    cursorPendingDy = (scaledDy - intDy) / CURSOR_SENSITIVITY
+                }
+            }
+
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (event.actionMasked == MotionEvent.ACTION_UP &&
+                    cursorTotalDragDistance < cursorTapMaxDistancePx
+                ) {
+                    triggerHapticFeedback(view)
+                    view.performClick() // acessibilidade (TalkBack) - view continua tratando o clique de verdade aqui, não em setOnClickListener
+                    TvManager.sendCursorClick()
+                }
+            }
+
+            else -> return false
+        }
+        return true
     }
 
     // ===================== PAINEL DE DIAGNÓSTICO =====================
