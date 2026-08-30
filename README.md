@@ -23,12 +23,12 @@ dia a dia, não um protótipo de estudo.
       <br/><sub>Controle remoto + adições novas</sub>
     </td>
     <td align="center" width="25%">
-      <img src="screenshots/tela-principal-cursor.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
-      <br/><sub>Tela inicia com touchpad</sub>
-    </td>
-    <td align="center" width="25%">
       <img src="screenshots/menu-lateral.jpeg" width="100%" alt="Tela de busca e pareamento de TVs"/>
       <br/><sub>Painel lateral</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="screenshots/diagnostico-aprofundado.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
+      <br/><sub>Painel de diagnóstico aprofundado</sub>
     </td>
     <td align="center" width="25%">
       <img src="screenshots/faq.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
@@ -38,7 +38,7 @@ dia a dia, não um protótipo de estudo.
 </table>
 
 
-> **v0.9.4** — Um novo botão (ícone de seta, canto superior direito do D-pad) alterna entre a navegação por D-pad tradicional e um modo cursor: a mesma área da tela vira uma superfície de toque — arrastar o dedo move um cursor na tela da TV
+> **v0.9.4.2** — Correção do play/pause (toggle real)
 
 ## Funcionalidades
 
@@ -184,6 +184,48 @@ Princípios que o projeto segue (e que qualquer contribuição deve manter):
   protocolo, passos numerados de um fluxo de pareamento, log completo de
   eventos) pertence ao Diagnóstico Aprofundado, tela separada e acessível
   pelo menu lateral.
+
+## Novidades da v0.9.4.2
+
+### 1. Correção do play/pause (toggle real)
+
+O botão físico único de play/pause enviava sempre o mesmo código
+discreto (`KEY_PAUSE` na Samsung, `PAUSE` na LG) — funcionava numa
+direção e não na outra, então em algum momento o botão parava de
+responder de forma útil (dependendo do estado real de reprodução da TV).
+
+Como nenhum dos dois protocolos tem um botão de toggle nativo (só
+`PLAY`/`PAUSE` discretos - Android TV é diferente, já usa um key code de
+toggle real do próprio Android e não foi afetado), a correção mantém um
+estado local (`mediaIsPlaying`) em `SamsungTizenController` e
+`LgWebOsController`, alternado a cada toque, decidindo dinamicamente se
+o próximo comando é `PLAY` ou `PAUSE`.
+
+**Limitação conhecida e intencional**: como os dois protocolos são
+fire-and-forget, não existe como consultar o estado real de reprodução
+da TV - esse `mediaIsPlaying` é só um palpite mantido pelo app, resetado
+a cada nova conexão (assume que algo já está tocando). Se o estado real
+mudar por fora do app (o vídeo termina sozinho, ou o usuário pausa com o
+controle físico da TV), o palpite fica desalinhado até o próximo toque -
+não tem como o app saber disso sem um canal de feedback que o protocolo
+não oferece.
+
+### 2. Investigação de App IDs faltantes (sem mudança de código)
+
+Pesquisa dedicada aos App IDs que faltavam no Roadmap
+(Paramount+/Crunchyroll na LG, Crunchyroll na Samsung):
+
+- **LG webOS**: nenhuma fonte confiável encontrada para nenhum dos três
+  (Paramount+, Crunchyroll, Globoplay), mesma conclusão já documentada
+  anteriormente - continuam de fora.
+- **Samsung (Crunchyroll)**: o app existe oficialmente na Samsung Smart
+  TV desde fev/2024, mas o ID numérico usado pelo mecanismo de
+  lançamento (`ms.channel.emit`) continua sem fonte confiável - nem
+  projetos comunitários bem mantidos têm esse dado (issue aberta sem
+  resposta desde a mesma época). O único candidato encontrado
+  (`com.crunchyroll.crunchyroid`, identificador da Galaxy Store) é de um
+  namespace diferente do usado pelos demais IDs numéricos já cadastrados
+  - decisão consciente de não adicionar um ID de baixa confiança.
 
 ## Novidades da v0.9.4
 
