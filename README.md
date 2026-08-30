@@ -24,7 +24,7 @@ dia a dia, não um protótipo de estudo.
     </td>
     <td align="center" width="25%">
       <img src="screenshots/tela-principal-cursor.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
-      <br/><sub>Painel de diagnóstico aprofundado</sub>
+      <br/><sub>Tela inicia com touchpad</sub>
     </td>
     <td align="center" width="25%">
       <img src="screenshots/menu-lateral.jpeg" width="100%" alt="Tela de busca e pareamento de TVs"/>
