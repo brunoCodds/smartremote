@@ -34,7 +34,7 @@ dia a dia, não um protótipo de estudo.
 </table>
 
 
-> **v0.9.4.2** — Botão de manter tela ligada — ligado por padrão, não disliga a tela do app.
+> **v0.9.5** — Botão de manter tela ligada — ligado por padrão, não disliga a tela do app.
 >
 >Botão de feedback de vibração — liga/desliga geral, ligado por padrão, ele quando ativo faz os botões do controle terem vibração tatica
 
