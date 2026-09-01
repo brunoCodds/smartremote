@@ -23,22 +23,20 @@ dia a dia, não um protótipo de estudo.
       <br/><sub>Controle remoto + adições novas</sub>
     </td>
     <td align="center" width="25%">
+      <img src="screenshots/tela-principal-cursor.jpeg" width="100%" alt="Menu com pad ativo"/>
+      <br/><sub>Menu principla com o modo cursor ativo</sub>
+    </td>
+    <td align="center" width="25%">
       <img src="screenshots/menu-lateral.jpeg" width="100%" alt="Tela de busca e pareamento de TVs"/>
       <br/><sub>Painel lateral</sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="screenshots/diagnostico-aprofundado.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
-      <br/><sub>Painel de diagnóstico aprofundado</sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="screenshots/faq.jpeg" width="100%" alt="Painel de diagnóstico de conexão"/>
-      <br/><sub>Tela de FAQ</sub>
     </td>
   </tr>
 </table>
 
 
-> **v0.9.4.2** — Correção do play/pause (toggle real)
+> **v0.9.4.2** — Botão de manter tela ligada — ligado por padrão, não disliga a tela do app.
+>
+>Botão de feedback de vibração — liga/desliga geral, ligado por padrão, ele quando ativo faz os botões do controle terem vibração tatica
 
 ## Funcionalidades
 
@@ -184,6 +182,36 @@ Princípios que o projeto segue (e que qualquer contribuição deve manter):
   protocolo, passos numerados de um fluxo de pareamento, log completo de
   eventos) pertence ao Diagnóstico Aprofundado, tela separada e acessível
   pelo menu lateral.
+
+## Novidades da v0.9.5
+
+### 1. Configurações de auxílio ao usuário (no rodapé do drawer)
+
+Dois toggles novos no menu lateral, logo acima dos links de GitHub/LinkedIn
+— não uma tela de Configurações completa (essa fica pra mais pra frente,
+quando tiver itens de verdade, tipo tamanho/posição dos botões e
+permissões):
+
+- **Manter tela ligada** (`FLAG_KEEP_SCREEN_ON`) — ligado por padrão, já
+  que é o esperado de um app de controle remoto usado ativamente não
+  deixar a tela apagar sozinha no meio do uso.
+- **Feedback de vibração** — liga/desliga geral, ligado por padrão (mesmo
+  comportamento que o app já tinha antes deste toggle existir). Passa a
+  ser o único ponto de saída de toda vibração do app
+  (`MainActivity.triggerHapticFeedback`), então desligar aqui desliga em
+  todo lugar de uma vez.
+
+Os dois persistem em SharedPreferences (mesmo padrão já usado por
+`LanguageManager`) e o clique é na linha inteira, não fecha o drawer -
+dá pra mexer nos dois em sequência sem reabrir o menu.
+
+### 2. Vibração ao entrar no modo cursor
+
+Uma vibração curta agora acontece ao ATIVAR o modo cursor (não durante o
+arrasto, nem ao sair dele) - decisão consciente: vibração contínua
+durante um gesto de arrastar tende a incomodar mais do que ajudar, e
+vibrar ao sair competiria com a vibração do próprio clique dentro do modo
+cursor.
 
 ## Novidades da v0.9.4.2
 
@@ -570,6 +598,17 @@ quebrar essa paridade.
 - [x] ~~Modo cursor/mouse (Samsung e LG)~~ — feito na v0.9.4. Android
       TV/Google TV ficou de fora por falta de suporte documentado no
       protocolo (ver "Novidades da v0.9.4").
+- [x] ~~Toggle real de play/pause (Samsung e LG)~~ — feito na v0.9.4.2.
+- [x] ~~Configurações de auxílio ao usuário (tela ligada, vibração)~~ —
+      feito na v0.9.5, direto no rodapé do drawer.
+- [ ] Tela de Configurações completa (tamanho/posição dos botões, quais
+      aparecem na tela, permissões etc.) — os dois toggles da v0.9.5
+      ficaram só no drawer de propósito; isso vira uma tela própria
+      quando tiver itens suficientes pra justificar.
+- [ ] Edição de temática do controle (Neon, Anos 2000, Básico etc.) —
+      escopo grande (paleta completa por tema + troca em runtime), rascunho
+      inicial pra v0.9.6, mas provavelmente precisa de documento de escopo
+      próprio antes de começar, como o do modo cursor.
 - [ ] Ícones reais dos apps de streaming na grade de apps (hoje sem ícone
       de marca — usar os assets oficiais de brand kit de cada serviço,
       respeitando os termos de uso de cada um).

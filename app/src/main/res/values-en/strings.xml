@@ -66,6 +66,10 @@
     <string name="drawer_item_faq">FAQ</string>
     <string name="drawer_item_share">Share app</string>
     <string name="drawer_item_language">Change language</string>
+
+    <!-- ===== v0.9.5 - Assist settings (drawer footer) ===== -->
+    <string name="drawer_item_keep_screen_on">Keep screen on</string>
+    <string name="drawer_item_vibration_feedback">Vibration feedback</string>
     <string name="drawer_footer_github">GitHub</string>
     <string name="drawer_footer_linkedin">LinkedIn</string>
     <string name="share_app_text">Check out Smart Remote, an app to control your Smart TV from your phone:\n%1$s</string>

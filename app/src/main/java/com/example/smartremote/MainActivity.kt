@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
 import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -35,6 +36,7 @@ import com.example.smartremote.ui.RemoteKeypadBottomSheet
 import com.example.smartremote.ui.TextInputBottomSheet
 import com.example.smartremote.util.Constants
 import com.example.smartremote.util.LanguageManager
+import com.example.smartremote.util.UserPreferences
 import java.util.Locale
 
 /**
@@ -153,6 +155,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         enableFullscreenMode()
+        applyKeepScreenOnPreference() // *** NOVO - v0.9.5 ***
         setupClickListeners()
         setupDiagnosticPanel()
         setupDrawer() // *** NOVO - v0.9.3, item 3 ***
@@ -190,6 +193,21 @@ class MainActivity : AppCompatActivity() {
         insetsController.hide(WindowInsetsCompat.Type.systemBars())
         insetsController.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    }
+
+    /**
+     * *** NOVO - v0.9.5 (configurações de auxílio ao usuário) ***: aplica
+     * FLAG_KEEP_SCREEN_ON conforme a preferência salva (padrão `true` -
+     * ver [UserPreferences.isKeepScreenOnEnabled]). Chamado em onCreate() e
+     * de novo a cada toque no toggle do drawer (ver setupDrawer()), pra
+     * refletir a mudança imediatamente sem precisar reabrir a tela.
+     */
+    private fun applyKeepScreenOnPreference() {
+        if (UserPreferences.isKeepScreenOnEnabled(this)) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
     }
 
     /** Centraliza a configuração de todos os cliques do controle remoto. */
@@ -303,6 +321,25 @@ class MainActivity : AppCompatActivity() {
             itemLanguage.setOnClickListener {
                 closeDrawer()
                 showLanguagePicker()
+            }
+            // *** NOVO - v0.9.5 (configurações de auxílio ao usuário) ***:
+            // switches inicializados com o valor salvo, e o clique é na
+            // LINHA inteira (o MaterialSwitch em si é não-clicável, ver
+            // drawer_content.xml) - NÃO fecha o drawer, diferente dos
+            // itens acima, pra dar pra mexer nos dois toggles em
+            // sequência sem reabrir o menu.
+            switchKeepScreenOn.isChecked = UserPreferences.isKeepScreenOnEnabled(this@MainActivity)
+            itemKeepScreenOn.setOnClickListener {
+                val enabled = !switchKeepScreenOn.isChecked
+                switchKeepScreenOn.isChecked = enabled
+                UserPreferences.setKeepScreenOnEnabled(this@MainActivity, enabled)
+                applyKeepScreenOnPreference()
+            }
+            switchVibrationFeedback.isChecked = UserPreferences.isVibrationEnabled(this@MainActivity)
+            itemVibrationFeedback.setOnClickListener {
+                val enabled = !switchVibrationFeedback.isChecked
+                switchVibrationFeedback.isChecked = enabled
+                UserPreferences.setVibrationEnabled(this@MainActivity, enabled)
             }
             itemGithub.setOnClickListener {
                 closeDrawer()
@@ -583,7 +620,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun toggleCursorMode() {
-        triggerHapticFeedback(binding.btnCursorToggle)
         setCursorModeActive(!isCursorModeActive)
     }
 
@@ -597,6 +633,12 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setCursorModeActive(active: Boolean) {
         isCursorModeActive = active
+        // *** AJUSTE - v0.9.5 ***: vibração só ao ENTRAR no modo cursor,
+        // não ao sair - pedido explícito, pra não competir com a vibração
+        // do clique dentro do modo cursor nem virar ruído a cada toggle.
+        if (active) {
+            triggerHapticFeedback(binding.btnCursorToggle)
+        }
         binding.dpadButtonsGroup.visibility = if (active) View.GONE else View.VISIBLE
         binding.cursorTouchpad.visibility = if (active) View.VISIBLE else View.GONE
         binding.cursorTouchpadHint.visibility = if (active) View.VISIBLE else View.GONE
@@ -986,7 +1028,9 @@ class MainActivity : AppCompatActivity() {
      * vibração (ou ela estiver desativada), performHapticFeedback apenas
      * retorna false, sem lançar exceção — nada precisa ser feito nesse caso.
      */
+    /** *** NOVO - v0.9.5 ***: respeita o toggle "Feedback de vibração" do drawer (ver UserPreferences.isVibrationEnabled) - único ponto de saída pra TODAS as vibrações do app, então desligar aqui desliga em todo lugar de uma vez. */
     private fun triggerHapticFeedback(view: View) {
+        if (!UserPreferences.isVibrationEnabled(this)) return
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
     }
 

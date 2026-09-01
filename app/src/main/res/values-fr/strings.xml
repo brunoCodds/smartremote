@@ -66,6 +66,10 @@
     <string name="drawer_item_faq">Questions fréquentes</string>
     <string name="drawer_item_share">Partager l\'app</string>
     <string name="drawer_item_language">Changer de langue</string>
+
+    <!-- ===== v0.9.5 - Réglages d'assistance (pied du menu) ===== -->
+    <string name="drawer_item_keep_screen_on">Garder l\'écran allumé</string>
+    <string name="drawer_item_vibration_feedback">Retour vibratoire</string>
     <string name="drawer_footer_github">GitHub</string>
     <string name="drawer_footer_linkedin">LinkedIn</string>
     <string name="share_app_text">Découvrez Smart Remote, une app pour contrôler votre Smart TV depuis votre téléphone :\n%1$s</string>

@@ -178,6 +178,87 @@
         android:layout_marginBottom="12dp"
         android:background="?attr/colorGlassStroke" />
 
+    <!-- *** NOVO - v0.9.5 (configurações de auxílio ao usuário) ***: dois
+         toggles rápidos aqui no rodapé, perto dos links externos, em vez
+         de uma tela de Configurações completa (essa fica pra mais pra
+         frente, com itens de verdade - tamanho/posição dos botões,
+         permissões etc.). O clique é na LINHA inteira (mesmo padrão dos
+         outros itens do drawer), não fecha o menu - a pessoa pode mexer
+         nos dois toggles em sequência sem reabrir. O MaterialSwitch em si
+         fica não-clicável/não-focável de propósito, só reflete o estado -
+         ver MainActivity.setupDrawer(). -->
+    <LinearLayout
+        android:id="@+id/itemKeepScreenOn"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="12dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_keep_screen_on"
+            android:tint="?attr/colorTextSecondary"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:text="@string/drawer_item_keep_screen_on"
+            android:textAppearance="@style/TextAppearance.Fluent.Caption" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchKeepScreenOn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:focusable="false" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/itemVibrationFeedback"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="12dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_vibration"
+            android:tint="?attr/colorTextSecondary"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:text="@string/drawer_item_vibration_feedback"
+            android:textAppearance="@style/TextAppearance.Fluent.Caption" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchVibrationFeedback"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:focusable="false" />
+
+    </LinearLayout>
+
     <LinearLayout
         android:id="@+id/itemGithub"
         android:layout_width="match_parent"
