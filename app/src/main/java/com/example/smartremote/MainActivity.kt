@@ -322,6 +322,11 @@ class MainActivity : AppCompatActivity() {
                 closeDrawer()
                 showLanguagePicker()
             }
+            // *** NOVO - v0.9.6, item 1 ***
+            itemSettings.setOnClickListener {
+                closeDrawer()
+                startActivity(Intent(this@MainActivity, com.example.smartremote.settings.SettingsActivity::class.java))
+            }
             // *** NOVO - v0.9.5 (configurações de auxílio ao usuário) ***:
             // switches inicializados com o valor salvo, e o clique é na
             // LINHA inteira (o MaterialSwitch em si é não-clicável, ver

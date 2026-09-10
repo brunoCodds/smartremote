@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurfaceDeep"
+    tools:context=".settings.SettingsActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurfaceDeep"
+        app:title="@string/settings_title"
+        app:titleTextColor="?attr/colorTextPrimary"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:navigationIconTint="?attr/colorTextPrimary"
+        app:navigationContentDescription="@string/desc_back" />
+
+    <!--
+        *** v0.9.6, item 1 ***: placeholder - os itens de verdade (cursor,
+        reconexão automática, confirmação de power-off, sobre, permissões,
+        visibilidade/tamanho/posição dos botões, resetar) entram um de cada
+        vez nos próximos itens desta versão.
+    -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:padding="24dp"
+        android:text="@string/settings_placeholder"
+        android:textAppearance="@style/TextAppearance.Fluent.Body"
+        android:textColor="?attr/colorTextSecondary" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

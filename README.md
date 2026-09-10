@@ -34,9 +34,18 @@ dia a dia, não um protótipo de estudo.
 </table>
 
 
-> **v0.9.5** — Botão de manter tela ligada — ligado por padrão, não disliga a tela do app.
+> **v0.9.6** — Nesta versão do app, será adicionada uma nova seção de configurações, permitindo que o usuário personalize algumas funções, como:
 >
->Botão de feedback de vibração — liga/desliga geral, ligado por padrão, ele quando ativo faz os botões do controle terem vibração tatica
+> • Alterar o tamanho e a posição dos botões;
+>
+> • Ajustar a sensibilidade do cursor;
+>
+> • Ativar ou desativar a reconexão automática;
+>
+> • Ativar ou desativar a confirmação antes de desligar a TV.
+
+Ainda esta em construção, nessa versão tem apenas o botão e a entrada na tela. (Ainda não tem um local explicando no README)
+
 
 ## Funcionalidades
 

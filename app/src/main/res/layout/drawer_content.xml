@@ -165,6 +165,33 @@
             android:textAppearance="@style/TextAppearance.Fluent.Body" />
     </LinearLayout>
 
+    <!-- Configurações - v0.9.6, item 1. Tela cheia própria (SettingsActivity), diferente dos dois toggles simples do rodapé (ver bloco v0.9.5 abaixo, que fica onde está). -->
+    <LinearLayout
+        android:id="@+id/itemSettings"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:src="@drawable/ic_settings"
+            android:tint="?attr/colorTextPrimary"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:text="@string/drawer_item_settings"
+            android:textAppearance="@style/TextAppearance.Fluent.Body" />
+    </LinearLayout>
+
     <!-- Espaço flexível empurra o rodapé (links do autor) para o fim do drawer. -->
     <View
         android:layout_width="match_parent"

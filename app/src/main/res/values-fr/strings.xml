@@ -66,6 +66,9 @@
     <string name="drawer_item_faq">Questions fréquentes</string>
     <string name="drawer_item_share">Partager l\'app</string>
     <string name="drawer_item_language">Changer de langue</string>
+    <string name="drawer_item_settings">Paramètres</string>
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_placeholder">Bientôt disponible\u00a0: taille et position des boutons, sensibilité du curseur, reconnexion automatique, confirmation avant l\'extinction et plus.</string>
 
     <!-- ===== v0.9.5 - Réglages d'assistance (pied du menu) ===== -->
     <string name="drawer_item_keep_screen_on">Garder l\'écran allumé</string>

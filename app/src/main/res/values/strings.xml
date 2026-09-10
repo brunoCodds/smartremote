@@ -74,6 +74,9 @@
     <string name="drawer_item_faq">Perguntas frequentes</string>
     <string name="drawer_item_share">Compartilhar app</string>
     <string name="drawer_item_language">Mudar idioma</string>
+    <string name="drawer_item_settings">Configurações</string>
+    <string name="settings_title">Configurações</string>
+    <string name="settings_placeholder">Em breve: tamanho e posição dos botões, sensibilidade do cursor, reconexão automática, confirmação antes de desligar e mais.</string>
 
     <!-- ===== v0.9.5 - Configurações de auxílio (rodapé do drawer) ===== -->
     <string name="drawer_item_keep_screen_on">Manter tela ligada</string>
