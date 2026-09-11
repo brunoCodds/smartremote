@@ -38,11 +38,17 @@ dia a dia, não um protótipo de estudo.
 >
 > • Alterar o tamanho e a posição dos botões;
 >
-> • Ajustar a sensibilidade do cursor;
+> • Ajustar a sensibilidade do cursor (adicionado);
 >
-> • Ativar ou desativar a reconexão automática;
+> • Ativar ou desativar a reconexão automática (adicionado);
 >
-> • Ativar ou desativar a confirmação antes de desligar a TV.
+> • Ativar ou desativar a confirmação antes de desligar a TV (adicionado).
+>
+> • Escolher quais botões quer no controle (tem a função, mas não esta completo, ainda vai ser modificado, add mais botões ou trocar o local onde esse botão fica);
+>
+> • APPs preferidos (adicionado);
+>
+> • Restaurar configurações padrão;
 
 Ainda esta em construção, nessa versão tem apenas o botão e a entrada na tela. (Ainda não tem um local explicando no README)
 

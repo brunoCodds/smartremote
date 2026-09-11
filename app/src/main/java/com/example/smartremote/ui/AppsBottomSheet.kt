@@ -47,7 +47,7 @@ class AppsBottomSheet : BottomSheetDialogFragment() {
         val supportedApps = TvManager.getSupportedApps()
         binding.recyclerApps.layoutManager = GridLayoutManager(requireContext(), GRID_SPAN_COUNT)
         binding.recyclerApps.adapter = AppsAdapter(
-            items = allApps,
+            items = AppCatalog.apps,
             supportedApps = supportedApps,
             onAppClick = { item -> onAppTapped(item, supportedApps) }
         )
@@ -70,24 +70,5 @@ class AppsBottomSheet : BottomSheetDialogFragment() {
     companion object {
         const val TAG = "AppsBottomSheet"
         private const val GRID_SPAN_COUNT = 4
-
-        /**
-         * Ordem de exibição fixa dos apps no grid. Adicionar um app novo no
-         * futuro = uma linha aqui + (se já tiver App ID confiável) uma
-         * entrada no APP_LAUNCH_MAP do TvController do fabricante - nada
-         * mais precisa mudar nesta tela.
-         */
-        private val allApps: List<AppItem> = listOf(
-            AppItem(RemoteKey.NETFLIX, "Netflix", "N", R.drawable.ripple_circle_netflix),
-            AppItem(RemoteKey.PRIME_VIDEO, "Prime Video", "P", R.drawable.ripple_circle_prime),
-            AppItem(RemoteKey.YOUTUBE, "YouTube", "Y", R.drawable.ripple_circle_youtube),
-            AppItem(RemoteKey.DISNEY_PLUS, "Disney+", "D", R.drawable.ripple_circle_disney),
-            AppItem(RemoteKey.MAX, "Max", "M", R.drawable.ripple_circle_max),
-            AppItem(RemoteKey.GLOBOPLAY, "Globoplay", "G", R.drawable.ripple_circle_globoplay),
-            AppItem(RemoteKey.APPLE_TV_PLUS, "Apple TV+", "tv", R.drawable.ripple_circle_appletv),
-            AppItem(RemoteKey.PARAMOUNT_PLUS, "Paramount+", "P+", R.drawable.ripple_circle_paramount),
-            AppItem(RemoteKey.CRUNCHYROLL, "Crunchyroll", "C", R.drawable.ripple_circle_crunchyroll),
-            AppItem(RemoteKey.PLEX, "Plex", "Px", R.drawable.ripple_circle_plex)
-        )
     }
 }

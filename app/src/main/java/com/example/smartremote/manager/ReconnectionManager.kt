@@ -11,6 +11,7 @@ import com.example.smartremote.controller.TvConnectionListener
 import com.example.smartremote.diagnostic.DiagnosticLogType
 import com.example.smartremote.diagnostic.DiagnosticManager
 import com.example.smartremote.model.TvDevice
+import com.example.smartremote.util.UserPreferences
 
 /**
  * *** NOVO - v0.9, item 1 (reconexão automática) ***
@@ -78,6 +79,14 @@ object ReconnectionManager {
      * retries concorrentes para o mesmo dispositivo).
      */
     fun scheduleReconnect(context: Context, device: TvDevice) {
+        // *** NOVO - v0.9.6, item 3 ***: checagem única aqui (em vez de
+        // espalhar por cada um dos pontos de chamada em TvManager) - se
+        // a pessoa desligou reconexão automática em Configurações, não
+        // agenda nada.
+        if (!UserPreferences.isAutoReconnectEnabled(context)) {
+            DiagnosticManager.log("Reconexão automática desativada nas configurações - tentativa não agendada", DiagnosticLogType.INFO)
+            return
+        }
         cancelPending()
         attempt++
         val delayMs = BACKOFF_SCHEDULE_MS.getOrElse(attempt - 1) { BACKOFF_SCHEDULE_MS.last() }
@@ -106,6 +115,10 @@ object ReconnectionManager {
      * quando não se sabia que a rede tinha voltado) nesse caso.
      */
     private fun triggerImmediateRetry(context: Context, device: TvDevice) {
+        // *** NOVO - v0.9.6, item 3 ***: mesma checagem de scheduleReconnect()
+        // - este caminho (rede voltando) não passa por lá, então precisa
+        // da própria checagem pra respeitar o toggle.
+        if (!UserPreferences.isAutoReconnectEnabled(context)) return
         cancelPending()
         attempt = 0
         DiagnosticManager.setAutoReconnecting(true) // *** NOVO - v0.9.3, item 1 ***

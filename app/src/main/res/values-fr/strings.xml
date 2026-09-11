@@ -68,7 +68,28 @@
     <string name="drawer_item_language">Changer de langue</string>
     <string name="drawer_item_settings">Paramètres</string>
     <string name="settings_title">Paramètres</string>
-    <string name="settings_placeholder">Bientôt disponible\u00a0: taille et position des boutons, sensibilité du curseur, reconnexion automatique, confirmation avant l\'extinction et plus.</string>
+    <string name="settings_cursor_sensitivity_label">Sensibilité du curseur</string>
+    <string name="settings_cursor_sensitivity_value_format">%.1fx</string>
+    <string name="settings_auto_reconnect_label">Reconnexion automatique</string>
+    <string name="settings_power_off_confirm_label">Confirmer avant d\'éteindre</string>
+    <string name="settings_visible_buttons_section_title">Quels boutons s\'affichent</string>
+    <string name="settings_show_assistant_label">Assistant vocal</string>
+    <string name="settings_show_abc_label">Raccourci de texte (ABC)</string>
+    <string name="settings_preferred_apps_section_title">Applications préférées</string>
+    <string name="settings_preferred_app_slot_format">Raccourci %1$d</string>
+    <string name="settings_preferred_apps_dialog_title">Choisir une application</string>
+    <string name="settings_about_section_title">À propos</string>
+    <string name="settings_about_version_format">SmartRemote v%1$s</string>
+    <string name="settings_about_github">Voir sur GitHub</string>
+    <string name="settings_reset_label">Rétablir les valeurs par défaut</string>
+    <string name="settings_reset_confirm_title">Rétablir les valeurs par défaut\u00a0?</string>
+    <string name="settings_reset_confirm_message">La sensibilité du curseur, la reconnexion automatique, la confirmation avant extinction, quels boutons s\'affichent et les applications préférées reviennent à leur valeur par défaut. Les deux interrupteurs du menu latéral (garder l\'écran allumé, vibration) ne sont pas affectés.</string>
+    <string name="settings_reset_confirm_positive">Réinitialiser</string>
+    <string name="settings_reset_done">Paramètres réinitialisés</string>
+    <string name="power_off_confirm_title">Éteindre la TV\u00a0?</string>
+    <string name="power_off_confirm_message">Ceci éteindra la TV maintenant.</string>
+    <string name="power_off_confirm_positive">Éteindre</string>
+    <string name="settings_placeholder">Bientôt disponible\u00a0: taille et position des boutons, autorisations.</string>
 
     <!-- ===== v0.9.5 - Réglages d'assistance (pied du menu) ===== -->
     <string name="drawer_item_keep_screen_on">Garder l\'écran allumé</string>

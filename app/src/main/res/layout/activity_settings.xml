@@ -20,18 +20,375 @@
         app:navigationContentDescription="@string/desc_back" />
 
     <!--
-        *** v0.9.6, item 1 ***: placeholder - os itens de verdade (cursor,
-        reconexão automática, confirmação de power-off, sobre, permissões,
-        visibilidade/tamanho/posição dos botões, resetar) entram um de cada
-        vez nos próximos itens desta versão.
+        *** v0.9.6, item 2 (sensibilidade do cursor) ***: primeiro item de
+        verdade da tela, dentro de um NestedScrollView já pensado pra
+        crescer com os próximos itens (reconexão automática, confirmação
+        de power-off, sobre, permissões, visibilidade/tamanho/posição dos
+        botões, resetar).
     -->
-    <TextView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
-        android:padding="24dp"
-        android:text="@string/settings_placeholder"
-        android:textAppearance="@style/TextAppearance.Fluent.Body"
-        android:textColor="?attr/colorTextSecondary" />
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_cursor_sensitivity_label"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextPrimary" />
+
+                <TextView
+                    android:id="@+id/txtCursorSensitivityValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextSecondary"
+                    tools:text="1.5x" />
+            </LinearLayout>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderCursorSensitivity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/settings_cursor_sensitivity_label"
+                android:stepSize="0.1"
+                android:value="1.5"
+                android:valueFrom="0.5"
+                android:valueTo="3.0"
+                app:labelBehavior="gone" />
+            <!-- Limites/valor inicial fixos aqui de propósito (atributo do
+                 Slider não aceita referência a constante Kotlin) - devem
+                 bater com UserPreferences.CURSOR_SENSITIVITY_MIN/MAX/DEFAULT.
+                 O valor real (lido de UserPreferences) é aplicado em
+                 SettingsActivity.onCreate(), este "1.5" é só o estado antes
+                 da leitura, pra evitar o slider nascer em 0 por um instante. -->
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/colorGlassStroke" />
+
+            <!-- *** NOVO - v0.9.6, item 3 (reconexão automática) *** -->
+            <LinearLayout
+                android:id="@+id/itemAutoReconnect"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_auto_reconnect_label"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextPrimary" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchAutoReconnect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+            </LinearLayout>
+
+            <!-- *** NOVO - v0.9.6, item 4 (confirmação de power-off) *** -->
+            <LinearLayout
+                android:id="@+id/itemPowerOffConfirm"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_power_off_confirm_label"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextPrimary" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchPowerOffConfirm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/colorGlassStroke" />
+
+            <!-- *** NOVO - v0.9.6, item 5 (sobre) *** -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="@string/settings_about_section_title"
+                android:textAppearance="@style/TextAppearance.Fluent.Caption"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <TextView
+                android:id="@+id/txtAboutVersion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:textAppearance="@style/TextAppearance.Fluent.Body"
+                android:textColor="?attr/colorTextPrimary"
+                tools:text="SmartRemote v0.9.6" />
+
+            <TextView
+                android:id="@+id/txtAboutGithub"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp"
+                android:text="@string/settings_about_github"
+                android:textAppearance="@style/TextAppearance.Fluent.Body"
+                android:textColor="?attr/colorAccent" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/colorGlassStroke" />
+
+            <!-- *** NOVO - v0.9.6, item 7 (quais botões aparecem) *** -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="@string/settings_visible_buttons_section_title"
+                android:textAppearance="@style/TextAppearance.Fluent.Caption"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <LinearLayout
+                android:id="@+id/itemShowAssistant"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_show_assistant_label"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextPrimary" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchShowAssistant"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/itemShowAbc"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/settings_show_abc_label"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextPrimary" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchShowAbc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/colorGlassStroke" />
+
+            <!-- *** NOVO - v0.9.6, item 7 (apps preferidos) ***: os 3
+                 atalhos de rowStreaming na tela principal - posição e
+                 quantidade continuam fixas (isso é item 9), só QUAL app
+                 cada um dispara é escolhido aqui, entre os 10 do catálogo
+                 (mesmo AppsBottomSheet). -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="@string/settings_preferred_apps_section_title"
+                android:textAppearance="@style/TextAppearance.Fluent.Caption"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <LinearLayout
+                android:id="@+id/itemAppSlot1"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtAppSlot1Label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="Atalho 1"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextPrimary" />
+
+                <TextView
+                    android:id="@+id/txtAppSlot1Value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextSecondary"
+                    tools:text="Netflix" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/itemAppSlot2"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtAppSlot2Label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="Atalho 2"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextPrimary" />
+
+                <TextView
+                    android:id="@+id/txtAppSlot2Value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextSecondary"
+                    tools:text="Prime Video" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/itemAppSlot3"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtAppSlot3Label"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="Atalho 3"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextPrimary" />
+
+                <TextView
+                    android:id="@+id/txtAppSlot3Value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Fluent.Body"
+                    android:textColor="?attr/colorTextSecondary"
+                    tools:text="Globoplay" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/colorGlassStroke" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_placeholder"
+                android:textAppearance="@style/TextAppearance.Fluent.Caption"
+                android:textColor="?attr/colorTextSecondary" />
+
+            <!-- *** NOVO - v0.9.6, item 10 (resetar) ***: por último de
+                 propósito, como o documento de planejamento pede - só faz
+                 sentido depois que os itens acima já existem de verdade. -->
+            <TextView
+                android:id="@+id/txtResetDefaults"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp"
+                android:text="@string/settings_reset_label"
+                android:textAppearance="@style/TextAppearance.Fluent.Body"
+                android:textColor="?attr/colorError" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

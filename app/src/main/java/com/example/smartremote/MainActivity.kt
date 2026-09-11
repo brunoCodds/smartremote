@@ -12,6 +12,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.LinearInterpolator
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +32,8 @@ import com.example.smartremote.faq.FaqActivity
 import com.example.smartremote.manager.ReconnectionManager
 import com.example.smartremote.manager.TvManager
 import com.example.smartremote.model.RemoteKey
+import com.example.smartremote.ui.AppCatalog
+import com.example.smartremote.ui.AppItem
 import com.example.smartremote.ui.AppsBottomSheet
 import com.example.smartremote.ui.RemoteKeypadBottomSheet
 import com.example.smartremote.ui.TextInputBottomSheet
@@ -65,8 +68,9 @@ class MainActivity : AppCompatActivity() {
         private const val RECONNECT_ROTATION_DURATION_MS = 900L
 
         // ===== v0.9.4 - Modo cursor/mouse =====
-        /** Fator de escala do delta bruto de arrasto (em px de tela) antes de mandar pra TV - ajuste empírico, sem valor "certo" a priori (ver prompt da v0.9.4). */
-        private const val CURSOR_SENSITIVITY = 1.5f
+        // *** REMOVIDO - v0.9.6, item 2 ***: CURSOR_SENSITIVITY (1.5f fixo)
+        // virou configurável - ver UserPreferences.getCursorSensitivity()/
+        // CURSOR_SENSITIVITY_DEFAULT e o campo `cursorSensitivity` abaixo.
         /** Intervalo mínimo entre dois comandos de move consecutivos - agrupa o movimento acumulado nesse meio-tempo em vez de mandar um comando por pixel.
          *  *** AJUSTADO (pós-v0.9.4, feedback de suavidade) ***: era 40ms: reduzido pra distribuir o mesmo movimento total em pacotes menores e mais frequentes,
          *  em vez de saltos grandes e espaçados - TVs sob carga (apps de streaming tipo YouTube/Netflix competindo por CPU/GPU) têm mais chance de conseguir
@@ -117,6 +121,8 @@ class MainActivity : AppCompatActivity() {
     private var cursorPendingDy = 0f
     /** Distância total (em px) percorrida desde o ACTION_DOWN do gesto atual - usada para decidir tap vs. arrasto no ACTION_UP. */
     private var cursorTotalDragDistance = 0f
+    /** *** NOVO - v0.9.6, item 2 ***: sensibilidade efetiva do gesto atual, lida de UserPreferences no ACTION_DOWN (ver handleCursorTouch) - não muda no meio de um arrasto já em andamento, só entre gestos novos, mesmo que o usuário altere o slider em Configurações nesse meio-tempo. */
+    private var cursorSensitivity = UserPreferences.CURSOR_SENSITIVITY_DEFAULT
 
     private val cursorTapMaxDistancePx: Float by lazy {
         CURSOR_TAP_MAX_DISTANCE_DP * resources.displayMetrics.density
@@ -157,9 +163,23 @@ class MainActivity : AppCompatActivity() {
         enableFullscreenMode()
         applyKeepScreenOnPreference() // *** NOVO - v0.9.5 ***
         setupClickListeners()
+        applyPreferredApps() // *** NOVO - v0.9.6, item 7 ***
+        applyButtonVisibilityPreferences() // *** NOVO - v0.9.6, item 7 ***
         setupDiagnosticPanel()
         setupDrawer() // *** NOVO - v0.9.3, item 3 ***
         setupCursorMode() // *** NOVO - v0.9.4 ***
+    }
+
+    /**
+     * *** NOVO - v0.9.6, item 7 ***: reaplica apps preferidos e
+     * visibilidade dos botões - cobre o caso de a pessoa abrir
+     * Configurações (SettingsActivity, em cima desta tela) e voltar sem a
+     * Activity principal ter sido destruída nesse meio-tempo.
+     */
+    override fun onResume() {
+        super.onResume()
+        applyPreferredApps()
+        applyButtonVisibilityPreferences()
     }
 
     override fun onStart() {
@@ -210,6 +230,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * *** NOVO - v0.9.6, item 7 ***: aplica, nos 3 botões fixos de
+     * `rowStreaming` (posição/quantidade continuam as mesmas - isso é
+     * item 9), qual app cada um representa hoje (ícone, letra,
+     * contentDescription e o clique em si, via [openApp]). Chamado em
+     * onCreate() e onResume() - a pessoa pode voltar de Configurações com
+     * um slot diferente configurado enquanto esta Activity só estava em
+     * background, não destruída.
+     */
+    private fun applyPreferredApps() {
+        val slotViews = listOf(binding.btnNetflix, binding.btnPrimeVideo, binding.btnGloboplay)
+        slotViews.forEachIndexed { index, view ->
+            val slot = index + 1
+            val key = UserPreferences.getPreferredAppSlot(this, slot)
+            val item = AppCatalog.byKey(key) ?: return@forEachIndexed
+            view.text = item.iconLetter
+            view.setBackgroundResource(item.legacyIconBackgroundRes)
+            view.contentDescription = getString(item.descriptionRes)
+            view.setOnClickListener { openApp(view, item) }
+        }
+    }
+
+    /**
+     * *** NOVO - v0.9.6, item 7 ***: mostra/esconde Assistente e o atalho
+     * ABC conforme Configurações (padrão: os dois visíveis, comportamento
+     * de sempre). Os dois ficam dentro de `rowTop`, que já centraliza seu
+     * conteúdo (`gravity="center"`) - esconder um item aqui só reflui os
+     * demais, sem quebrar nenhuma constraint (nenhum outro elemento do
+     * layout se ancora nestes dois IDs).
+     */
+    private fun applyButtonVisibilityPreferences() {
+        binding.btnAssistant.visibility = if (UserPreferences.isAssistantButtonVisible(this)) View.VISIBLE else View.GONE
+        binding.btnAbc.visibility = if (UserPreferences.isAbcButtonVisible(this)) View.VISIBLE else View.GONE
+    }
+
     /** Centraliza a configuração de todos os cliques do controle remoto. */
     private fun setupClickListeners() {
         with(binding) {
@@ -249,10 +304,12 @@ class MainActivity : AppCompatActivity() {
             btnChannelUp.setOnClickListener { channelUp() }
             btnChannelDown.setOnClickListener { channelDown() }
 
-            // Streaming
-            btnNetflix.setOnClickListener { netflix() }
-            btnPrimeVideo.setOnClickListener { primeVideo() }
-            btnGloboplay.setOnClickListener { globoplay() }
+            // Streaming - *** NOVO - v0.9.6, item 7 ***: os 3 cliques (e o
+            // ícone/texto/contentDescription de cada botão) agora são
+            // aplicados dinamicamente por applyPreferredApps(), conforme
+            // os apps escolhidos em Configurações - não são mais fixos
+            // aqui (netflix()/primeVideo()/globoplay() foram removidos,
+            // ver openApp()).
             btnApps.setOnClickListener { apps() }
         }
     }
@@ -410,8 +467,26 @@ class MainActivity : AppCompatActivity() {
 
     // ===================== AÇÕES - TOPO =====================
 
-    /** Envia RemoteKey.POWER para a TV, além do feedback local. */
+    /**
+     * Envia RemoteKey.POWER para a TV, além do feedback local.
+     * *** NOVO - v0.9.6, item 4 ***: se o toggle "Confirmação antes de
+     * desligar" estiver ligado (padrão: desligado), passa por um
+     * AlertDialog antes - senão, comportamento idêntico ao de sempre.
+     */
     private fun power() {
+        if (UserPreferences.isPowerOffConfirmationEnabled(this)) {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(R.string.power_off_confirm_title)
+                .setMessage(R.string.power_off_confirm_message)
+                .setPositiveButton(R.string.power_off_confirm_positive) { _, _ -> sendPowerOff() }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        } else {
+            sendPowerOff()
+        }
+    }
+
+    private fun sendPowerOff() {
         TvManager.sendRemoteKey(RemoteKey.POWER)
         executeAction(binding.btnPower, toastText = "Power", logMessage = "Power button pressed")
     }
@@ -552,27 +627,24 @@ class MainActivity : AppCompatActivity() {
     // ===================== AÇÕES - STREAMING =====================
 
     /**
-     * Envia RemoteKey.NETFLIX para a TV. Ainda não suportado por nenhum
-     * TvController nesta fase (lançamento de app usa um mecanismo
-     * diferente do protocolo - ms.channel.emit + app ID - fica para uma
-     * fase futura dedicada a apps). Não trava o app, só registra "não
-     * suportado" no diagnóstico.
+     * *** NOVO - v0.9.6, item 7 ***: substitui netflix()/primeVideo()/
+     * globoplay() (que mandavam um RemoteKey fixo cada) - agora os 3
+     * botões de rowStreaming disparam o app que estiver configurado
+     * naquele slot (ver applyPreferredApps()), então precisam de uma
+     * única função parametrizada. Mesma checagem de suporte que o
+     * AppsBottomSheet já fazia (TvManager.getSupportedApps()) - antes os
+     * 3 botões fixos mandavam o RemoteKey direto sem checar, mas agora
+     * que o app pode ser qualquer um dos 10 do catálogo (incluindo os que
+     * o TvController atual não suporta), faz sentido avisar em vez de
+     * mandar um comando que a TV vai ignorar.
      */
-    private fun netflix() {
-        TvManager.sendRemoteKey(RemoteKey.NETFLIX)
-        executeAction(binding.btnNetflix, toastText = "Netflix", logMessage = "Netflix button pressed")
-    }
-
-    /** Envia RemoteKey.PRIME_VIDEO para a TV. Mesma observação de [netflix]. */
-    private fun primeVideo() {
-        TvManager.sendRemoteKey(RemoteKey.PRIME_VIDEO)
-        executeAction(binding.btnPrimeVideo, toastText = "Prime Video", logMessage = "Prime Video button pressed")
-    }
-
-    /** Envia RemoteKey.GLOBOPLAY para a TV. Mesma observação de [netflix]. */
-    private fun globoplay() {
-        TvManager.sendRemoteKey(RemoteKey.GLOBOPLAY)
-        executeAction(binding.btnGloboplay, toastText = "Globoplay", logMessage = "Globoplay button pressed")
+    private fun openApp(view: TextView, item: AppItem) {
+        if (!TvManager.getSupportedApps().contains(item.key)) {
+            showToast(getString(R.string.app_not_supported_toast))
+            return
+        }
+        TvManager.sendRemoteKey(item.key)
+        executeAction(view, toastText = item.label, logMessage = "${item.label} button pressed")
     }
 
     /**
@@ -695,6 +767,7 @@ class MainActivity : AppCompatActivity() {
                 cursorPendingDx = 0f
                 cursorPendingDy = 0f
                 lastCursorMoveSentAt = 0L
+                cursorSensitivity = UserPreferences.getCursorSensitivity(this) // *** NOVO - v0.9.6, item 2 ***
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -730,8 +803,8 @@ class MainActivity : AppCompatActivity() {
                 val now = SystemClock.uptimeMillis()
                 if (now - lastCursorMoveSentAt >= CURSOR_MOVE_THROTTLE_MS) {
                     lastCursorMoveSentAt = now
-                    val scaledDx = cursorPendingDx * CURSOR_SENSITIVITY
-                    val scaledDy = cursorPendingDy * CURSOR_SENSITIVITY
+                    val scaledDx = cursorPendingDx * cursorSensitivity
+                    val scaledDy = cursorPendingDy * cursorSensitivity
                     val intDx = scaledDx.toInt()
                     val intDy = scaledDy.toInt()
                     if (intDx != 0 || intDy != 0) {
@@ -748,8 +821,8 @@ class MainActivity : AppCompatActivity() {
                     // convertida de volta pra espaço de tela, dividindo
                     // pela sensibilidade) pra somar na próxima leva, em
                     // vez de simplesmente perdê-la.
-                    cursorPendingDx = (scaledDx - intDx) / CURSOR_SENSITIVITY
-                    cursorPendingDy = (scaledDy - intDy) / CURSOR_SENSITIVITY
+                    cursorPendingDx = (scaledDx - intDx) / cursorSensitivity
+                    cursorPendingDy = (scaledDy - intDy) / cursorSensitivity
                 }
             }
 

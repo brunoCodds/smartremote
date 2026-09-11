@@ -68,7 +68,28 @@
     <string name="drawer_item_language">Cambiar idioma</string>
     <string name="drawer_item_settings">Configuración</string>
     <string name="settings_title">Configuración</string>
-    <string name="settings_placeholder">Próximamente: tamaño y posición de los botones, sensibilidad del cursor, reconexión automática, confirmación antes de apagar y más.</string>
+    <string name="settings_cursor_sensitivity_label">Sensibilidad del cursor</string>
+    <string name="settings_cursor_sensitivity_value_format">%.1fx</string>
+    <string name="settings_auto_reconnect_label">Reconexión automática</string>
+    <string name="settings_power_off_confirm_label">Confirmar antes de apagar</string>
+    <string name="settings_visible_buttons_section_title">Qué botones aparecen</string>
+    <string name="settings_show_assistant_label">Asistente de voz</string>
+    <string name="settings_show_abc_label">Atajo de texto (ABC)</string>
+    <string name="settings_preferred_apps_section_title">Apps preferidas</string>
+    <string name="settings_preferred_app_slot_format">Atajo %1$d</string>
+    <string name="settings_preferred_apps_dialog_title">Elegir app</string>
+    <string name="settings_about_section_title">Acerca de</string>
+    <string name="settings_about_version_format">SmartRemote v%1$s</string>
+    <string name="settings_about_github">Ver en GitHub</string>
+    <string name="settings_reset_label">Restaurar valores predeterminados</string>
+    <string name="settings_reset_confirm_title">¿Restaurar valores predeterminados?</string>
+    <string name="settings_reset_confirm_message">La sensibilidad del cursor, la reconexión automática, la confirmación de apagado, qué botones aparecen y las apps preferidas vuelven a su valor predeterminado. Los dos interruptores del menú lateral (mantener pantalla encendida, vibración) no se ven afectados.</string>
+    <string name="settings_reset_confirm_positive">Restaurar</string>
+    <string name="settings_reset_done">Configuración restaurada</string>
+    <string name="power_off_confirm_title">¿Apagar la TV?</string>
+    <string name="power_off_confirm_message">Esto apagará la TV ahora.</string>
+    <string name="power_off_confirm_positive">Apagar</string>
+    <string name="settings_placeholder">Próximamente: tamaño y posición de los botones, permisos.</string>
 
     <!-- ===== v0.9.5 - Configuración de asistencia (pie del menú) ===== -->
     <string name="drawer_item_keep_screen_on">Mantener pantalla encendida</string>

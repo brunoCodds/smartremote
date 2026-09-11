@@ -76,7 +76,28 @@
     <string name="drawer_item_language">Mudar idioma</string>
     <string name="drawer_item_settings">Configurações</string>
     <string name="settings_title">Configurações</string>
-    <string name="settings_placeholder">Em breve: tamanho e posição dos botões, sensibilidade do cursor, reconexão automática, confirmação antes de desligar e mais.</string>
+    <string name="settings_cursor_sensitivity_label">Sensibilidade do cursor</string>
+    <string name="settings_cursor_sensitivity_value_format">%.1fx</string>
+    <string name="settings_auto_reconnect_label">Reconexão automática</string>
+    <string name="settings_power_off_confirm_label">Confirmar antes de desligar</string>
+    <string name="settings_visible_buttons_section_title">Quais botões aparecem</string>
+    <string name="settings_show_assistant_label">Assistente de voz</string>
+    <string name="settings_show_abc_label">Atalho de texto (ABC)</string>
+    <string name="settings_preferred_apps_section_title">Apps preferidos</string>
+    <string name="settings_preferred_app_slot_format">Atalho %1$d</string>
+    <string name="settings_preferred_apps_dialog_title">Escolher app</string>
+    <string name="settings_about_section_title">Sobre</string>
+    <string name="settings_about_version_format">SmartRemote v%1$s</string>
+    <string name="settings_about_github">Ver no GitHub</string>
+    <string name="settings_reset_label">Restaurar configurações padrão</string>
+    <string name="settings_reset_confirm_title">Restaurar configurações padrão?</string>
+    <string name="settings_reset_confirm_message">Sensibilidade do cursor, reconexão automática, confirmação de power-off, quais botões aparecem e os apps preferidos voltam ao valor padrão. Os dois toggles do menu lateral (manter tela ligada, vibração) não são afetados.</string>
+    <string name="settings_reset_confirm_positive">Restaurar</string>
+    <string name="settings_reset_done">Configurações restauradas</string>
+    <string name="power_off_confirm_title">Desligar a TV?</string>
+    <string name="power_off_confirm_message">Isso vai desligar a TV agora.</string>
+    <string name="power_off_confirm_positive">Desligar</string>
+    <string name="settings_placeholder">Em breve: tamanho e posição dos botões, permissões.</string>
 
     <!-- ===== v0.9.5 - Configurações de auxílio (rodapé do drawer) ===== -->
     <string name="drawer_item_keep_screen_on">Manter tela ligada</string>

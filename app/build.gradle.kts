@@ -94,8 +94,17 @@ android {
         // então começamos aqui um esquema simples e monotônico
         // (versionCode = 8 para versionName "0.8"); versões futuras devem
         // seguir subindo os dois de forma coerente.
-        versionCode = 8
-        versionName = "0.8"
+        // *** ATUALIZADO - v0.9.6, item 5 (Sobre) ***: versionName/versionCode
+        // ficaram parados em "0.8"/8 desde então, mesmo com v0.9, v0.9.4,
+        // v0.9.4.2 e v0.9.5 já lançadas - provavelmente esquecido nos
+        // releases anteriores, não intencional. Corrigido aqui porque a
+        // tela "Sobre" (item 5 desta versão) precisa mostrar um número
+        // real, mas os saltos intermediários não foram reconstituídos
+        // retroativamente - só o salto mínimo pra "0.9.6" ficar coerente
+        // daqui pra frente. Aponto isso porque é uma mudança fora do card
+        // "tela de Configurações" em si, mesmo sendo necessária pra ele.
+        versionCode = 9
+        versionName = "0.9.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
